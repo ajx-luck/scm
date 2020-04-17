@@ -2,14 +2,12 @@
 #define getbit(x,y)   ((x) >> (y)&1)
 
 unsigned char nub = 0;
-unsigned char prenub = 0;
 unsigned char pb5h = 0,pb5max = 0;
 unsigned char pb4h = 0,pb4max = 0;
 unsigned char pb3h = 0,pb3max = 0;
+unsigned char timeoutFlag = 0;
 
-void checkPB5();
-void checkPB4();
-void checkPB3();
+void checkPB(unsigned char* pbCount,unsigned char* pbCountmax,unsigned char bitNub);
 void setPWM();
 void Init_System();
 
@@ -21,22 +19,25 @@ void main(void)
 	while(1)
 	{
 		//检测输入
-		if(prenub != nub)
+		if(timeoutFlag)
 		{
-			prenub = nub;
-			checkPB5();
-			checkPB4();
-			checkPB3();			
-		}
-		if(nub >=201)
-		{
-			nub = 0;
+			nub++;
+			checkPB(&pb3h,&pb3max,3);
+			checkPB(&pb4h,&pb4max,4);
+			checkPB(&pb5h,&pb5max,5);	
+			timeoutFlag = 0;
+			if(nub >=201)
+			{
+				nub = 0;
+			}
+			
+			if(nub % 100 ==0)
+			{
+				setPWM();
+			}		
 		}
 		
-		if(nub % 100 ==0)
-		{
-			setPWM();
-		}
+		
 	}	
 }
 
@@ -77,53 +78,22 @@ void setPWM()
 	
 }
 
-void checkPB5()
+void checkPB(unsigned char* pbCount,unsigned char* pbCountmax,unsigned char bitNub)
 {
-		if(getbit(PORTB,3) == 1)
-			{
-				pb5h++;
-			}
-			else
-			{
-				if(pb5h !=0)
-				{
-					pb5max = pb5h;
-				}
-				pb5h = 0;
-			}
+    if(getbit(PORTB,bitNub) == 1)
+    {
+        *pbCount = *pbCount + 1;
+    }
+    else
+    {
+        if(*pbCount !=0)
+        {
+            *pbCountmax = *pbCount;
+        }
+        *pbCount = 0;
+    }
 }
 
-void checkPB4()
-{
-		if(getbit(PORTB,4) == 1)
-			{
-				pb4h++;
-			}
-			else
-			{
-				if(pb4h !=0)
-				{
-					pb4max = pb4h;
-				}
-				pb4h = 0;
-			}
-}
-
-void checkPB3()
-{
-		if(getbit(PORTB,3) == 1)
-			{
-				pb3h++;
-			}
-			else
-			{
-				if(pb3h !=0)
-				{
-					pb3max = pb3h;
-				}
-				pb3h = 0;
-			}
-}
 
 /***********************************************
 函数名称：Init_System
@@ -201,6 +171,6 @@ void interrupt Timer0_Isr()
 	//---------------------------------------
 			
 		T0IF = 0;			//清中断标志位	
-		nub++;
+		timeoutFlag = 1;
 	}
 }

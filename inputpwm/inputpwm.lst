@@ -3,381 +3,348 @@
 2:                #define getbit(x,y)   ((x) >> (y)&1)
 3:                
 4:                unsigned char nub = 0;
-5:                unsigned char prenub = 0;
-6:                unsigned char pb5h = 0,pb5max = 0;
-7:                unsigned char pb4h = 0,pb4max = 0;
-8:                unsigned char pb3h = 0,pb3max = 0;
+5:                unsigned char pb5h = 0,pb5max = 0;
+6:                unsigned char pb4h = 0,pb4max = 0;
+7:                unsigned char pb3h = 0,pb3max = 0;
+8:                unsigned char timeoutFlag = 0;
 9:                
-10:               void checkPB5();
-11:               void checkPB4();
-12:               void checkPB3();
-13:               void setPWM();
-14:               void Init_System();
-15:               
-16:               
-17:               void main(void)
-18:               {
-19:               	
-20:               	Init_System();
-  0074    2037    CALL	0x37
-21:               	while(1)
-22:               	{
-23:               		//检测输入
-24:               		if(prenub != nub)
-  0075    0845    LD	A,0x45
-  0076    0646    XORA	0x46
-  0077    1903    SZB	0x3,2
-  0078    287E    JP	0x7E
-25:               		{
-26:               			prenub = nub;
-  0079    0846    LD	A,0x46
-  007A    00C5    LD	0x45,A
-27:               			checkPB5();
-  007B    208B    CALL	0x8B
-28:               			checkPB4();
-  007C    209E    CALL	0x9E
-29:               			checkPB3();			
-  007D    20B1    CALL	0xB1
-30:               		}
-31:               		if(nub >=201)
-  007E    30C9    LDIA	0xC9
-  007F    0246    SUBA	0x46
-  0080    1803    SZB	0x3,0
-32:               		{
-33:               			nub = 0;
-  0081    01C6    CLR	0x46
-34:               		}
-35:               		
-36:               		if(nub % 100 ==0)
-  0082    3064    LDIA	0x64
-  0083    00C9    LD	0x49,A
-  0084    0846    LD	A,0x46
-  0085    2058    CALL	0x58
-  0086    3A00    XORIA	0x0
-  0087    1D03    SNZB	0x3,2
-  0088    2875    JP	0x75
-37:               		{
-38:               			setPWM();
-  0089    2015    CALL	0x15
-  008A    2875    JP	0x75
-39:               		}
-40:               	}	
-41:               }
-42:               
-43:               void setPWM()
-44:               {
-45:               	//选择PWM0
-46:               	PWMS0 = 0;
-47:               	PWMS1 = 0;
-48:               	PWMS2 = 0;
-49:               	//PWM占空比
-50:               
-51:               	PWMR08 = 0;
-52:               	PWMR09 = 0;
-  0015    2031    CALL	0x31
-53:               	PWMR = pb5max * 2;
-  0016    1003    CLRB	0x3,0
-  0017    0D43    RLCA	0x43
-  0018    0093    LD	0x13,A
-54:               	PWMEN0 = 1;
-55:               	
-56:               	//选择PWM1
-57:               	PWMS0 = 1;
-58:               	PWMS1 = 0;
-59:               	PWMS2 = 0;
-60:               	//PWM占空比
-61:               
-62:               	PWMR08 = 0;
-63:               	PWMR09 = 0;
-  0019    2023    CALL	0x23
-64:               	PWMR = pb4max * 2;
+10:               void checkPB(unsigned char* pbCount,unsigned char* pbCountmax,unsigned char bitNub);
+11:               void setPWM();
+12:               void Init_System();
+13:               
+14:               
+15:               void main(void)
+16:               {
+17:               	
+18:               	Init_System();
+  003C    2083    CALL	0x83
+19:               	while(1)
+20:               	{
+21:               		//检测输入
+22:               		if(timeoutFlag)
+  003D    0823    LD	A,0x23
+  003E    1903    SZB	0x3,2
+  003F    283D    JP	0x3D
+  0040    3041    LDIA	0x41
+23:               		{
+24:               			nub++;
+  0041    0AC0    INCR	0x40
+25:               			checkPB(&pb3h,&pb3max,3);
+  0042    00C9    LD	0x49,A
+  0043    3003    LDIA	0x3
+  0044    00CA    LD	0x4A,A
+  0045    3042    LDIA	0x42
+  0046    2015    CALL	0x15
+26:               			checkPB(&pb4h,&pb4max,4);
+  0047    3043    LDIA	0x43
+  0048    00C9    LD	0x49,A
+  0049    3004    LDIA	0x4
+  004A    00CA    LD	0x4A,A
+  004B    3044    LDIA	0x44
+  004C    2015    CALL	0x15
+27:               			checkPB(&pb5h,&pb5max,5);	
+  004D    3045    LDIA	0x45
+  004E    00C9    LD	0x49,A
+  004F    3005    LDIA	0x5
+  0050    00CA    LD	0x4A,A
+  0051    3046    LDIA	0x46
+  0052    2015    CALL	0x15
+  0053    30C9    LDIA	0xC9
+28:               			timeoutFlag = 0;
+  0054    01A3    CLR	0x23
+29:               			if(nub >=201)
+  0055    0240    SUBA	0x40
+  0056    1803    SZB	0x3,0
+30:               			{
+31:               				nub = 0;
+  0057    01C0    CLR	0x40
+32:               			}
+33:               			
+34:               			if(nub % 100 ==0)
+  0058    3064    LDIA	0x64
+  0059    00C9    LD	0x49,A
+  005A    0840    LD	A,0x40
+  005B    20A4    CALL	0xA4
+  005C    3A00    XORIA	0x0
+  005D    1D03    SNZB	0x3,2
+  005E    283D    JP	0x3D
+35:               			{
+36:               				setPWM();
+  005F    2061    CALL	0x61
+  0060    283D    JP	0x3D
+37:               			}		
+38:               		}
+39:               		
+40:               		
+41:               	}	
+42:               }
+43:               
+44:               void setPWM()
+45:               {
+46:               	//选择PWM0
+47:               	PWMS0 = 0;
+48:               	PWMS1 = 0;
+49:               	PWMS2 = 0;
+50:               	//PWM占空比
+51:               
+52:               	PWMR08 = 0;
+53:               	PWMR09 = 0;
+  0061    207D    CALL	0x7D
+54:               	PWMR = pb5max * 2;
+  0062    1003    CLRB	0x3,0
+  0063    0D45    RLCA	0x45
+  0064    0093    LD	0x13,A
+55:               	PWMEN0 = 1;
+56:               	
+57:               	//选择PWM1
+58:               	PWMS0 = 1;
+59:               	PWMS1 = 0;
+60:               	PWMS2 = 0;
+61:               	//PWM占空比
+62:               
+63:               	PWMR08 = 0;
+64:               	PWMR09 = 0;
+  0065    206F    CALL	0x6F
+65:               	PWMR = pb4max * 2;
+  0066    1003    CLRB	0x3,0
+  0067    0D43    RLCA	0x43
+  0068    0093    LD	0x13,A
+66:               	PWMEN1 = 1;
+67:               	
+68:               	//选择PWM2
+69:               	PWMS0 = 0;
+70:               	PWMS1 = 1;
+71:               	PWMS2 = 0;
+72:               	//PWM占空比
+73:               
+74:               	PWMR08 = 0;
+75:               	PWMR09 = 0;
+  0069    2076    CALL	0x76
+76:               	PWMR = pb3max * 2;
+  006A    1003    CLRB	0x3,0
+  006B    0D41    RLCA	0x41
+  006C    0093    LD	0x13,A
+77:               	PWMEN2 = 1;
+  006D    1510    SETB	0x10,2
+  006E    0008    RET
+78:               	
+79:               }
+80:               
+81:               void checkPB(unsigned char* pbCount,unsigned char* pbCountmax,unsigned char bitNub)
+  0015    00A0    LD	0x20,A
+82:               {
+83:                   if(getbit(PORTB,bitNub) == 1)
+  0016    0805    LD	A,0x5
+  0017    00CB    LD	0x4B,A
+  0018    0A4A    INCA	0x4A
+  0019    281C    JP	0x1C
   001A    1003    CLRB	0x3,0
-  001B    0D41    RLCA	0x41
-  001C    0093    LD	0x13,A
-65:               	PWMEN1 = 1;
-66:               	
-67:               	//选择PWM2
-68:               	PWMS0 = 0;
-69:               	PWMS1 = 1;
-70:               	PWMS2 = 0;
-71:               	//PWM占空比
-72:               
-73:               	PWMR08 = 0;
-74:               	PWMR09 = 0;
-  001D    202A    CALL	0x2A
-75:               	PWMR = pb3max * 2;
-  001E    1003    CLRB	0x3,0
-  001F    0D23    RLCA	0x23
-  0020    0093    LD	0x13,A
-76:               	PWMEN2 = 1;
-  0021    1510    SETB	0x10,2
-  0022    0008    RET
-77:               	
-78:               }
-79:               
-80:               void checkPB5()
-81:               {
-82:               		if(getbit(PORTB,3) == 1)
-  008B    0805    LD	A,0x5
-  008C    00C9    LD	0x49,A
-  008D    1003    CLRB	0x3,0
-  008E    0CC9    RRCR	0x49
-  008F    1003    CLRB	0x3,0
-  0090    0CC9    RRCR	0x49
-  0091    1003    CLRB	0x3,0
-  0092    0CC9    RRCR	0x49
-  0093    1C49    SNZB	0x49,0
-  0094    2897    JP	0x97
-83:               			{
-84:               				pb5h++;
-  0095    0AC4    INCR	0x44
-85:               			}
-  0096    0008    RET
-86:               			else
-87:               			{
-88:               				if(pb5h !=0)
-  0097    0844    LD	A,0x44
-  0098    1903    SZB	0x3,2
-  0099    289C    JP	0x9C
-89:               				{
-90:               					pb5max = pb5h;
-  009A    0844    LD	A,0x44
-  009B    00C3    LD	0x43,A
-91:               				}
-92:               				pb5h = 0;
-  009C    01C4    CLR	0x44
-  009D    0008    RET
-93:               			}
-94:               }
-95:               
-96:               void checkPB4()
-97:               {
-98:               		if(getbit(PORTB,4) == 1)
-  009E    0805    LD	A,0x5
-  009F    00C9    LD	0x49,A
-  00A0    3004    LDIA	0x4
-  00A1    1003    CLRB	0x3,0
-  00A2    0CC9    RRCR	0x49
-  00A3    3EFF    ADDIA	0xFF
-  00A4    1D03    SNZB	0x3,2
-  00A5    28A1    JP	0xA1
-  00A6    1C49    SNZB	0x49,0
-  00A7    28AA    JP	0xAA
-99:               			{
-100:              				pb4h++;
-  00A8    0AC2    INCR	0x42
-101:              			}
-  00A9    0008    RET
-102:              			else
-103:              			{
-104:              				if(pb4h !=0)
-  00AA    0842    LD	A,0x42
-  00AB    1903    SZB	0x3,2
-  00AC    28AF    JP	0xAF
-105:              				{
-106:              					pb4max = pb4h;
-  00AD    0842    LD	A,0x42
-  00AE    00C1    LD	0x41,A
-107:              				}
-108:              				pb4h = 0;
-  00AF    01C2    CLR	0x42
-  00B0    0008    RET
-109:              			}
-110:              }
-111:              
-112:              void checkPB3()
-113:              {
-114:              		if(getbit(PORTB,3) == 1)
-  00B1    0805    LD	A,0x5
-  00B2    00C9    LD	0x49,A
-  00B3    1003    CLRB	0x3,0
-  00B4    0CC9    RRCR	0x49
-  00B5    1003    CLRB	0x3,0
-  00B6    0CC9    RRCR	0x49
-  00B7    1003    CLRB	0x3,0
-  00B8    0CC9    RRCR	0x49
-  00B9    1C49    SNZB	0x49,0
-  00BA    28BD    JP	0xBD
-115:              			{
-116:              				pb3h++;
-  00BB    0AC0    INCR	0x40
-117:              			}
-  00BC    0008    RET
-118:              			else
-119:              			{
-120:              				if(pb3h !=0)
-  00BD    0840    LD	A,0x40
-  00BE    1903    SZB	0x3,2
-  00BF    28C2    JP	0xC2
-121:              				{
-122:              					pb3max = pb3h;
-  00C0    0840    LD	A,0x40
-  00C1    00A3    LD	0x23,A
-123:              				}
-124:              				pb3h = 0;
-  00C2    01C0    CLR	0x40
-  00C3    0008    RET
-125:              			}
-126:              }
-127:              
-128:              /***********************************************
-129:              函数名称：Init_System
-130:              函数功能：系统初始化
-131:              入口参数：无
-132:              出口参数：无
-133:              备注：
-134:              ************************************************/
-135:              void Init_System()
-  0037    0000    NOP
-  0038    0064    CLRWDT
-136:              {
-137:              	asm("nop");
-138:              	asm("clrwdt");
-139:              	INTCON = 0;					//系统初始化
-  0039    0189    CLR	0x9
-140:              	OSCCON = 0X71;				//配置振荡为8M,开 WDT
-  003A    3071    LDIA	0x71
-  003B    0088    LD	0x8,A
-141:              	WPUB = 0xFF;
-  003C    30FF    LDIA	0xFF
-  003D    008D    LD	0xD,A
-142:              	OPTION_REG = 0xD0;		//Timer0使用内部时钟Focs/4，预分频比为1:2
-  003E    30D0    LDIA	0xD0
-  003F    0087    LD	0x7,A
-143:              	TMR0 = 0;				//赋予初始值
-  0040    0181    CLR	0x1
-144:              	INTCON = 0xE0;			//允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
-  0041    30E0    LDIA	0xE0
-  0042    0089    LD	0x9,A
-145:              	TMR0PRD = 100;
-  0043    3064    LDIA	0x64
-  0044    008F    LD	0xF,A
-146:              	
-147:              
-148:              	TRISB = 0B00111000;	
-  0045    3038    LDIA	0x38
-  0046    0086    LD	0x6,A
-149:              	PORTB = 0B00111000;
-  0047    0085    LD	0x5,A
-150:              	IOCB = 0xFF;
-  0048    30FF    LDIA	0xFF
-  0049    008E    LD	0xE,A
-151:              	
-152:              	//设置PWM周期
-153:              	PWMCK0 = 0;
-  004A    1212    CLRB	0x12,4
-154:              	PWMCK1 = 1;
-  004B    1692    SETB	0x12,5
-155:              	PWMPRD8 = 0;
-  004C    1312    CLRB	0x12,6
-156:              	PWMPRD9 = 0;
-  004D    1392    CLRB	0x12,7
-157:              	PWM_PRD = 199;
-  004E    30C7    LDIA	0xC7
-  004F    0094    LD	0x14,A
-158:              	
-159:              	//选择PWM0
-160:              	PWMS0 = 0;
-161:              	PWMS1 = 0;
-162:              	PWMS2 = 0;
-163:              	//PWM占空比
-164:              
-165:              	PWMR08 = 0;
-166:              	PWMR09 = 0;
-  0050    2031    CALL	0x31
-167:              	PWMR = 0;
-  0051    0193    CLR	0x13
-168:              	PWMEN0 = 1;//PWM0使能
-169:              	//选择PWM1
-170:              	PWMS0 = 1;
-171:              	PWMS1 = 0;
-172:              	PWMS2 = 0;
-173:              	PWMR08 = 0;
-174:              	PWMR09 = 0;
-  0052    2023    CALL	0x23
-175:              	PWMR = 0;
-  0053    0193    CLR	0x13
-176:              	PWMEN1 = 1;
-177:              	
-178:              	//选择PWM2
-179:              	PWMS0 = 0;
-180:              	PWMS1 = 1;
-181:              	PWMS2 = 0;
-182:              	PWMR08 = 0;
-183:              	PWMR09 = 0;
-  0054    202A    CALL	0x2A
-184:              	PWMR = 0;
-  0055    0193    CLR	0x13
-185:              	PWMEN2 = 1;
-  0056    1510    SETB	0x10,2
-  0057    0008    RET
-186:              }
-187:              
-188:              /***********************************************
-189:              函数名称：Timer0_Isr
-190:              函数功能：中断服务
-191:              入口参数：无
-192:              出口参数：无
-193:              备注：
-194:              ***********************************************/
-195:              void interrupt Timer0_Isr()
-196:              {
-197:              	if(T0IF)
-  00C4    1D09    SNZB	0x9,2
-  00C5    28CA    JP	0xCA
-198:              	{
-199:              	//---------------------------------------
-200:              		TMR0 += 50;		//重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
-  00C6    3032    LDIA	0x32
-  00C7    0781    ADDR	0x1
-201:              	//---------------------------------------
-202:              			
-203:              		T0IF = 0;			//清中断标志位	
-  00C8    1109    CLRB	0x9,2
-204:              		nub++;
-  00C9    0AC6    INCR	0x46
-  00CA    0848    LD	A,0x48
-  00CB    008A    LD	0xA,A
-  00CC    0E47    SWAPA	0x47
-  00CD    0083    LD	0x3,A
-  00CE    0ECE    SWAPR	0x4E
-  00CF    0E4E    SWAPA	0x4E
-  00D0    0009    RETI
-205:              	}
-206:              }
+  001B    0CCB    RRCR	0x4B
+  001C    3EFF    ADDIA	0xFF
+  001D    1D03    SNZB	0x3,2
+  001E    281A    JP	0x1A
+  001F    1C4B    SNZB	0x4B,0
+  0020    282B    JP	0x2B
+84:                   {
+85:                       *pbCount = *pbCount + 1;
+  0021    0820    LD	A,0x20
+  0022    0084    LD	0x4,A
+  0023    0800    LD	A,0x0
+  0024    3E01    ADDIA	0x1
+  0025    00CB    LD	0x4B,A
+  0026    0820    LD	A,0x20
+  0027    0084    LD	0x4,A
+  0028    084B    LD	A,0x4B
+  0029    0080    LD	0x0,A
+86:                   }
+  002A    0008    RET
+87:                   else
+88:                   {
+89:                       if(*pbCount !=0)
+  002B    0820    LD	A,0x20
+  002C    0084    LD	0x4,A
+  002D    0800    LD	A,0x0
+  002E    1903    SZB	0x3,2
+  002F    2838    JP	0x38
+90:                       {
+91:                           *pbCountmax = *pbCount;
+  0030    0820    LD	A,0x20
+  0031    0084    LD	0x4,A
+  0032    0800    LD	A,0x0
+  0033    00CB    LD	0x4B,A
+  0034    0849    LD	A,0x49
+  0035    0084    LD	0x4,A
+  0036    084B    LD	A,0x4B
+  0037    0080    LD	0x0,A
+92:                       }
+93:                       *pbCount = 0;
+  0038    0820    LD	A,0x20
+  0039    0084    LD	0x4,A
+  003A    0180    CLR	0x0
+  003B    0008    RET
+94:                   }
+95:               }
+96:               
+97:               
+98:               /***********************************************
+99:               函数名称：Init_System
+100:              函数功能：系统初始化
+101:              入口参数：无
+102:              出口参数：无
+103:              备注：
+104:              ************************************************/
+105:              void Init_System()
+  0083    0000    NOP
+  0084    0064    CLRWDT
+106:              {
+107:              	asm("nop");
+108:              	asm("clrwdt");
+109:              	INTCON = 0;					//系统初始化
+  0085    0189    CLR	0x9
+110:              	OSCCON = 0X71;				//配置振荡为8M,开 WDT
+  0086    3071    LDIA	0x71
+  0087    0088    LD	0x8,A
+111:              	WPUB = 0xFF;
+  0088    30FF    LDIA	0xFF
+  0089    008D    LD	0xD,A
+112:              	OPTION_REG = 0xD0;		//Timer0使用内部时钟Focs/4，预分频比为1:2
+  008A    30D0    LDIA	0xD0
+  008B    0087    LD	0x7,A
+113:              	TMR0 = 0;				//赋予初始值
+  008C    0181    CLR	0x1
+114:              	INTCON = 0xE0;			//允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
+  008D    30E0    LDIA	0xE0
+  008E    0089    LD	0x9,A
+115:              	TMR0PRD = 100;
+  008F    3064    LDIA	0x64
+  0090    008F    LD	0xF,A
+116:              	
+117:              
+118:              	TRISB = 0B00111000;	
+  0091    3038    LDIA	0x38
+  0092    0086    LD	0x6,A
+119:              	PORTB = 0B00111000;
+  0093    0085    LD	0x5,A
+120:              	IOCB = 0xFF;
+  0094    30FF    LDIA	0xFF
+  0095    008E    LD	0xE,A
+121:              	
+122:              	//设置PWM周期
+123:              	PWMCK0 = 0;
+  0096    1212    CLRB	0x12,4
+124:              	PWMCK1 = 1;
+  0097    1692    SETB	0x12,5
+125:              	PWMPRD8 = 0;
+  0098    1312    CLRB	0x12,6
+126:              	PWMPRD9 = 0;
+  0099    1392    CLRB	0x12,7
+127:              	PWM_PRD = 199;
+  009A    30C7    LDIA	0xC7
+  009B    0094    LD	0x14,A
+128:              	
+129:              	//选择PWM0
+130:              	PWMS0 = 0;
+131:              	PWMS1 = 0;
+132:              	PWMS2 = 0;
+133:              	//PWM占空比
+134:              
+135:              	PWMR08 = 0;
+136:              	PWMR09 = 0;
+  009C    207D    CALL	0x7D
+137:              	PWMR = 0;
+  009D    0193    CLR	0x13
+138:              	PWMEN0 = 1;//PWM0使能
+139:              	//选择PWM1
+140:              	PWMS0 = 1;
+141:              	PWMS1 = 0;
+142:              	PWMS2 = 0;
+143:              	PWMR08 = 0;
+144:              	PWMR09 = 0;
+  009E    206F    CALL	0x6F
+145:              	PWMR = 0;
+  009F    0193    CLR	0x13
+146:              	PWMEN1 = 1;
+147:              	
+148:              	//选择PWM2
+149:              	PWMS0 = 0;
+150:              	PWMS1 = 1;
+151:              	PWMS2 = 0;
+152:              	PWMR08 = 0;
+153:              	PWMR09 = 0;
+  00A0    2076    CALL	0x76
+154:              	PWMR = 0;
+  00A1    0193    CLR	0x13
+155:              	PWMEN2 = 1;
+  00A2    1510    SETB	0x10,2
+  00A3    0008    RET
+156:              }
+157:              
+158:              /***********************************************
+159:              函数名称：Timer0_Isr
+160:              函数功能：中断服务
+161:              入口参数：无
+162:              出口参数：无
+163:              备注：
+164:              ***********************************************/
+165:              void interrupt Timer0_Isr()
+166:              {
+167:              	if(T0IF)
+  00C0    1D09    SNZB	0x9,2
+  00C1    28C7    JP	0xC7
+168:              	{
+169:              	//---------------------------------------
+170:              		TMR0 += 50;		//重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+  00C2    3032    LDIA	0x32
+  00C3    0781    ADDR	0x1
+171:              	//---------------------------------------
+172:              			
+173:              		T0IF = 0;			//清中断标志位	
+  00C4    1109    CLRB	0x9,2
+174:              		timeoutFlag = 1;
+  00C5    01A3    CLR	0x23
+  00C6    0AA3    INCR	0x23
+  00C7    0848    LD	A,0x48
+  00C8    008A    LD	0xA,A
+  00C9    0E47    SWAPA	0x47
+  00CA    0083    LD	0x3,A
+  00CB    0ECE    SWAPR	0x4E
+  00CC    0E4E    SWAPA	0x4E
+  00CD    0009    RETI
+175:              	}
+176:              }
 ---- C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\lbmod.c ----------------------------------------------------------------------
 1:                // byte unsigned modulus
 2:                
 3:                unsigned char
 4:                __lbmod(unsigned char dividend, unsigned char divisor)
-  0058    00A0    LD	0x20,A
-  0059    3008    LDIA	0x8
-  005A    00A1    LD	0x21,A
-  005B    01A2    CLR	0x22
-  005C    0820    LD	A,0x20
-  005D    00CA    LD	0x4A,A
-  005E    3007    LDIA	0x7
-  005F    1003    CLRB	0x3,0
-  0060    0CCA    RRCR	0x4A
-  0061    3EFF    ADDIA	0xFF
-  0062    1003    CLRB	0x3,0
-  0063    1D03    SNZB	0x3,2
-  0064    2860    JP	0x60
-  0065    0D22    RLCA	0x22
-  0066    044A    ORA	0x4A
-  0067    00A2    LD	0x22,A
-  0068    1003    CLRB	0x3,0
-  0069    0DA0    RLCR	0x20
-  006A    0849    LD	A,0x49
-  006B    0222    SUBA	0x22
-  006C    1C03    SNZB	0x3,0
-  006D    2870    JP	0x70
-  006E    0849    LD	A,0x49
-  006F    02A2    SUBR	0x22
-  0070    0BA1    SZDECR	0x21
-  0071    285C    JP	0x5C
-  0072    0822    LD	A,0x22
-  0073    0008    RET
+  00A4    00A0    LD	0x20,A
+  00A5    3008    LDIA	0x8
+  00A6    00A1    LD	0x21,A
+  00A7    01A2    CLR	0x22
+  00A8    0820    LD	A,0x20
+  00A9    00CA    LD	0x4A,A
+  00AA    3007    LDIA	0x7
+  00AB    1003    CLRB	0x3,0
+  00AC    0CCA    RRCR	0x4A
+  00AD    3EFF    ADDIA	0xFF
+  00AE    1003    CLRB	0x3,0
+  00AF    1D03    SNZB	0x3,2
+  00B0    28AC    JP	0xAC
+  00B1    0D22    RLCA	0x22
+  00B2    044A    ORA	0x4A
+  00B3    00A2    LD	0x22,A
+  00B4    1003    CLRB	0x3,0
+  00B5    0DA0    RLCR	0x20
+  00B6    0849    LD	A,0x49
+  00B7    0222    SUBA	0x22
+  00B8    1C03    SNZB	0x3,0
+  00B9    28BC    JP	0xBC
+  00BA    0849    LD	A,0x49
+  00BB    02A2    SUBR	0x22
+  00BC    0BA1    SZDECR	0x21
+  00BD    28A8    JP	0xA8
+  00BE    0822    LD	A,0x22
+  00BF    0008    RET
 5:                {
 6:                	unsigned char	rem;
 7:                	unsigned char	counter;
@@ -411,27 +378,27 @@
   0006    00C7    LD	0x47,A
   0007    080A    LD	A,0xA
   0008    00C8    LD	0x48,A
-  0009    28C4    JP	0xC4
+  0009    28C0    JP	0xC0
 ---- common_function ------------------------------------------------------------------
   0013    0183    CLR	0x3
-  0014    2874    JP	0x74
-  0023    1410    SETB	0x10,0
-  0024    1412    SETB	0x12,0
-  0025    1092    CLRB	0x12,1
-  0026    1112    CLRB	0x12,2
-  0027    1011    CLRB	0x11,0
-  0028    1091    CLRB	0x11,1
-  0029    0008    RET
-  002A    1490    SETB	0x10,1
-  002B    1012    CLRB	0x12,0
-  002C    1492    SETB	0x12,1
-  002D    1112    CLRB	0x12,2
-  002E    1011    CLRB	0x11,0
-  002F    1091    CLRB	0x11,1
-  0030    0008    RET
-  0031    1012    CLRB	0x12,0
-  0032    1092    CLRB	0x12,1
-  0033    1112    CLRB	0x12,2
-  0034    1011    CLRB	0x11,0
-  0035    1091    CLRB	0x11,1
-  0036    0008    RET
+  0014    283C    JP	0x3C
+  006F    1410    SETB	0x10,0
+  0070    1412    SETB	0x12,0
+  0071    1092    CLRB	0x12,1
+  0072    1112    CLRB	0x12,2
+  0073    1011    CLRB	0x11,0
+  0074    1091    CLRB	0x11,1
+  0075    0008    RET
+  0076    1490    SETB	0x10,1
+  0077    1012    CLRB	0x12,0
+  0078    1492    SETB	0x12,1
+  0079    1112    CLRB	0x12,2
+  007A    1011    CLRB	0x11,0
+  007B    1091    CLRB	0x11,1
+  007C    0008    RET
+  007D    1012    CLRB	0x12,0
+  007E    1092    CLRB	0x12,1
+  007F    1112    CLRB	0x12,2
+  0080    1011    CLRB	0x11,0
+  0081    1091    CLRB	0x11,1
+  0082    0008    RET
