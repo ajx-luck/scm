@@ -1,0 +1,120 @@
+
+# 1 "C:\SCMCU WorkSpace\scankey.c"
+
+# 11 "C:\SCMCU WorkSpace\scankey.h"
+unsigned char key_read(unsigned char key_input);
+static unsigned char key_driver(unsigned char key_input);
+unsigned char getSimpleKeyInput(unsigned char key_input);
+
+# 3 "C:\SCMCU WorkSpace\scankey.c"
+unsigned char getSimpleKeyInput(unsigned char key_input)
+{
+unsigned char result = key_input & 0x04 == 0?0 : 1;
+return result;
+}
+
+
+static unsigned char key_driver(unsigned char key_input)
+{
+static unsigned char key_state_buffer1 = 0;
+static unsigned char key_timer_cnt1 = 0;
+unsigned char key_return = 0;
+unsigned char key;
+
+key = key_input;
+
+switch(key_state_buffer1)
+{
+case 0:
+if(key == 0)
+{
+key_state_buffer1 = 1;
+}
+
+
+break;
+
+case 1:
+if(key == 0)
+{
+key_timer_cnt1 = 0;
+key_state_buffer1 = 2;
+
+
+
+}
+else
+{
+key_state_buffer1 = 0;
+}
+
+
+break;
+
+case 2:
+if(key == 1)
+{
+key_return = 1;
+key_state_buffer1 = 0;
+}
+else if(++key_timer_cnt1 >= 100)
+{
+key_return = 3;
+key_state_buffer1 = 3;
+
+}
+break;
+
+case 3:
+if(key == 1)
+{
+key_state_buffer1 = 0;
+}
+
+break;
+}
+return key_return;
+}
+
+# 77
+unsigned char key_read(unsigned char key_input)
+{
+static unsigned char key_state_buffer2 = 0;
+static unsigned char key_timer_cnt2 = 0;
+unsigned char key_return = 0;
+unsigned char key;
+
+key = key_driver(key_input);
+
+switch(key_state_buffer2)
+{
+case 0:
+if(key == 1)
+{
+key_timer_cnt2 = 0;
+key_state_buffer2 = 1;
+}
+else
+key_return = key;
+break;
+
+case 1:
+if(key == 1)
+{
+key_return = 2;
+key_state_buffer2 = 0;
+}
+else if(++key_timer_cnt2 >= 50)
+{
+
+
+
+key_return = 1;
+key_state_buffer2 = 0;
+
+}
+break;
+}
+
+return key_return;
+}

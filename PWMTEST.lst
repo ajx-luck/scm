@@ -1,0 +1,374 @@
+---- C:\SCMCU WorkSpace\pwmtest.c ----------------------------------------------------------------------
+1:                #include "delay.h"
+2:                #define K1ON 1
+3:                #define K1OFF 0
+4:                #define KEY_NULL 0xFF
+5:                #define DEBOUNCE 10//延时消抖时间
+6:                
+7:                void Init_System();
+8:                
+9:                void delay_ms(unsigned int ms);
+10:               
+11:               unsigned char scanKey(unsigned char key);
+12:               
+13:               unsigned int nub = 0;
+14:               unsigned char K1 = K1OFF;
+15:               unsigned char tempK1 = KEY_NULL;
+16:               
+17:               void main()
+18:               {
+19:               	Init_System();
+  0066    2012    CALL	0x12
+20:               	
+21:               	while(1)
+22:               	{
+23:               		if(K1 == K1ON)
+  0067    0B77    SZDECA	0x77
+  0068    286D    JP	0x6D
+24:               		{
+25:               			PORTB = 0B00000000;
+  0069    1283    CLRB	0x3,5
+  006A    1303    CLRB	0x3,6
+  006B    0186    CLR	0x6
+26:               
+27:               		}
+  006C    2871    JP	0x71
+28:               		else
+29:               		{
+30:               			PORTB = 0B00010000;
+  006D    3010    LDIA	0x10
+  006E    1283    CLRB	0x3,5
+  006F    1303    CLRB	0x3,6
+  0070    0086    LD	0x6,A
+31:               		}
+32:               		delay_ms(1000);
+33:               		nub++;
+  0071    30E8    LDIA	0xE8
+  0072    00F4    LD	0x74,A
+  0073    3003    LDIA	0x3
+  0074    00F5    LD	0x75,A
+  0075    2077    CALL	0x77
+  0076    2867    JP	0x67
+34:               		/**
+35:               		PORTB = 0B00010000;
+36:               		delay_ms(1000);
+37:               		PORTB = 0B00100000;
+38:               		delay_ms(1000);
+39:               		PORTB = 0B00110000;
+40:               		delay_ms(1000);
+41:               		PORTB = 0B00000000;
+42:               		delay_ms(1000);
+43:               		*/
+44:               
+45:               	}
+46:               }
+47:               
+48:               
+49:               /***********************************************
+50:               函数名称：scanKey
+51:               函数功能：扫描按键
+52:               入口参数：无
+53:               出口参数：无
+54:               备注：
+55:               ************************************************/
+56:               unsigned char scanKey(unsigned char keyCur)
+  004B    00F1    LD	0x71,A
+57:               {
+58:               	unsigned char keyret = KEY_NULL;
+  004C    30FF    LDIA	0xFF
+  004D    00F0    LD	0x70,A
+59:               	static unsigned char keyCountDown = 0;
+60:               	static unsigned char keyLast = 0xFF;
+61:               	
+62:               	if(keyCur == 0)
+  004E    0871    LD	A,0x71
+  004F    1D03    SNZB	0x3,2
+  0050    2859    JP	0x59
+63:               	{
+64:               		
+65:               		if(keyLast == keyCur || KEY_NULL == keyLast)
+  0051    0878    LD	A,0x78
+  0052    0671    XORA	0x71
+  0053    1903    SZB	0x3,2
+  0054    2857    JP	0x57
+  0055    0F78    SZINCA	0x78
+  0056    2862    JP	0x62
+66:               		{
+67:               			keyCountDown++;
+  0057    0AF6    INCR	0x76
+  0058    2862    JP	0x62
+68:               		
+69:               		}
+70:               	}
+71:               	else
+72:               	{
+73:               		if(keyCountDown >= DEBOUNCE)
+  0059    300A    LDIA	0xA
+  005A    0276    SUBA	0x76
+  005B    1C03    SNZB	0x3,0
+  005C    285F    JP	0x5F
+74:               		{
+75:               			keyret = keyLast;
+  005D    0878    LD	A,0x78
+  005E    2860    JP	0x60
+76:               		}
+77:               		else
+78:               		{
+79:               			keyret = KEY_NULL;
+  005F    30FF    LDIA	0xFF
+  0060    00F0    LD	0x70,A
+80:               		}
+81:               		keyCountDown = 0;
+  0061    01F6    CLR	0x76
+82:               	}
+83:               	keyLast = keyCur;
+  0062    0871    LD	A,0x71
+  0063    00F8    LD	0x78,A
+84:               	return keyret;
+  0064    0870    LD	A,0x70
+  0065    0008    RET
+85:               }
+86:               
+87:               /***********************************************
+88:               函数名称：Init_System
+89:               函数功能：系统初始化
+90:               入口参数：无
+91:               出口参数：无
+92:               备注：
+93:               ************************************************/
+94:               void Init_System()
+  0012    0000    NOP
+  0013    0064    CLRWDT
+95:               {
+96:               	asm("nop");
+97:               	asm("clrwdt");
+98:               	INTCON = 0;					//系统初始化
+  0014    018B    CLR	0xB
+99:               	OSCCON = 0X70;				//配置振荡为8M,开 WDT
+  0015    3070    LDIA	0x70
+  0016    1683    SETB	0x3,5
+  0017    1303    CLRB	0x3,6
+  0018    008F    LD	0xF,A
+100:              	WPUB = 0xFF;
+  0019    30FF    LDIA	0xFF
+  001A    0095    LD	0x15,A
+101:              	OPTION_REG = 0xD0;		//Timer0使用内部时钟Focs/4，预分频比为1:2
+  001B    30D0    LDIA	0xD0
+  001C    0081    LD	0x1,A
+102:              	TMR0 = 131;				//赋予初始值
+  001D    3083    LDIA	0x83
+  001E    1283    CLRB	0x3,5
+  001F    0081    LD	0x1,A
+103:              	INTCON = 0xA0;			//允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
+  0020    30A0    LDIA	0xA0
+  0021    008B    LD	0xB,A
+104:              	TRISA = 0x00;
+  0022    1683    SETB	0x3,5
+  0023    0185    CLR	0x5
+105:              	TRISB = 0B00101111;
+  0024    302F    LDIA	0x2F
+  0025    0086    LD	0x6,A
+106:              	TRISC = 0x00;
+  0026    0187    CLR	0x7
+107:              	PORTA = 0x00;	
+  0027    1283    CLRB	0x3,5
+  0028    0185    CLR	0x5
+108:              	PORTB = 0B00010000;
+  0029    3010    LDIA	0x10
+  002A    0086    LD	0x6,A
+109:              	PORTC = 0x00;
+  002B    0187    CLR	0x7
+110:              	IOCB = 0xFF;
+  002C    30FF    LDIA	0xFF
+  002D    1683    SETB	0x3,5
+  002E    0096    LD	0x16,A
+  002F    0008    RET
+111:              }
+112:              
+113:              /***********************************************
+114:              函数名称：Timer0_Isr
+115:              函数功能：中断服务
+116:              入口参数：无
+117:              出口参数：无
+118:              备注：
+119:              ***********************************************/
+120:              void interrupt Timer0_Isr()
+121:              {
+122:              	if(T0IF)
+  0030    1D0B    SNZB	0xB,2
+  0031    2844    JP	0x44
+123:              	{
+124:              	//---------------------------------------
+125:              		TMR0 += 131;		//重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+  0032    3083    LDIA	0x83
+  0033    1283    CLRB	0x3,5
+  0034    1303    CLRB	0x3,6
+  0035    0781    ADDR	0x1
+126:              	//---------------------------------------
+127:              			
+128:              		T0IF = 0;			//清中断标志位
+  0036    110B    CLRB	0xB,2
+129:              		/**按下按键PB2就熄灭
+130:              		if((0B00000100 & PORTB) == 0)
+131:              		{
+132:              			PORTB = 0B00000000;
+133:              		}
+134:              		else
+135:              		{
+136:              			PORTB = 0B00010000;
+137:              		}
+138:              		*/
+139:              		tempK1 = scanKey(0B00000100 & PORTB);//扫描按键
+  0037    0806    LD	A,0x6
+  0038    3904    ANDIA	0x4
+  0039    204B    CALL	0x4B
+  003A    00F9    LD	0x79,A
+140:              		if(tempK1 != KEY_NULL)
+  003B    0A79    INCA	0x79
+  003C    1903    SZB	0x3,2
+  003D    2844    JP	0x44
+141:              		{
+142:              			if(K1 == K1ON)
+  003E    0B77    SZDECA	0x77
+  003F    2842    JP	0x42
+143:              			{
+144:              				K1 = K1OFF;
+  0040    01F7    CLR	0x77
+145:              			}
+  0041    2844    JP	0x44
+146:              			else
+147:              			{
+148:              				K1 = K1ON;
+  0042    01F7    CLR	0x77
+  0043    0AF7    INCR	0x77
+  0044    0873    LD	A,0x73
+  0045    008A    LD	0xA,A
+  0046    0E72    SWAPA	0x72
+  0047    0083    LD	0x3,A
+  0048    0EFE    SWAPR	0x7E
+  0049    0E7E    SWAPA	0x7E
+  004A    0009    RETI
+149:              			}
+150:              		}
+151:              		
+152:              	}
+153:              }
+154:              
+---- C:\SCMCU WorkSpace\delay.c ----------------------------------------------------------------------
+1:                #include "delay.h"
+2:                
+3:                void delay_1us(void) //1us延时函数，不能连续调用，
+4:                {
+5:                asm("nop");
+6:                asm("nop");
+7:                }
+8:                void delay_3us(void) //3us延时函数,,可重复调用不影响精度
+  008E    0000    NOP
+  008F    0000    NOP
+  0090    0000    NOP
+  0091    0000    NOP
+  0092    0000    NOP
+  0093    0000    NOP
+  0094    0008    RET
+9:                {
+10:               asm("nop");
+11:               asm("nop");
+12:               asm("nop");
+13:               asm("nop");
+14:               asm("nop");
+15:               asm("nop");
+16:               
+17:               }
+18:               void delay_10us(void) //10us延时函数,可重复调用不影响精度
+19:               {
+20:               delay_3us();
+  009D    208E    CALL	0x8E
+21:               delay_3us();
+  009E    208E    CALL	0x8E
+22:               delay_3us();
+  009F    288E    JP	0x8E
+23:               }
+24:               void delay_50us(void) //48us延时函数,可重复调用不影响精度
+25:               {
+26:               delay_10us();
+  0095    209D    CALL	0x9D
+27:               delay_10us();
+  0096    209D    CALL	0x9D
+28:               delay_10us();
+  0097    209D    CALL	0x9D
+29:               delay_10us();
+  0098    209D    CALL	0x9D
+30:               delay_10us();
+  0099    289D    JP	0x9D
+31:               }
+32:               void delay_100us(void)//exactly 98us延时函数,可重复调用不影响精度
+33:               {
+34:               delay_50us();
+  009A    2095    CALL	0x95
+35:               delay_50us();
+  009B    2095    CALL	0x95
+36:               delay_3us();
+  009C    288E    JP	0x8E
+37:               }
+38:               //ms级延时
+39:               void delay_1ms(void)
+40:               {
+41:               delay_100us();
+  0084    209A    CALL	0x9A
+42:               delay_100us();
+  0085    209A    CALL	0x9A
+43:               delay_100us();
+  0086    209A    CALL	0x9A
+44:               delay_100us();
+  0087    209A    CALL	0x9A
+45:               delay_100us();
+  0088    209A    CALL	0x9A
+46:               delay_100us();
+  0089    209A    CALL	0x9A
+47:               delay_100us();
+  008A    209A    CALL	0x9A
+48:               delay_100us();
+  008B    209A    CALL	0x9A
+49:               delay_100us();
+  008C    209A    CALL	0x9A
+50:               delay_100us();
+  008D    289A    JP	0x9A
+51:               }
+52:               void delay_ms(unsigned int ms)
+53:               {
+54:               while(ms--)
+  0077    3001    LDIA	0x1
+  0078    02F4    SUBR	0x74
+  0079    3000    LDIA	0x0
+  007A    1C03    SNZB	0x3,0
+  007B    03F5    DECR	0x75
+  007C    02F5    SUBR	0x75
+  007D    0F74    SZINCA	0x74
+  007E    2882    JP	0x82
+  007F    0A75    INCA	0x75
+  0080    1903    SZB	0x3,2
+  0081    0008    RET
+55:               delay_1ms();//8MHZ主频时，25分钟误差小于1秒
+  0082    2084    CALL	0x84
+  0083    2877    JP	0x77
+56:               }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    30FF    LDIA	0xFF
+  000C    00F8    LD	0x78,A
+  000D    00F9    LD	0x79,A
+  000E    01F6    CLR	0x76
+  000F    01F7    CLR	0x77
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00FE    LD	0x7E,A
+  0005    0E03    SWAPA	0x3
+  0006    00F2    LD	0x72,A
+  0007    080A    LD	A,0xA
+  0008    00F3    LD	0x73,A
+  0009    2830    JP	0x30
+---- common_function ------------------------------------------------------------------
+  0010    0183    CLR	0x3
+  0011    2866    JP	0x66
