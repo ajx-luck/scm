@@ -1,6 +1,5 @@
 #include<sc.h>
 #define getbit(x,y)   ((x) >> (y)&1)
-
 unsigned char nub = 0;
 unsigned char pb5h = 0,pb5max = 0;
 unsigned char pb4h = 0,pb4max = 0;
@@ -21,19 +20,15 @@ void main(void)
 		//检测输入
 		if(timeoutFlag)
 		{
-			nub++;
+			nub++;	
 			checkPB(&pb3h,&pb3max,3);
 			checkPB(&pb4h,&pb4max,4);
 			checkPB(&pb5h,&pb5max,5);	
-			timeoutFlag = 0;
-			if(nub >=201)
-			{
-				nub = 0;
-			}
-			
-			if(nub % 100 ==0)
+			timeoutFlag = 0;						
+			if(nub == 100)
 			{
 				setPWM();
+				nub = 0;
 			}		
 		}
 		
@@ -51,7 +46,7 @@ void setPWM()
 
 	PWMR08 = 0;
 	PWMR09 = 0;
-	PWMR = pb5max * 2;
+	PWMR = pb5max;
 	PWMEN0 = 1;
 	
 	//选择PWM1
@@ -62,7 +57,7 @@ void setPWM()
 
 	PWMR08 = 0;
 	PWMR09 = 0;
-	PWMR = pb4max * 2;
+	PWMR = pb4max;
 	PWMEN1 = 1;
 	
 	//选择PWM2
@@ -73,9 +68,8 @@ void setPWM()
 
 	PWMR08 = 0;
 	PWMR09 = 0;
-	PWMR = pb3max * 2;
+	PWMR = pb3max;
 	PWMEN2 = 1;
-	
 }
 
 void checkPB(unsigned char* pbCount,unsigned char* pbCountmax,unsigned char bitNub)
@@ -120,11 +114,11 @@ void Init_System()
 	IOCB = 0xFF;
 	
 	//设置PWM周期
-	PWMCK0 = 0;
-	PWMCK1 = 1;
+	PWMCK0 = 1;
+	PWMCK1 = 0;
 	PWMPRD8 = 0;
 	PWMPRD9 = 0;
-	PWM_PRD = 199;
+	PWM_PRD = 99;
 	
 	//选择PWM0
 	PWMS0 = 0;
@@ -167,7 +161,7 @@ void interrupt Timer0_Isr()
 	if(T0IF)
 	{
 	//---------------------------------------
-		TMR0 += 50;		//重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+	//	TMR0 += 50;		//重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
 	//---------------------------------------
 			
 		T0IF = 0;			//清中断标志位	

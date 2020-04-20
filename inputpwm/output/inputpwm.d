@@ -1,1 +1,1 @@
- inputpwm.d  inputpwm.p1:  C:/SCMCU\ WorkSpace/inputpwm/inputpwm.c
+ inputpwm.d  inputpwm.p1:  E:/project/scm/inputpwm/inputpwm.c

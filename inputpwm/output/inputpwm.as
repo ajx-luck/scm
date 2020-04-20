@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8P1152A
-opt include "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc8p1152a.cgen.inc"
+opt include "E:\cms\SCMCU_IDE_V2.00.07\data\include\sc8p1152a.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -31,13 +31,13 @@ skipnz	macro
 	btfsc	3,2
 	endm
 	FNCALL	_main,_Init_System
-	FNCALL	_main,___lbmod
 	FNCALL	_main,_checkPB
 	FNCALL	_main,_setPWM
 	FNROOT	_main
 	FNCALL	intlevel1,_Timer0_Isr
 	global	intlevel1
 	FNROOT	intlevel1
+	global	_timeoutFlag
 	global	_nub
 	global	_pb3max
 	global	_pb3h
@@ -45,7 +45,6 @@ skipnz	macro
 	global	_pb4h
 	global	_pb5max
 	global	_pb5h
-	global	_timeoutFlag
 	global	_PWM_PRD
 psect	text0,local,class=CODE,delta=2,merge=1
 global __ptext0
@@ -109,6 +108,9 @@ __initialization:
 psect	bssCOMMON,class=COMMON,space=1,noexec
 global __pbssCOMMON
 __pbssCOMMON:
+_timeoutFlag:
+       ds      1
+
 _nub:
        ds      1
 
@@ -130,12 +132,6 @@ _pb5max:
 _pb5h:
        ds      1
 
-psect	bssBANK0,class=BANK0,space=1,noexec
-global __pbssBANK0
-__pbssBANK0:
-_timeoutFlag:
-       ds      1
-
 	file	"inputpwm.as"
 	line	#
 ; Clear objects allocated to COMMON
@@ -147,9 +143,7 @@ psect cinit,class=CODE,delta=2,merge=1
 	clrf	((__pbssCOMMON)+4)&07Fh
 	clrf	((__pbssCOMMON)+5)&07Fh
 	clrf	((__pbssCOMMON)+6)&07Fh
-; Clear objects allocated to BANK0
-psect cinit,class=CODE,delta=2,merge=1
-	clrf	((__pbssBANK0)+0)&07Fh
+	clrf	((__pbssCOMMON)+7)&07Fh
 psect cinit,class=CODE,delta=2,merge=1
 global end_of_initialization,__end_of__initialization
 
@@ -171,32 +165,20 @@ __pcstackCOMMON:
 ??_Init_System:	; 1 bytes @ 0x2
 ?_checkPB:	; 1 bytes @ 0x2
 ??_setPWM:	; 1 bytes @ 0x2
-?___lbmod:	; 1 bytes @ 0x2
 	global	checkPB@pbCountmax
 checkPB@pbCountmax:	; 1 bytes @ 0x2
-	global	___lbmod@divisor
-___lbmod@divisor:	; 1 bytes @ 0x2
 	ds	1
-??___lbmod:	; 1 bytes @ 0x3
 	global	checkPB@bitNub
 checkPB@bitNub:	; 1 bytes @ 0x3
 	ds	1
-??_checkPB:	; 1 bytes @ 0x4
-	ds	1
-??_main:	; 1 bytes @ 0x5
+??_main:	; 1 bytes @ 0x4
 psect	cstackBANK0,class=BANK0,space=1,noexec
 global __pcstackBANK0
 __pcstackBANK0:
+??_checkPB:	; 1 bytes @ 0x0
+	ds	1
 	global	checkPB@pbCount
-checkPB@pbCount:	; 1 bytes @ 0x0
-	global	___lbmod@dividend
-___lbmod@dividend:	; 1 bytes @ 0x0
-	ds	1
-	global	___lbmod@counter
-___lbmod@counter:	; 1 bytes @ 0x1
-	ds	1
-	global	___lbmod@rem
-___lbmod@rem:	; 1 bytes @ 0x2
+checkPB@pbCount:	; 1 bytes @ 0x1
 	ds	1
 ;!
 ;!Data Sizes:
@@ -209,8 +191,8 @@ ___lbmod@rem:	; 1 bytes @ 0x2
 ;!
 ;!Auto Spaces:
 ;!    Space          Size  Autos    Used
-;!    COMMON           14      5      12
-;!    BANK0            32      3       4
+;!    COMMON           14      4      12
+;!    BANK0            32      2       2
 
 ;!
 ;!Pointer List with Targets:
@@ -234,7 +216,7 @@ ___lbmod@rem:	; 1 bytes @ 0x2
 ;!
 ;!Critical Paths under _main in BANK0
 ;!
-;!    _main->___lbmod
+;!    _main->_checkPB
 ;!
 ;!Critical Paths under _Timer0_Isr in BANK0
 ;!
@@ -250,21 +232,16 @@ ___lbmod@rem:	; 1 bytes @ 0x2
 ;! ---------------------------------------------------------------------------------
 ;! (Depth) Function   	        Calls       Base Space   Used Autos Params    Refs
 ;! ---------------------------------------------------------------------------------
-;! (0) _main                                                 0     0      0     994
+;! (0) _main                                                 0     0      0     697
 ;!                        _Init_System
-;!                            ___lbmod
 ;!                            _checkPB
 ;!                             _setPWM
 ;! ---------------------------------------------------------------------------------
 ;! (1) _setPWM                                               0     0      0       0
 ;! ---------------------------------------------------------------------------------
 ;! (1) _checkPB                                              4     2      2     697
-;!                                              2 COMMON     3     1      2
-;!                                              0 BANK0      1     1      0
-;! ---------------------------------------------------------------------------------
-;! (1) ___lbmod                                              5     4      1     297
-;!                                              2 COMMON     2     1      1
-;!                                              0 BANK0      3     3      0
+;!                                              2 COMMON     2     0      2
+;!                                              0 BANK0      2     2      0
 ;! ---------------------------------------------------------------------------------
 ;! (1) _Init_System                                          0     0      0       0
 ;! ---------------------------------------------------------------------------------
@@ -282,7 +259,6 @@ ___lbmod@rem:	; 1 bytes @ 0x2
 ;!
 ;! _main (ROOT)
 ;!   _Init_System
-;!   ___lbmod
 ;!   _checkPB
 ;!   _setPWM
 ;!
@@ -295,20 +271,20 @@ ___lbmod@rem:	; 1 bytes @ 0x2
 ;!BITCOMMON            E      0       0       0        0.0%
 ;!NULL                 0      0       0       0        0.0%
 ;!CODE                 0      0       0       0        0.0%
-;!COMMON               E      5       C       1       85.7%
+;!COMMON               E      4       C       1       85.7%
 ;!BITSFR0              0      0       0       1        0.0%
 ;!SFR0                 0      0       0       1        0.0%
 ;!STACK                0      0       0       2        0.0%
-;!BANK0               20      3       4       3       12.5%
-;!ABS                  0      0      10       4        0.0%
+;!BANK0               20      2       2       3        6.3%
+;!ABS                  0      0       E       4        0.0%
 ;!BITBANK0            20      0       0       5        0.0%
-;!DATA                 0      0      10       6        0.0%
+;!DATA                 0      0       E       6        0.0%
 
 	global	_main
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 15 in file "C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
+;;		line 14 in file "E:\project\scm\inputpwm\inputpwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -330,7 +306,6 @@ ___lbmod@rem:	; 1 bytes @ 0x2
 ;; Hardware stack levels required when called:    2
 ;; This function calls:
 ;;		_Init_System
-;;		___lbmod
 ;;		_checkPB
 ;;		_setPWM
 ;; This function is called by:
@@ -338,13 +313,13 @@ ___lbmod@rem:	; 1 bytes @ 0x2
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
-	line	15
+	file	"E:\project\scm\inputpwm\inputpwm.c"
+	line	14
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
-	line	15
+	file	"E:\project\scm\inputpwm\inputpwm.c"
+	line	14
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
@@ -352,109 +327,92 @@ _main:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _main: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	18
+	line	17
 	
-l1037:	
-;inputpwm.c: 18: Init_System();
+l874:	
+;inputpwm.c: 17: Init_System();
 	fcall	_Init_System
-	line	22
+	line	21
 	
-l1039:	
-;inputpwm.c: 20: {
-;inputpwm.c: 22: if(timeoutFlag)
+l876:	
+;inputpwm.c: 19: {
+;inputpwm.c: 21: if(timeoutFlag)
 	movf	((_timeoutFlag)),w
 	btfsc	status,2
-	goto	u271
-	goto	u270
-u271:
-	goto	l1039
-u270:
+	goto	u151
+	goto	u150
+u151:
+	goto	l876
+u150:
+	line	23
+	
+l878:	
+;inputpwm.c: 22: {
+;inputpwm.c: 23: nub++;
+	incf	(_nub),f
 	line	24
 	
-l1041:	
-;inputpwm.c: 23: {
-;inputpwm.c: 24: nub++;
-	incf	(_nub),f
-	line	25
-	
-l1043:	
-;inputpwm.c: 25: checkPB(&pb3h,&pb3max,3);
+l880:	
+;inputpwm.c: 24: checkPB(&pb3h,&pb3max,3);
 	movlw	(low(_pb3max|((0x00)<<8)))&0ffh
 	movwf	(checkPB@pbCountmax)
 	movlw	low(03h)
 	movwf	(checkPB@bitNub)
 	movlw	(low(_pb3h|((0x00)<<8)))&0ffh
 	fcall	_checkPB
-	line	26
+	line	25
 	
-l1045:	
-;inputpwm.c: 26: checkPB(&pb4h,&pb4max,4);
+l882:	
+;inputpwm.c: 25: checkPB(&pb4h,&pb4max,4);
 	movlw	(low(_pb4max|((0x00)<<8)))&0ffh
 	movwf	(checkPB@pbCountmax)
 	movlw	low(04h)
 	movwf	(checkPB@bitNub)
 	movlw	(low(_pb4h|((0x00)<<8)))&0ffh
 	fcall	_checkPB
-	line	27
+	line	26
 	
-l1047:	
-;inputpwm.c: 27: checkPB(&pb5h,&pb5max,5);
+l884:	
+;inputpwm.c: 26: checkPB(&pb5h,&pb5max,5);
 	movlw	(low(_pb5max|((0x00)<<8)))&0ffh
 	movwf	(checkPB@pbCountmax)
 	movlw	low(05h)
 	movwf	(checkPB@bitNub)
 	movlw	(low(_pb5h|((0x00)<<8)))&0ffh
 	fcall	_checkPB
+	line	27
+	
+l886:	
+;inputpwm.c: 27: timeoutFlag = 0;
+	clrf	(_timeoutFlag)
 	line	28
 	
-l1049:	
-;inputpwm.c: 28: timeoutFlag = 0;
-	clrf	(_timeoutFlag)
-	line	29
+l888:	
+;inputpwm.c: 28: if(nub == 100)
+		movlw	100
+	xorwf	((_nub)),w
+	btfss	status,2
+	goto	u161
+	goto	u160
+u161:
+	goto	l876
+u160:
+	line	30
 	
-l1051:	
-;inputpwm.c: 29: if(nub >=201)
-	movlw	low(0C9h)
-	subwf	(_nub),w
-	skipc
-	goto	u281
-	goto	u280
-u281:
-	goto	l1055
-u280:
+l890:	
+;inputpwm.c: 29: {
+;inputpwm.c: 30: setPWM();
+	fcall	_setPWM
 	line	31
 	
-l1053:	
-;inputpwm.c: 30: {
+l892:	
 ;inputpwm.c: 31: nub = 0;
 	clrf	(_nub)
-	line	34
-	
-l1055:	
-;inputpwm.c: 32: }
-;inputpwm.c: 34: if(nub % 100 ==0)
-	movlw	low(064h)
-	movwf	(___lbmod@divisor)
-	movf	(_nub),w
-	fcall	___lbmod
-	xorlw	0
-	skipz
-	goto	u291
-	goto	u290
-u291:
-	goto	l1039
-u290:
-	line	36
-	
-l1057:	
-;inputpwm.c: 35: {
-;inputpwm.c: 36: setPWM();
-	fcall	_setPWM
-	goto	l1039
+	goto	l876
 	global	start
 	ljmp	start
 	opt stack 0
-	line	42
+	line	37
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -462,7 +420,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _setPWM *****************
 ;; Defined at:
-;;		line 44 in file "C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
+;;		line 39 in file "E:\project\scm\inputpwm\inputpwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -470,7 +428,7 @@ GLOBAL	__end_of_main
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg, status,2, status,0
+;;		wreg
 ;; Tracked objects:
 ;;		On entry : 0/0
 ;;		On exit  : 0/0
@@ -490,121 +448,118 @@ GLOBAL	__end_of_main
 ;; This function uses a non-reentrant model
 ;;
 psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	44
+	line	39
 global __ptext1
 __ptext1:	;psect for function _setPWM
 psect	text1
-	file	"C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
-	line	44
+	file	"E:\project\scm\inputpwm\inputpwm.c"
+	line	39
 	global	__size_of_setPWM
 	__size_of_setPWM	equ	__end_of_setPWM-_setPWM
 	
 _setPWM:	
 ;incstack = 0
 	opt	stack 6
-; Regs used in _setPWM: [wreg+status,2+status,0]
-	line	47
+; Regs used in _setPWM: [wreg]
+	line	42
 	
-l931:	
-;inputpwm.c: 47: PWMS0 = 0;
+l780:	
+;inputpwm.c: 42: PWMS0 = 0;
 	bcf	(144/8),(144)&7	;volatile
-	line	48
-;inputpwm.c: 48: PWMS1 = 0;
+	line	43
+;inputpwm.c: 43: PWMS1 = 0;
 	bcf	(145/8),(145)&7	;volatile
-	line	49
-;inputpwm.c: 49: PWMS2 = 0;
+	line	44
+;inputpwm.c: 44: PWMS2 = 0;
 	bcf	(146/8),(146)&7	;volatile
-	line	52
-;inputpwm.c: 52: PWMR08 = 0;
+	line	47
+;inputpwm.c: 47: PWMR08 = 0;
 	bcf	(136/8),(136)&7	;volatile
-	line	53
-;inputpwm.c: 53: PWMR09 = 0;
+	line	48
+;inputpwm.c: 48: PWMR09 = 0;
 	bcf	(137/8),(137)&7	;volatile
+	line	49
+	
+l782:	
+;inputpwm.c: 49: PWMR = pb5max;
+	movf	(_pb5max),w
+	movwf	(19)	;volatile
+	line	50
+	
+l784:	
+;inputpwm.c: 50: PWMEN0 = 1;
+	bsf	(128/8),(128)&7	;volatile
+	line	53
+	
+l786:	
+;inputpwm.c: 53: PWMS0 = 1;
+	bsf	(144/8),(144)&7	;volatile
 	line	54
 	
-l933:	
-;inputpwm.c: 54: PWMR = pb5max * 2;
-	clrc
-	rlf	(_pb5max),w
-	movwf	(19)	;volatile
+l788:	
+;inputpwm.c: 54: PWMS1 = 0;
+	bcf	(145/8),(145)&7	;volatile
 	line	55
 	
-l935:	
-;inputpwm.c: 55: PWMEN0 = 1;
-	bsf	(128/8),(128)&7	;volatile
+l790:	
+;inputpwm.c: 55: PWMS2 = 0;
+	bcf	(146/8),(146)&7	;volatile
 	line	58
 	
-l937:	
-;inputpwm.c: 58: PWMS0 = 1;
-	bsf	(144/8),(144)&7	;volatile
+l792:	
+;inputpwm.c: 58: PWMR08 = 0;
+	bcf	(136/8),(136)&7	;volatile
 	line	59
 	
-l939:	
-;inputpwm.c: 59: PWMS1 = 0;
-	bcf	(145/8),(145)&7	;volatile
+l794:	
+;inputpwm.c: 59: PWMR09 = 0;
+	bcf	(137/8),(137)&7	;volatile
 	line	60
+;inputpwm.c: 60: PWMR = pb4max;
+	movf	(_pb4max),w
+	movwf	(19)	;volatile
+	line	61
 	
-l941:	
-;inputpwm.c: 60: PWMS2 = 0;
-	bcf	(146/8),(146)&7	;volatile
-	line	63
-	
-l943:	
-;inputpwm.c: 63: PWMR08 = 0;
-	bcf	(136/8),(136)&7	;volatile
+l796:	
+;inputpwm.c: 61: PWMEN1 = 1;
+	bsf	(129/8),(129)&7	;volatile
 	line	64
 	
-l945:	
-;inputpwm.c: 64: PWMR09 = 0;
-	bcf	(137/8),(137)&7	;volatile
+l798:	
+;inputpwm.c: 64: PWMS0 = 0;
+	bcf	(144/8),(144)&7	;volatile
 	line	65
-;inputpwm.c: 65: PWMR = pb4max * 2;
-	clrc
-	rlf	(_pb4max),w
-	movwf	(19)	;volatile
+	
+l800:	
+;inputpwm.c: 65: PWMS1 = 1;
+	bsf	(145/8),(145)&7	;volatile
 	line	66
 	
-l947:	
-;inputpwm.c: 66: PWMEN1 = 1;
-	bsf	(129/8),(129)&7	;volatile
+l802:	
+;inputpwm.c: 66: PWMS2 = 0;
+	bcf	(146/8),(146)&7	;volatile
 	line	69
 	
-l949:	
-;inputpwm.c: 69: PWMS0 = 0;
-	bcf	(144/8),(144)&7	;volatile
+l804:	
+;inputpwm.c: 69: PWMR08 = 0;
+	bcf	(136/8),(136)&7	;volatile
 	line	70
 	
-l951:	
-;inputpwm.c: 70: PWMS1 = 1;
-	bsf	(145/8),(145)&7	;volatile
-	line	71
-	
-l953:	
-;inputpwm.c: 71: PWMS2 = 0;
-	bcf	(146/8),(146)&7	;volatile
-	line	74
-	
-l955:	
-;inputpwm.c: 74: PWMR08 = 0;
-	bcf	(136/8),(136)&7	;volatile
-	line	75
-	
-l957:	
-;inputpwm.c: 75: PWMR09 = 0;
+l806:	
+;inputpwm.c: 70: PWMR09 = 0;
 	bcf	(137/8),(137)&7	;volatile
-	line	76
-;inputpwm.c: 76: PWMR = pb3max * 2;
-	clrc
-	rlf	(_pb3max),w
+	line	71
+;inputpwm.c: 71: PWMR = pb3max;
+	movf	(_pb3max),w
 	movwf	(19)	;volatile
-	line	77
+	line	72
 	
-l959:	
-;inputpwm.c: 77: PWMEN2 = 1;
+l808:	
+;inputpwm.c: 72: PWMEN2 = 1;
 	bsf	(130/8),(130)&7	;volatile
-	line	79
+	line	73
 	
-l314:	
+l313:	
 	return
 	opt stack 0
 GLOBAL	__end_of_setPWM
@@ -614,7 +569,7 @@ GLOBAL	__end_of_setPWM
 
 ;; *************** function _checkPB *****************
 ;; Defined at:
-;;		line 81 in file "C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
+;;		line 75 in file "E:\project\scm\inputpwm\inputpwm.c"
 ;; Parameters:    Size  Location     Type
 ;;  pbCount         1    wreg     PTR unsigned char 
 ;;		 -> pb5h(1), pb4h(1), pb3h(1), 
@@ -622,7 +577,7 @@ GLOBAL	__end_of_setPWM
 ;;		 -> pb5max(1), pb4max(1), pb3max(1), 
 ;;  bitNub          1    3[COMMON] unsigned char 
 ;; Auto vars:     Size  Location     Type
-;;  pbCount         1    0[BANK0 ] PTR unsigned char 
+;;  pbCount         1    1[BANK0 ] PTR unsigned char 
 ;;		 -> pb5h(1), pb4h(1), pb3h(1), 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
@@ -635,8 +590,8 @@ GLOBAL	__end_of_setPWM
 ;; Data sizes:     COMMON   BANK0
 ;;      Params:         2       0
 ;;      Locals:         0       1
-;;      Temps:          1       0
-;;      Totals:         3       1
+;;      Temps:          0       1
+;;      Totals:         2       2
 ;;Total ram usage:        4 bytes
 ;; Hardware stack levels used:    1
 ;; Hardware stack levels required when called:    1
@@ -647,12 +602,12 @@ GLOBAL	__end_of_setPWM
 ;; This function uses a non-reentrant model
 ;;
 psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	line	81
+	line	75
 global __ptext2
 __ptext2:	;psect for function _checkPB
 psect	text2
-	file	"C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
-	line	81
+	file	"E:\project\scm\inputpwm\inputpwm.c"
+	line	75
 	global	__size_of_checkPB
 	__size_of_checkPB	equ	__end_of_checkPB-_checkPB
 	
@@ -662,32 +617,32 @@ _checkPB:
 ; Regs used in _checkPB: [wreg-fsr0h+status,2+status,0]
 ;checkPB@pbCount stored from wreg
 	movwf	(checkPB@pbCount)
-	line	83
+	line	77
 	
-l1009:	
-;inputpwm.c: 83: if(((PORTB) >> (bitNub)&1) == 1)
+l864:	
+;inputpwm.c: 77: if(((PORTB) >> (bitNub)&1) == 1)
 	movf	(5),w	;volatile
 	movwf	(??_checkPB+0)+0
 	incf	(checkPB@bitNub),w
-	goto	u214
-u215:
+	goto	u124
+u125:
 	clrc
 	rrf	(??_checkPB+0)+0,f
-u214:
+u124:
 	addlw	-1
 	skipz
-	goto	u215
+	goto	u125
 	btfss	0+(??_checkPB+0)+0,(0)&7
-	goto	u221
-	goto	u220
-u221:
-	goto	l1013
-u220:
-	line	85
+	goto	u131
+	goto	u130
+u131:
+	goto	l868
+u130:
+	line	79
 	
-l1011:	
-;inputpwm.c: 84: {
-;inputpwm.c: 85: *pbCount = *pbCount + 1;
+l866:	
+;inputpwm.c: 78: {
+;inputpwm.c: 79: *pbCount = *pbCount + 1;
 	movf	(checkPB@pbCount),w
 	movwf	fsr0
 	movf	indf,w
@@ -697,29 +652,29 @@ l1011:
 	movwf	fsr0
 	movf	(??_checkPB+0)+0,w
 	movwf	indf
-	line	86
-;inputpwm.c: 86: }
-	goto	l320
-	line	89
+	line	80
+;inputpwm.c: 80: }
+	goto	l319
+	line	83
 	
-l1013:	
-;inputpwm.c: 87: else
-;inputpwm.c: 88: {
-;inputpwm.c: 89: if(*pbCount !=0)
+l868:	
+;inputpwm.c: 81: else
+;inputpwm.c: 82: {
+;inputpwm.c: 83: if(*pbCount !=0)
 	movf	(checkPB@pbCount),w
 	movwf	fsr0
 	movf	(indf),w
 	btfsc	status,2
-	goto	u231
-	goto	u230
-u231:
-	goto	l1017
-u230:
-	line	91
+	goto	u141
+	goto	u140
+u141:
+	goto	l872
+u140:
+	line	85
 	
-l1015:	
-;inputpwm.c: 90: {
-;inputpwm.c: 91: *pbCountmax = *pbCount;
+l870:	
+;inputpwm.c: 84: {
+;inputpwm.c: 85: *pbCountmax = *pbCount;
 	movf	(checkPB@pbCount),w
 	movwf	fsr0
 	movf	indf,w
@@ -728,145 +683,27 @@ l1015:
 	movwf	fsr0
 	movf	(??_checkPB+0)+0,w
 	movwf	indf
-	line	93
+	line	87
 	
-l1017:	
-;inputpwm.c: 92: }
-;inputpwm.c: 93: *pbCount = 0;
+l872:	
+;inputpwm.c: 86: }
+;inputpwm.c: 87: *pbCount = 0;
 	movf	(checkPB@pbCount),w
 	movwf	fsr0
 	clrf	indf
-	line	95
+	line	89
 	
-l320:	
+l319:	
 	return
 	opt stack 0
 GLOBAL	__end_of_checkPB
 	__end_of_checkPB:
 	signat	_checkPB,12409
-	global	___lbmod
-
-;; *************** function ___lbmod *****************
-;; Defined at:
-;;		line 4 in file "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\lbmod.c"
-;; Parameters:    Size  Location     Type
-;;  dividend        1    wreg     unsigned char 
-;;  divisor         1    2[COMMON] unsigned char 
-;; Auto vars:     Size  Location     Type
-;;  dividend        1    0[BANK0 ] unsigned char 
-;;  rem             1    2[BANK0 ] unsigned char 
-;;  counter         1    1[BANK0 ] unsigned char 
-;; Return value:  Size  Location     Type
-;;                  1    wreg      unsigned char 
-;; Registers used:
-;;		wreg, status,2, status,0
-;; Tracked objects:
-;;		On entry : 0/0
-;;		On exit  : 0/0
-;;		Unchanged: 0/0
-;; Data sizes:     COMMON   BANK0
-;;      Params:         1       0
-;;      Locals:         0       3
-;;      Temps:          1       0
-;;      Totals:         2       3
-;;Total ram usage:        5 bytes
-;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
-;; This function calls:
-;;		Nothing
-;; This function is called by:
-;;		_main
-;; This function uses a non-reentrant model
-;;
-psect	text3,local,class=CODE,delta=2,merge=1,group=1
-	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\lbmod.c"
-	line	4
-global __ptext3
-__ptext3:	;psect for function ___lbmod
-psect	text3
-	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\lbmod.c"
-	line	4
-	global	__size_of___lbmod
-	__size_of___lbmod	equ	__end_of___lbmod-___lbmod
-	
-___lbmod:	
-;incstack = 0
-	opt	stack 6
-; Regs used in ___lbmod: [wreg+status,2+status,0]
-;___lbmod@dividend stored from wreg
-	movwf	(___lbmod@dividend)
-	line	9
-	
-l1019:	
-	movlw	low(08h)
-	movwf	(___lbmod@counter)
-	line	10
-	
-l1021:	
-	clrf	(___lbmod@rem)
-	line	12
-	
-l1023:	
-	movf	(___lbmod@dividend),w
-	movwf	(??___lbmod+0)+0
-	movlw	07h
-u245:
-	clrc
-	rrf	(??___lbmod+0)+0,f
-	addlw	-1
-	skipz
-	goto	u245
-	clrc
-	rlf	(___lbmod@rem),w
-	iorwf	0+(??___lbmod+0)+0,w
-	movwf	(___lbmod@rem)
-	line	13
-	
-l1025:	
-	clrc
-	rlf	(___lbmod@dividend),f
-	line	14
-	
-l1027:	
-	movf	(___lbmod@divisor),w
-	subwf	(___lbmod@rem),w
-	skipc
-	goto	u251
-	goto	u250
-u251:
-	goto	l1031
-u250:
-	line	15
-	
-l1029:	
-	movf	(___lbmod@divisor),w
-	subwf	(___lbmod@rem),f
-	line	16
-	
-l1031:	
-	decfsz	(___lbmod@counter),f
-	goto	u261
-	goto	u260
-u261:
-	goto	l1023
-u260:
-	line	17
-	
-l1033:	
-	movf	(___lbmod@rem),w
-	line	18
-	
-l604:	
-	return
-	opt stack 0
-GLOBAL	__end_of___lbmod
-	__end_of___lbmod:
-	signat	___lbmod,8313
 	global	_Init_System
 
 ;; *************** function _Init_System *****************
 ;; Defined at:
-;;		line 105 in file "C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
+;;		line 99 in file "E:\project\scm\inputpwm\inputpwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -893,14 +730,13 @@ GLOBAL	__end_of___lbmod
 ;;		_main
 ;; This function uses a non-reentrant model
 ;;
-psect	text4,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
-	line	105
-global __ptext4
-__ptext4:	;psect for function _Init_System
-psect	text4
-	file	"C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
-	line	105
+psect	text3,local,class=CODE,delta=2,merge=1,group=0
+	line	99
+global __ptext3
+__ptext3:	;psect for function _Init_System
+psect	text3
+	file	"E:\project\scm\inputpwm\inputpwm.c"
+	line	99
 	global	__size_of_Init_System
 	__size_of_Init_System	equ	__end_of_Init_System-_Init_System
 	
@@ -908,195 +744,195 @@ _Init_System:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _Init_System: [wreg+status,2]
-	line	107
+	line	101
 	
-l859:	
-# 107 "C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
+l708:	
+# 101 "E:\project\scm\inputpwm\inputpwm.c"
 nop ;# 
-	line	108
-# 108 "C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
+	line	102
+# 102 "E:\project\scm\inputpwm\inputpwm.c"
 clrwdt ;# 
-psect	text4
-	line	109
+psect	text3
+	line	103
 	
-l861:	
-;inputpwm.c: 109: INTCON = 0;
+l710:	
+;inputpwm.c: 103: INTCON = 0;
 	clrf	(9)	;volatile
-	line	110
+	line	104
 	
-l863:	
-;inputpwm.c: 110: OSCCON = 0X71;
+l712:	
+;inputpwm.c: 104: OSCCON = 0X71;
 	movlw	low(071h)
 	movwf	(8)	;volatile
-	line	111
+	line	105
 	
-l865:	
-;inputpwm.c: 111: WPUB = 0xFF;
+l714:	
+;inputpwm.c: 105: WPUB = 0xFF;
 	movlw	low(0FFh)
 	movwf	(13)	;volatile
-	line	112
+	line	106
 	
-l867:	
-;inputpwm.c: 112: OPTION_REG = 0xD0;
+l716:	
+;inputpwm.c: 106: OPTION_REG = 0xD0;
 	movlw	low(0D0h)
 	movwf	(7)	;volatile
-	line	113
+	line	107
 	
-l869:	
-;inputpwm.c: 113: TMR0 = 0;
+l718:	
+;inputpwm.c: 107: TMR0 = 0;
 	clrf	(1)	;volatile
-	line	114
-;inputpwm.c: 114: INTCON = 0xE0;
+	line	108
+;inputpwm.c: 108: INTCON = 0xE0;
 	movlw	low(0E0h)
 	movwf	(9)	;volatile
-	line	115
-;inputpwm.c: 115: TMR0PRD = 100;
+	line	109
+;inputpwm.c: 109: TMR0PRD = 100;
 	movlw	low(064h)
 	movwf	(15)	;volatile
-	line	118
-;inputpwm.c: 118: TRISB = 0B00111000;
+	line	112
+;inputpwm.c: 112: TRISB = 0B00111000;
 	movlw	low(038h)
 	movwf	(6)	;volatile
-	line	119
-;inputpwm.c: 119: PORTB = 0B00111000;
+	line	113
+;inputpwm.c: 113: PORTB = 0B00111000;
 	movlw	low(038h)
 	movwf	(5)	;volatile
-	line	120
-;inputpwm.c: 120: IOCB = 0xFF;
+	line	114
+;inputpwm.c: 114: IOCB = 0xFF;
 	movlw	low(0FFh)
 	movwf	(14)	;volatile
-	line	123
+	line	117
 	
-l871:	
-;inputpwm.c: 123: PWMCK0 = 0;
-	bcf	(148/8),(148)&7	;volatile
+l720:	
+;inputpwm.c: 117: PWMCK0 = 1;
+	bsf	(148/8),(148)&7	;volatile
+	line	118
+	
+l722:	
+;inputpwm.c: 118: PWMCK1 = 0;
+	bcf	(149/8),(149)&7	;volatile
+	line	119
+	
+l724:	
+;inputpwm.c: 119: PWMPRD8 = 0;
+	bcf	(150/8),(150)&7	;volatile
+	line	120
+	
+l726:	
+;inputpwm.c: 120: PWMPRD9 = 0;
+	bcf	(151/8),(151)&7	;volatile
+	line	121
+;inputpwm.c: 121: PWM_PRD = 99;
+	movlw	low(063h)
+	movwf	(20)	;volatile
 	line	124
 	
-l873:	
-;inputpwm.c: 124: PWMCK1 = 1;
-	bsf	(149/8),(149)&7	;volatile
+l728:	
+;inputpwm.c: 124: PWMS0 = 0;
+	bcf	(144/8),(144)&7	;volatile
 	line	125
 	
-l875:	
-;inputpwm.c: 125: PWMPRD8 = 0;
-	bcf	(150/8),(150)&7	;volatile
+l730:	
+;inputpwm.c: 125: PWMS1 = 0;
+	bcf	(145/8),(145)&7	;volatile
 	line	126
 	
-l877:	
-;inputpwm.c: 126: PWMPRD9 = 0;
-	bcf	(151/8),(151)&7	;volatile
-	line	127
-;inputpwm.c: 127: PWM_PRD = 199;
-	movlw	low(0C7h)
-	movwf	(20)	;volatile
+l732:	
+;inputpwm.c: 126: PWMS2 = 0;
+	bcf	(146/8),(146)&7	;volatile
+	line	129
+	
+l734:	
+;inputpwm.c: 129: PWMR08 = 0;
+	bcf	(136/8),(136)&7	;volatile
 	line	130
 	
-l879:	
-;inputpwm.c: 130: PWMS0 = 0;
-	bcf	(144/8),(144)&7	;volatile
+l736:	
+;inputpwm.c: 130: PWMR09 = 0;
+	bcf	(137/8),(137)&7	;volatile
 	line	131
 	
-l881:	
-;inputpwm.c: 131: PWMS1 = 0;
-	bcf	(145/8),(145)&7	;volatile
+l738:	
+;inputpwm.c: 131: PWMR = 0;
+	clrf	(19)	;volatile
 	line	132
 	
-l883:	
-;inputpwm.c: 132: PWMS2 = 0;
-	bcf	(146/8),(146)&7	;volatile
+l740:	
+;inputpwm.c: 132: PWMEN0 = 1;
+	bsf	(128/8),(128)&7	;volatile
+	line	134
+	
+l742:	
+;inputpwm.c: 134: PWMS0 = 1;
+	bsf	(144/8),(144)&7	;volatile
 	line	135
 	
-l885:	
-;inputpwm.c: 135: PWMR08 = 0;
-	bcf	(136/8),(136)&7	;volatile
+l744:	
+;inputpwm.c: 135: PWMS1 = 0;
+	bcf	(145/8),(145)&7	;volatile
 	line	136
 	
-l887:	
-;inputpwm.c: 136: PWMR09 = 0;
-	bcf	(137/8),(137)&7	;volatile
+l746:	
+;inputpwm.c: 136: PWMS2 = 0;
+	bcf	(146/8),(146)&7	;volatile
 	line	137
 	
-l889:	
-;inputpwm.c: 137: PWMR = 0;
-	clrf	(19)	;volatile
+l748:	
+;inputpwm.c: 137: PWMR08 = 0;
+	bcf	(136/8),(136)&7	;volatile
 	line	138
 	
-l891:	
-;inputpwm.c: 138: PWMEN0 = 1;
-	bsf	(128/8),(128)&7	;volatile
+l750:	
+;inputpwm.c: 138: PWMR09 = 0;
+	bcf	(137/8),(137)&7	;volatile
+	line	139
+	
+l752:	
+;inputpwm.c: 139: PWMR = 0;
+	clrf	(19)	;volatile
 	line	140
 	
-l893:	
-;inputpwm.c: 140: PWMS0 = 1;
-	bsf	(144/8),(144)&7	;volatile
-	line	141
-	
-l895:	
-;inputpwm.c: 141: PWMS1 = 0;
-	bcf	(145/8),(145)&7	;volatile
-	line	142
-	
-l897:	
-;inputpwm.c: 142: PWMS2 = 0;
-	bcf	(146/8),(146)&7	;volatile
+l754:	
+;inputpwm.c: 140: PWMEN1 = 1;
+	bsf	(129/8),(129)&7	;volatile
 	line	143
 	
-l899:	
-;inputpwm.c: 143: PWMR08 = 0;
-	bcf	(136/8),(136)&7	;volatile
+l756:	
+;inputpwm.c: 143: PWMS0 = 0;
+	bcf	(144/8),(144)&7	;volatile
 	line	144
 	
-l901:	
-;inputpwm.c: 144: PWMR09 = 0;
-	bcf	(137/8),(137)&7	;volatile
+l758:	
+;inputpwm.c: 144: PWMS1 = 1;
+	bsf	(145/8),(145)&7	;volatile
 	line	145
 	
-l903:	
-;inputpwm.c: 145: PWMR = 0;
-	clrf	(19)	;volatile
+l760:	
+;inputpwm.c: 145: PWMS2 = 0;
+	bcf	(146/8),(146)&7	;volatile
 	line	146
 	
-l905:	
-;inputpwm.c: 146: PWMEN1 = 1;
-	bsf	(129/8),(129)&7	;volatile
+l762:	
+;inputpwm.c: 146: PWMR08 = 0;
+	bcf	(136/8),(136)&7	;volatile
+	line	147
+	
+l764:	
+;inputpwm.c: 147: PWMR09 = 0;
+	bcf	(137/8),(137)&7	;volatile
+	line	148
+	
+l766:	
+;inputpwm.c: 148: PWMR = 0;
+	clrf	(19)	;volatile
 	line	149
 	
-l907:	
-;inputpwm.c: 149: PWMS0 = 0;
-	bcf	(144/8),(144)&7	;volatile
+l768:	
+;inputpwm.c: 149: PWMEN2 = 1;
+	bsf	(130/8),(130)&7	;volatile
 	line	150
 	
-l909:	
-;inputpwm.c: 150: PWMS1 = 1;
-	bsf	(145/8),(145)&7	;volatile
-	line	151
-	
-l911:	
-;inputpwm.c: 151: PWMS2 = 0;
-	bcf	(146/8),(146)&7	;volatile
-	line	152
-	
-l913:	
-;inputpwm.c: 152: PWMR08 = 0;
-	bcf	(136/8),(136)&7	;volatile
-	line	153
-	
-l915:	
-;inputpwm.c: 153: PWMR09 = 0;
-	bcf	(137/8),(137)&7	;volatile
-	line	154
-	
-l917:	
-;inputpwm.c: 154: PWMR = 0;
-	clrf	(19)	;volatile
-	line	155
-	
-l919:	
-;inputpwm.c: 155: PWMEN2 = 1;
-	bsf	(130/8),(130)&7	;volatile
-	line	156
-	
-l323:	
+l322:	
 	return
 	opt stack 0
 GLOBAL	__end_of_Init_System
@@ -1106,7 +942,7 @@ GLOBAL	__end_of_Init_System
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 165 in file "C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
+;;		line 159 in file "E:\project\scm\inputpwm\inputpwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1114,7 +950,7 @@ GLOBAL	__end_of_Init_System
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg, status,2, status,0
+;;		None
 ;; Tracked objects:
 ;;		On entry : 0/0
 ;;		On exit  : 0/0
@@ -1132,20 +968,20 @@ GLOBAL	__end_of_Init_System
 ;;		Interrupt level 1
 ;; This function uses a non-reentrant model
 ;;
-psect	text5,local,class=CODE,delta=2,merge=1,group=0
-	line	165
-global __ptext5
-__ptext5:	;psect for function _Timer0_Isr
-psect	text5
-	file	"C:\SCMCU WorkSpace\inputpwm\inputpwm.c"
-	line	165
+psect	text4,local,class=CODE,delta=2,merge=1,group=0
+	line	159
+global __ptext4
+__ptext4:	;psect for function _Timer0_Isr
+psect	text4
+	file	"E:\project\scm\inputpwm\inputpwm.c"
+	line	159
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
 	
 _Timer0_Isr:	
 ;incstack = 0
 	opt	stack 6
-; Regs used in _Timer0_Isr: [wreg+status,2+status,0]
+; Regs used in _Timer0_Isr: []
 psect	intentry,class=CODE,delta=2
 global __pintentry
 __pintentry:
@@ -1159,38 +995,30 @@ interrupt_function:
 	movf	pclath,w
 	movwf	(??_Timer0_Isr+1)
 	ljmp	_Timer0_Isr
-psect	text5
+psect	text4
+	line	161
+	
+i1l830:	
+;inputpwm.c: 161: if(T0IF)
+	btfss	(74/8),(74)&7	;volatile
+	goto	u6_21
+	goto	u6_20
+u6_21:
+	goto	i1l328
+u6_20:
 	line	167
 	
-i1l1001:	
-;inputpwm.c: 167: if(T0IF)
-	btfss	(74/8),(74)&7	;volatile
-	goto	u20_21
-	goto	u20_20
-u20_21:
-	goto	i1l329
-u20_20:
-	line	170
-	
-i1l1003:	
-;inputpwm.c: 168: {
-;inputpwm.c: 170: TMR0 += 50;
-	movlw	low(032h)
-	addwf	(1),f	;volatile
-	line	173
-	
-i1l1005:	
-;inputpwm.c: 173: T0IF = 0;
+i1l832:	
+;inputpwm.c: 162: {
+;inputpwm.c: 167: T0IF = 0;
 	bcf	(74/8),(74)&7	;volatile
-	line	174
-	
-i1l1007:	
-;inputpwm.c: 174: timeoutFlag = 1;
+	line	168
+;inputpwm.c: 168: timeoutFlag = 1;
 	clrf	(_timeoutFlag)
 	incf	(_timeoutFlag),f
-	line	176
+	line	170
 	
-i1l329:	
+i1l328:	
 	movf	(??_Timer0_Isr+1),w
 	movwf	pclath
 	swapf	(??_Timer0_Isr+0)^0FFFFFF80h,w
