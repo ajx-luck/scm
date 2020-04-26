@@ -1,0 +1,578 @@
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE LED
+OBJECT MODULE PLACED IN .\Objects\led.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE led.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Listings\led.lst) TABS(2)
+                    - OBJECT(.\Objects\led.obj)
+
+line level    source
+
+   1          /**
+   2            *
+   3            *
+   4            *右Led灯旋转
+   5            */
+   6          #include <CMS/CMS8S5880.H>
+   7          
+   8          
+   9          //***********define constant*********//
+  10          
+  11          #define   MAIN_CLOCK_FREQ   16000000uL    //unit:Hz
+  12          #define   TM0_OF_us     1000      //timer0 overflow times unit:us
+  13          #define   divider       4
+  14          #define   TM_value      (65535-(TM0_OF_us*(MAIN_CLOCK_FREQ/(4*1000000))))
+  15          
+  16          #define G1 P2_5
+  17          #define B1 P2_4
+  18          #define R1 P2_3
+  19          #define G2 P2_2
+  20          #define B2 P1_7
+  21          #define R2 P1_6
+  22          #define G3 P1_5
+  23          #define B3 P1_4
+  24          #define R3 P1_3
+  25          
+  26          #define SCL P0_5
+  27          #define SDA P0_4
+  28          
+  29          #define MAX_TIME (29127)
+  30          #define MIN_TIME (0)
+  31          #define SPEEDS (80)         
+  32          
+  33          #define speed 60
+  34          
+  35          //*******************variable*********************//
+  36          
+  37          static unsigned char vlee=0;
+  38          unsigned int times = 0;
+  39          
+  40          volatile unsigned int temp = 0X00;
+  41          
+  42          unsigned int km = 0;
+  43          static unsigned int num=0;
+  44          static unsigned char startFlag = 0;
+  45          
+  46          /*-------这样定义OK 之后,你在程序中就可以使用,比如Flg_RFSleep=0;-----*/
+  47          union
+  48            {
+  49              unsigned char Flg;
+  50              struct
+  51                {unsigned char          Flg_key:1;
+  52                              unsigned char          Flg_RxChanle:1;
+  53                               unsigned char         Flg_RxTimeCoutEn:1;
+  54                                unsigned char        Flg_DcIn:1;
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 2   
+
+  55                                unsigned char        Flg_RFSleep:1;
+  56                                unsigned char        Flg_Wor:1;
+  57                                 unsigned char       Flg_Pre:1;
+  58                                 unsigned char       Flg_Sync:1;
+  59                }sflg;
+  60            }uFlg;
+  61            
+  62            
+  63          /*--------------------------------------------------------------------*/
+  64          
+  65          //*******************initial*********************//
+  66          
+  67          void Timer0_init();               //
+  68          void INT_init();                //interrupt initial
+  69          void Timer0_INT();                //toggle watch IO
+  70            
+  71          void GPIO_Init(void)
+  72          {
+  73   1        P2TRIS |= 0X3C;    /*output*/
+  74   1        P2UP = 0x3C;
+  75   1        P2RD = 0x00;
+  76   1        
+  77   1        P1TRIS |= 0XF8;    /*output*/
+  78   1        P1UP  = 0XF8;    /* */
+  79   1        P1RD  = 0X00;    /*output speed up to 2mhz */
+  80   1        
+  81   1        P2TRIS &= 0XBF;
+  82   1        P2UP |= 0X40;    /*???????*/
+  83   1        P2RD &= 0XBF;    /*PD6  KEY ????  */
+  84   1        
+  85   1        P0TRIS |= 0X10;  //右边灯P05设为输入
+  86   1        P0UP  = 0X30;
+  87   1        P0RD  = 0X00;     /*PB5    */
+  88   1        P05CFG = 0;
+  89   1        
+  90   1        R1 = R2 = R3 = G1 = G2 = G3 = B1 = B2 = B3 = 1;
+  91   1        
+  92   1        SCL=1;
+  93   1        SDA = 1;
+  94   1       uFlg.sflg.Flg_key = 0;
+  95   1      }
+  96          
+  97          #pragma OT(0)  
+  98          void delay_us(unsigned int a)
+  99          {
+ 100   1               //16M 1.02us
+ 101   1               while(a--);
+ 102   1      }
+ 103          
+ 104          #pragma OT(0) 
+ 105          unsigned char delay_ms(unsigned int ms) //16MHZ
+ 106          { 
+ 107   1         
+ 108   1        unsigned int ti;
+ 109   1         while(ms--) 
+ 110   1          { 
+ 111   2            clrwdt();
+ 112   2            for(ti=0;ti<947;ti++){}  //
+ 113   2              if(startFlag == 0)
+ 114   2            {
+ 115   3              
+ 116   3                return 1;
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 3   
+
+ 117   3            }
+ 118   2           
+ 119   2          } 
+ 120   1          return 0;
+ 121   1      }
+ 122          
+ 123          #pragma OT(0)
+ 124          void Delay(unsigned int nCount)
+ 125          {
+ 126   1        for(; nCount != 0; nCount--);
+ 127   1      } 
+ 128          /*------------------------------------------------------------------*/
+ 129          void KEY_Scan(void)
+ 130          {
+ 131   1        if(P2_6 == 0)
+ 132   1        {
+ 133   2        
+ 134   2          num++;
+ 135   2          if((P2_6 == 0) &&(num >= 300))   //3s
+ 136   2          {       
+ 137   3                     
+ 138   3                num = 0; 
+ 139   3                uFlg.sflg.Flg_key = 1; 
+ 140   3               // SCL = ~SCL; 
+ 141   3      
+ 142   3          }
+ 143   2          else
+ 144   2          {
+ 145   3            num = 0;
+ 146   3          }
+ 147   2          
+ 148   2        }
+ 149   1        else
+ 150   1        {
+ 151   2           num = 0;
+ 152   2        }
+ 153   1      }
+ 154          
+ 155          /*       ????      */
+ 156          void disp(void)
+ 157          {
+ 158   1         //闪灯中
+ 159   1        uFlg.sflg.Flg_key = 1;
+ 160   1        
+ 161   1         R3 = R2 = G1 = 0;
+ 162   1                          if(delay_ms(speed)){ return; } 
+ 163   1         R1 = R2 = 1;G1 = G2 = R3= 0;         if(delay_ms(speed)){ return; } 
+ 164   1         R1 = R2 = R3 = 1;  G1 = G2 = G3 = 0; if(delay_ms(speed)){ return; } 
+ 165   1         G1 = 1; G2 = B1 = G3 = 0;            if(delay_ms(speed)){ return; } 
+ 166   1         G1 = G2 = 1; B1 = B2 = G3 = 0 ;      if(delay_ms(speed)){ return; } 
+ 167   1         G1 = G2 = G3 = 1; B1 = B2 = B3 = 0;  if(delay_ms(speed)){ return; } 
+ 168   1         B1 = 1; R1 = B2 = B3 = 0;            if(delay_ms(speed)){ return; } 
+ 169   1         B1 = B2 = 1; R1 = R2 = B3 = 0;       if(delay_ms(speed)){ return; } 
+ 170   1         B1 = B2 = B3 = 1; R1 = B2 = R3 = 0;  
+ 171   1        if(delay_ms(speed))
+ 172   1          { 
+ 173   2            R1 = B2 = R3 = 1;
+ 174   2            return; 
+ 175   2          }  
+ 176   1        uFlg.sflg.Flg_key == 0;
+*** WARNING C275 IN LINE 176 OF led.c: expression with possibly no effect
+ 177   1      }
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 4   
+
+ 178          /*----------------------R??----------------------------------------------*/
+ 179          void LED_LOOP_R(unsigned int on, unsigned int off)    //LED????
+ 180          {
+ 181   1       
+ 182   1        R3 = R2 = R1 = 0; 
+ 183   1        Delay(on); 
+ 184   1        R3 = R2 = R1 = 1; 
+ 185   1        Delay(off); 
+ 186   1      }
+ 187          /*-------------LED????------------------------------------*/
+ 188          void LED_BREATH_R(void)
+ 189          {
+ 190   1          /*??*/
+ 191   1        times = MAX_TIME;
+ 192   1        while(1)
+ 193   1        {
+ 194   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 195   2          times -= SPEEDS;
+ 196   2          LED_LOOP_R(MAX_TIME-times,times);
+ 197   2          if(times < SPEEDS)
+ 198   2            break;
+ 199   2        }
+ 200   1         /*??*/
+ 201   1        times = MAX_TIME;
+ 202   1        while(1)
+ 203   1        {
+ 204   2           if(uFlg.sflg.Flg_key== 1) {  break;  }
+ 205   2          times -= SPEEDS;
+ 206   2          LED_LOOP_R(times,MAX_TIME-times);
+ 207   2          if(times < SPEEDS)
+ 208   2            break;
+ 209   2        }
+ 210   1        
+ 211   1      }
+ 212          /*------------------------------------------------------------*/
+ 213          
+ 214          /*----------------------G??----------------------------------------------*/
+ 215          void LED_LOOP_G(unsigned int on, unsigned int off)    //LED????
+ 216          {
+ 217   1       
+ 218   1        G3 = G2 = G1 = 0; 
+ 219   1        Delay(on); 
+ 220   1        G3 = G2 = G1 = 1; 
+ 221   1        Delay(off); 
+ 222   1      }
+ 223          /*-------------LED????------------------------------------*/
+ 224          void LED_BREATH_G(void)
+ 225          {
+ 226   1          /*??*/
+ 227   1        times = MAX_TIME;
+ 228   1        while(1)
+ 229   1        {
+ 230   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 231   2          times -= SPEEDS;
+ 232   2          LED_LOOP_G(MAX_TIME-times,times);
+ 233   2          if(times < SPEEDS)
+ 234   2            break;
+ 235   2        }
+ 236   1        
+ 237   1         /*??*/
+ 238   1        times = MAX_TIME;
+ 239   1        while(1)
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 5   
+
+ 240   1        {
+ 241   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 242   2          times -= SPEEDS;
+ 243   2          LED_LOOP_G(times,MAX_TIME-times);
+ 244   2          if(times < SPEEDS)
+ 245   2            break;
+ 246   2        }
+ 247   1        
+ 248   1      }
+ 249          /*------------------------------------------------------------*/
+ 250          /*----------------------B??----------------------------------------------*/
+ 251          void LED_LOOP_B(unsigned int on, unsigned int off)    //LED????
+ 252          {
+ 253   1       
+ 254   1        B3 = B2 = B1 = 0; 
+ 255   1        Delay(on); 
+ 256   1        B3 = B2 = B1 = 1; 
+ 257   1        Delay(off); 
+ 258   1      }
+ 259          /*-------------LED????------------------------------------*/
+ 260          void LED_BREATH_B(void)
+ 261          {
+ 262   1          /*??*/
+ 263   1        times = MAX_TIME;
+ 264   1        while(1)
+ 265   1        {
+ 266   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 267   2          times -= SPEEDS;
+ 268   2          LED_LOOP_B(MAX_TIME-times,times);
+ 269   2          if(times < SPEEDS)
+ 270   2            break;
+ 271   2        }
+ 272   1        
+ 273   1         /*??*/
+ 274   1        times = MAX_TIME;
+ 275   1        while(1)
+ 276   1        {
+ 277   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 278   2          times -= SPEEDS;
+ 279   2          LED_LOOP_B(times,MAX_TIME-times);
+ 280   2          if(times < SPEEDS)
+ 281   2            break;
+ 282   2        }
+ 283   1        
+ 284   1      }
+ 285          /*----------------------RG??----------------------------------------------*/
+ 286          void LED_LOOP_RG(unsigned int on, unsigned int off)    //LED????
+ 287          {
+ 288   1       
+ 289   1        G3 = G2 = G1 = R3 = R2 = R1 = 0;  
+ 290   1        Delay(on); 
+ 291   1        G3 = G2 = G1 = R3 = R2 = R1 = 1;  
+ 292   1        Delay(off); 
+ 293   1      }
+ 294          /*-------------LED????------------------------------------*/
+ 295          void LED_BREATH_RG(void)
+ 296          {
+ 297   1          /*??*/
+ 298   1        times = MAX_TIME;
+ 299   1        while(1)
+ 300   1        {
+ 301   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 6   
+
+ 302   2          times -= SPEEDS;
+ 303   2          LED_LOOP_RG(MAX_TIME-times,times);
+ 304   2          if(times < SPEEDS)
+ 305   2            break;
+ 306   2        }
+ 307   1        
+ 308   1         /*??*/
+ 309   1        times = MAX_TIME;
+ 310   1        while(1)
+ 311   1        {
+ 312   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 313   2          times -= SPEEDS;
+ 314   2          LED_LOOP_RG(times,MAX_TIME-times);
+ 315   2          if(times < SPEEDS)
+ 316   2            break;
+ 317   2        }
+ 318   1        
+ 319   1      }
+ 320          /*------------------------------------------------------------*/
+ 321          /*----------------------GB??----------------------------------------------*/
+ 322          void LED_LOOP_GB(unsigned int on, unsigned int off)    //LED????
+ 323          {
+ 324   1       
+ 325   1        G3 = G2 = G1 = B3 = B2 = B1 = 0;  
+ 326   1        Delay(on); 
+ 327   1        G3 = G2 = G1 = B3 = B2 = B1 = 1;  
+ 328   1        Delay(off); 
+ 329   1      }
+ 330          /*-------------LED????------------------------------------*/
+ 331          void LED_BREATH_GB(void)
+ 332          {
+ 333   1          /*??*/
+ 334   1        times = MAX_TIME;
+ 335   1        while(1)
+ 336   1        {
+ 337   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 338   2          times -= SPEEDS;
+ 339   2          LED_LOOP_GB(MAX_TIME-times,times);
+ 340   2          if(times < SPEEDS)
+ 341   2            break;
+ 342   2        }
+ 343   1        
+ 344   1         /*??*/
+ 345   1        times = MAX_TIME;
+ 346   1        while(1)
+ 347   1        {
+ 348   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 349   2          times -= SPEEDS;
+ 350   2          LED_LOOP_GB(times,MAX_TIME-times);
+ 351   2          if(times < SPEEDS)
+ 352   2            break;
+ 353   2        }
+ 354   1        
+ 355   1      }
+ 356          /*------------------------------------------------------------*/
+ 357          /*----------------------RGB??----------------------------------------------*/
+ 358          void LED_LOOP_RGB(unsigned int on, unsigned int off)    //LED????
+ 359          {
+ 360   1       
+ 361   1        R1 = R2 = R3 = G3 = G2 = G1 = B3 = B2 = B1 = 0;  
+ 362   1        Delay(on); 
+ 363   1        R1 = R2 = R3 = G3 = G2 = G1 = B3 = B2 = B1 = 1;  
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 7   
+
+ 364   1        Delay(off); 
+ 365   1      }
+ 366          /*-------------LED????------------------------------------*/
+ 367          void LED_BREATH_RGB(void)
+ 368          {
+ 369   1          /*??*/
+ 370   1        times = MAX_TIME;
+ 371   1        while(1)
+ 372   1        {
+ 373   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 374   2          times -= SPEEDS;
+ 375   2          LED_LOOP_RGB(MAX_TIME-times,times);
+ 376   2          if(times < SPEEDS)
+ 377   2            break;
+ 378   2        }
+ 379   1        
+ 380   1         /*??*/
+ 381   1        times = MAX_TIME;
+ 382   1        while(1)
+ 383   1        {
+ 384   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 385   2          times -= SPEEDS;
+ 386   2          LED_LOOP_RGB(times,MAX_TIME-times);
+ 387   2          if(times < SPEEDS)
+ 388   2            break;
+ 389   2        }
+ 390   1        
+ 391   1      }
+ 392          /*------------------------------------------------------------*/
+ 393          /*----------------------RGB??----------------------------------------------*/
+ 394          void LED_LOOP_RB(unsigned int on, unsigned int off)    //LED????
+ 395          {
+ 396   1       
+ 397   1        R1 = R2 = R3 = B3 = B2 = B1 = 0;  
+ 398   1        Delay(on); 
+ 399   1        R1 = R2 = R3 = B3 = B2 = B1 = 1;  
+ 400   1        Delay(off); 
+ 401   1      }
+ 402          /*-------------LED????------------------------------------*/
+ 403          void LED_BREATH_RB(void)
+ 404          {
+ 405   1          /*??*/
+ 406   1        times = MAX_TIME;
+ 407   1        while(1)
+ 408   1        {
+ 409   2           if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 410   2          times -= SPEEDS;
+ 411   2          LED_LOOP_RB(MAX_TIME-times,times);
+ 412   2          if(times < SPEEDS)
+ 413   2            break;
+ 414   2        }
+ 415   1        
+ 416   1         /*??*/
+ 417   1        times = MAX_TIME;
+ 418   1        while(1)
+ 419   1        {
+ 420   2          if(uFlg.sflg.Flg_key == 1) {  break;  }
+ 421   2          times -= SPEEDS;
+ 422   2          LED_LOOP_RB(times,MAX_TIME-times);
+ 423   2          if(times < SPEEDS)
+ 424   2            break;
+ 425   2        }
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 8   
+
+ 426   1        
+ 427   1      }
+ 428          
+ 429          
+ 430          
+ 431          
+ 432          void main()
+ 433          {
+ 434   1        clrwdt();
+ 435   1        GPIO_Init();
+ 436   1        Timer0_init();                
+ 437   1        INT_init();                 
+ 438   1      
+ 439   1        
+ 440   1      //  ledStart:
+ 441   1      //    R1 = R2 = R3 = 0;G1 = G2 = G3 = B1 = B2 = B3 = 1;
+ 442   1        while(1)                  
+ 443   1        {
+ 444   2          
+ 445   2          
+ 446   2          clrwdt();
+ 447   2          
+ 448   2          if(startFlag)
+ 449   2          {
+ 450   3            disp();
+ 451   3          }
+ 452   2          
+ 453   2          
+ 454   2        }
+ 455   1        //goto ledStart;
+ 456   1        
+ 457   1      }
+ 458          
+ 459          
+ 460          /*************************************************
+ 461          function name: Timer0_init()
+ 462          function work: initial the timer0 overflow time
+ 463          input data   : the constant define the fsys and the overflow time
+ 464          output data  : null
+ 465          note     : setting the timer0 
+ 466          *************************************************/
+ 467          void Timer0_init()    
+ 468          {
+ 469   1      
+ 470   1        TMOD    |=  0x01;
+ 471   1      
+ 472   1        
+ 473   1        CKCON   |=  0x08;
+ 474   1        
+ 475   1      
+ 476   1        
+ 477   1        TH0     = TM_value/256;
+ 478   1        TL0     = TM_value;
+ 479   1        
+ 480   1        TCON    = 0x10;
+ 481   1      
+ 482   1        
+ 483   1      }
+ 484          /*************************************************
+ 485          function name: INT_init()
+ 486          function work: initial the INT function
+ 487          input data   : null
+C51 COMPILER V9.56.0.0   LED                                                               04/26/2020 17:08:39 PAGE 9   
+
+ 488          output data  : null
+ 489          note     : setting the interrupt function
+ 490          *************************************************/
+ 491          void INT_init()                 
+ 492          {
+ 493   1        IE    = 0x02;
+ 494   1        
+ 495   1      
+ 496   1        IP    = 0x00;
+ 497   1        
+ 498   1      
+ 499   1        EA    = 1;    
+ 500   1        
+ 501   1      }
+ 502          
+ 503          /*************************************************
+ 504          function name: Timer0_INT()
+ 505          function work: timer0 INT function
+ 506          input data   : null
+ 507          output data  : null
+ 508          note     : watch the P15 toggle and measure pulse is the overflow time
+ 509          *************************************************/
+ 510          void Timer0_INT() interrupt TIMER0_VECTOR
+ 511          {
+ 512   1      
+ 513   1        TH0     = TM_value/256;
+ 514   1        TL0     = TM_value;
+ 515   1        
+ 516   1        
+ 517   1        if(SCL == 1)
+ 518   1        {
+ 519   2            startFlag = 0;
+ 520   2            //停止工作
+ 521   2          //B1 = 0;
+ 522   2          //G1 = 1;
+ 523   2        }
+ 524   1        else
+ 525   1        {
+ 526   2            startFlag = 1;  
+ 527   2          //B1 = 1;
+ 528   2          //G1 = 0;
+ 529   2            
+ 530   2        }
+ 531   1        
+ 532   1      }
+ 533          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1607    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     47    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
