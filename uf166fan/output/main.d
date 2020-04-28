@@ -1,0 +1,1 @@
+ main.d  main.p1:  E:/project/scm/uf166fan/main.c E:/project/scm/uf166fan/init.h E:/project/scm/uf166fan/scankey.h

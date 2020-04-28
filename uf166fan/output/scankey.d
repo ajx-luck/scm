@@ -1,0 +1,1 @@
+ scankey.d  scankey.p1:  E:/project/scm/uf166fan/scankey.c E:/project/scm/uf166fan/scankey.h
