@@ -28,7 +28,7 @@ struct Keys{
 	//按键序列
 	char key_index;
 };
-
+//读取按键结果
 unsigned char key_read(struct Keys * keys);
 static unsigned char key_driver(struct Keys * keys);
 void sacnKeyInput(struct Keys* key);

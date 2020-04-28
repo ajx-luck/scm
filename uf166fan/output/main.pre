@@ -1,17 +1,37 @@
 
-# 1 "E:\project\scm\uf166fan\main.c"
+# 1 "C:\SCMCU WorkSpace\uf166fan\main.c"
 
-# 26 "E:\cms\SCMCU_IDE_V2.00.07\data\include\htc.h"
+# 18 "C:\SCMCU WorkSpace\uf166fan\scankey.h"
+struct Keys{
+unsigned char key_timer_cnt1;
+unsigned char key_state_buffer1;
+
+unsigned char key_timer_cnt2;
+unsigned char key_state_buffer2;
+
+char key_input;
+
+char key_addr_result;
+
+char key_index;
+};
+
+unsigned char key_read(struct Keys * keys);
+static unsigned char key_driver(struct Keys * keys);
+void sacnKeyInput(struct Keys* key);
+void resetKey(struct Keys* key);
+
+# 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
 
 extern double __fpnormalize(double);
 
 
-# 13 "E:\cms\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
+# 13 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
 #pragma intrinsic(__builtin_software_breakpoint)
 extern void __builtin_software_breakpoint(void);
 
-# 11 "E:\cms\SCMCU_IDE_V2.00.07\data\include\SC8P1713C.h"
+# 11 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\SC8P1713C.h"
 volatile unsigned char INDF @ 0x000;
 volatile unsigned char TMR0 @ 0x001;
 volatile unsigned char PCL @ 0x002;
@@ -387,7 +407,7 @@ volatile bit ANS12 @ ((unsigned)&ANSELH*8)+4;
 volatile bit ANS13 @ ((unsigned)&ANSELH*8)+5;
 
 
-# 27 "E:\cms\SCMCU_IDE_V2.00.07\data\include\sc.h"
+# 27 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc.h"
 #pragma intrinsic(__nop)
 extern void __nop(void);
 
@@ -404,32 +424,12 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 18 "E:\project\scm\uf166fan\scankey.h"
-struct Keys{
-unsigned char key_timer_cnt1;
-unsigned char key_state_buffer1;
-
-unsigned char key_timer_cnt2;
-unsigned char key_state_buffer2;
-
-char key_input;
-
-char key_addr_result;
-
-char key_index;
-};
-
-unsigned char key_read(struct Keys * keys);
-static unsigned char key_driver(struct Keys * keys);
-void sacnKeyInput(struct Keys* key);
-void resetKey(struct Keys* key);
-
-# 5 "E:\project\scm\uf166fan\init.h"
+# 5 "C:\SCMCU WorkSpace\uf166fan\init.h"
 void Init_System();
 void Init_GPIO();
 void Init_Interupt();
 
-# 17 "E:\project\scm\uf166fan\main.c"
+# 16 "C:\SCMCU WorkSpace\uf166fan\main.c"
 static unsigned char time0Flag = 0;
 static unsigned int countTime = 0;
 static unsigned int count10Ms = 0;
@@ -438,6 +438,8 @@ unsigned char currentLevel = 2;
 unsigned char FAN_STATUS = 2;
 
 unsigned int fan_check_time = 0;
+
+struct Keys key1,key2,key3;
 
 void setLedOn(int ledIndex);
 
@@ -467,12 +469,13 @@ CCPR1L = 0;
 TMR2IF = 0;
 T2CON = 0;
 
+TRISC&=~(1<<2);
+
 }
 
 
 void setFanLevel(char level)
 {
-
 unsigned int levelWidth = (PR2+1)/4;
 char tempLevel = currentLevel + level;
 if(tempLevel > 4)
@@ -485,7 +488,8 @@ if(tempLevel < 1)
 tempLevel = 1;
 }
 currentLevel = tempLevel;
-CCPR1L = tempLevel*currentLevel;
+
+CCPR1L = levelWidth*currentLevel;
 if(FAN_STATUS == 1)
 {
 setLedOn(currentLevel);
@@ -500,6 +504,8 @@ Init_PWM();
 currentLevel = 2;
 setLedOn(5);
 PORTA|=(1<<0);
+
+TRISC|=(1<<2);
 fan_check_time = 0;
 FAN_STATUS = 0;
 
@@ -509,15 +515,22 @@ FAN_STATUS = 0;
 
 void checkFan()
 {
+
 PORTA|=(1<<1);
 setFanLevel(0);
+
+TRISC&=~(1<<2);
 T2CON = 0X04;
 
-if(FAN_STATUS == 1)
+
+if(((PORTB) >> (6)&1) == 0)
 {
-closeFan();
-return;
+FAN_STATUS = 1;
+}else
+{
+FAN_STATUS = 2;
 }
+
 
 if(FAN_STATUS == 2)
 {
@@ -529,18 +542,12 @@ return;
 }
 }
 
-if(((PORTB) >> (6)&1) == 0)
-{
-FAN_STATUS = 1;
-}else
-{
-FAN_STATUS = 2;
-}
+
 
 
 }
 
-# 132
+# 138
 void setLedOn(int ledIndex)
 {
 switch(ledIndex)
@@ -565,40 +572,8 @@ break;
 }
 
 
-void main(void)
+void scanKeys()
 {
-Init_System();
-Init_GPIO();
-Init_Interupt();
-
-
-IOCB = 0x04;
-TMR0 = 155;
-TO = 0;
-
-struct Keys key1,key2,key3;
-
-key1.key_index = 5;
-
-key2.key_index = 4;
-
-key3.key_index = 3;
-resetKey(&key1);
-resetKey(&key2);
-resetKey(&key3);
-
-TRISA = 0;
-
-TRISB = 0;
-PORTB = 0;
-TRISC = 0;
-while(1)
-{
-
-if(time0Flag)
-{
-asm("clrwdt");
-time0Flag = 0;
 key1.key_addr_result = key2.key_addr_result = key3.key_addr_result = PORTB;
 sacnKeyInput(&key1);
 sacnKeyInput(&key2);
@@ -608,13 +583,22 @@ count10Ms++;
 }
 
 
-if(count10Ms == 10)
+void checkKeys()
 {
 if(key_read(&key1) != 0)
 {
 
-checkFan();
 
+if(FAN_STATUS == 1)
+{
+
+closeFan();
+}else
+{
+FAN_STATUS = 2;
+checkFan();
+}
+return;
 }
 else if(FAN_STATUS == 2)
 {
@@ -627,23 +611,61 @@ if(key_read(&key2) != 0)
 {
 
 setFanLevel(1);
+return;
 }
 
 if(key_read(&key3) != 0)
 {
 
 setFanLevel(-1);
+return;
+}
+
 }
 
 
+void main(void)
+{
+Init_System();
+Init_GPIO();
+Init_Interupt();
+Init_PWM();
+
+IOCB = 0x04;
+TMR0 = 155;
+TO = 0;
 
 
+key1.key_index = 5;
+
+key2.key_index = 4;
+
+key3.key_index = 3;
+resetKey(&key1);
+resetKey(&key2);
+resetKey(&key3);
+
+TRISA = 0;
+TRISB = 0x7E;
+TRISC = 0;
+while(1)
+{
+
+if(time0Flag)
+{
+asm("clrwdt");
+time0Flag = 0;
+scanKeys();
+}
+
+
+if(count10Ms == 10)
+{
+checkKeys();
 count10Ms = 0;
+
 checkUsbStatus();
-
 }
-
-
 
 if(countTime == 1000)
 {
@@ -653,7 +675,7 @@ countTime = 0;
 
 }
 
-# 252
+# 273
 void interrupt Timer0_Isr()
 {
 if(T0IF)

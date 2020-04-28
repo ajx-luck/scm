@@ -1,4 +1,3 @@
-#include<sc.h>
 #include "scankey.h"
 #include "init.h"
 
@@ -22,6 +21,8 @@ unsigned char currentLevel = 2;
 unsigned char FAN_STATUS = FAN_STATUS_NONE;
 //检测风扇次数
 unsigned int fan_check_time = 0;
+
+struct Keys key1,key2,key3;
 
 void setLedOn(int ledIndex);
 
@@ -50,13 +51,14 @@ void Init_PWM()
 	CCPR1L = 0;//占空比高8位，低2位设置为0，结果就是 占空比 = CCPR1L*4/4*(PR2+1)
 	TMR2IF = 0;
 	T2CON = 0;
+	//PC2设置为输出脚
+	resetbit(TRISC,2);
 	//T2CON = 0X04 //启动定时器2，溢出后启动PWM
 }
 
 //设置风扇转速
 void setFanLevel(char level)
 {
-	
 	unsigned int levelWidth =  (PR2+1)/MAX_FAN_LEVEL;
 	char tempLevel =  currentLevel + level;
 	if(tempLevel > MAX_FAN_LEVEL)
@@ -69,7 +71,8 @@ void setFanLevel(char level)
 		tempLevel = MIN_FAN_LEVEL;
 	}
 	currentLevel = tempLevel;
-	CCPR1L = tempLevel*currentLevel;
+	//设置占宽比
+	CCPR1L = levelWidth*currentLevel;
 	if(FAN_STATUS == FAN_STATUS_ON)
 	{
 		setLedOn(currentLevel);
@@ -84,6 +87,8 @@ void closeFan()
 	currentLevel = 2;
 	setLedOn(5);
 	setbit(PORTA,0);
+	//PWM输出脚设置为输入，关闭PWM
+	setbit(TRISC,2);
 	fan_check_time = 0;
 	FAN_STATUS = FAN_STATUS_OFF;
 	
@@ -92,16 +97,23 @@ void closeFan()
 
 //检测风扇是否连接
 void checkFan()
-{
+{	
+	
 	setbit(PORTA,1);
 	setFanLevel(0);
+	//PC2设置为输出脚
+	resetbit(TRISC,2);
 	T2CON = 0X04; //启动定时器2，溢出后启动PWM
-		
-	if(FAN_STATUS == FAN_STATUS_ON)
+	
+	//EN IN输出高电位，D1点亮，检测FAN DET，FAN DET为低电位则风扇正常工作，高电位则未连接
+	if(getbit(PORTB,6) == 0)
 	{
-		closeFan();
-		return;
+		FAN_STATUS = FAN_STATUS_ON;
+	}else
+	{
+		FAN_STATUS = FAN_STATUS_NONE;
 	}
+	
 	//没有检测到风扇
 	if(FAN_STATUS == FAN_STATUS_NONE)
 	{
@@ -113,14 +125,8 @@ void checkFan()
 		}
 	}
 	
-	if(getbit(PORTB,6) == 0)
-	{
-		FAN_STATUS = FAN_STATUS_ON;
-	}else
-	{
-		FAN_STATUS = FAN_STATUS_NONE;
-	}
-	//EN IN输出高电位，D1点亮，检测FAN DET，FAN DET为低电位则风扇正常工作，高电位则未连接
+	
+	
 	
 }
 
@@ -134,22 +140,76 @@ void setLedOn(int ledIndex)
 	switch(ledIndex)
 	{
 		case 1:
-		resetbit(PORTB,7); setbit(PORTC,0); resetbit(PORTC,1);
+		//PB7设置为输入脚,PC1和PC0设置为输出
+		resetbit(PORTB,7); setbit(PORTC,0); resetbit(PORTC,1); setbit(TRISB,7);resetbit(TRISC,0);resetbit(TRISC,1);
 		break;
 		case 2:
-		setbit(PORTB,7); resetbit(PORTC,0); setbit(PORTC,1);
+		setbit(PORTB,7); resetbit(PORTC,0); setbit(PORTC,1); setbit(TRISB,7);resetbit(TRISC,0);resetbit(TRISC,1);
 		break;
-		setbit(PORTB,7); resetbit(PORTC,0); setbit(PORTC,1);
 		case 3:
-		setbit(PORTB,7); resetbit(PORTC,0); resetbit(PORTC,1);
+		//PC0设置为输入脚，PB7和PC1设置为输出
+		setbit(PORTB,7); resetbit(PORTC,0); resetbit(PORTC,1); resetbit(TRISB,7);setbit(TRISC,0);resetbit(TRISC,1);
 		break;
 		case 4:
-		resetbit(PORTB,7); setbit(PORTC,0); setbit(PORTC,1);
+		resetbit(PORTB,7); setbit(PORTC,0); setbit(PORTC,1); resetbit(TRISB,7);setbit(TRISC,0);resetbit(TRISC,1);
 		break;
 		default:
-		resetbit(PORTB,7); resetbit(PORTC,0); resetbit(PORTC,1);
+		//全部设置为输入脚
+		resetbit(PORTB,7); resetbit(PORTC,0); resetbit(PORTC,1); setbit(TRISB,7);setbit(TRISC,0);setbit(TRISC,1);
 		break;
 	}
+}
+
+//扫描按键
+void scanKeys()
+{
+	key1.key_addr_result = key2.key_addr_result = key3.key_addr_result = PORTB;
+	sacnKeyInput(&key1);
+	sacnKeyInput(&key2);
+	sacnKeyInput(&key3);
+	countTime++;
+	count10Ms++;
+}
+
+//检测按键状态并处理
+void checkKeys()
+{
+	if(key_read(&key1) != key_no)
+	{
+		//检测到按键了，检测风扇是否存在
+		
+		if(FAN_STATUS == FAN_STATUS_ON)
+		{
+			//关闭风扇
+			closeFan();
+		}else
+		{
+			FAN_STATUS = FAN_STATUS_NONE;
+			checkFan();
+		}
+		return;
+	}
+	else if(FAN_STATUS == FAN_STATUS_NONE)
+	{
+		checkFan();
+	}
+	
+	
+	
+	if(key_read(&key2) != key_no)
+	{
+		//加档
+		setFanLevel(1);
+		return;
+	}
+	
+	if(key_read(&key3) != key_no)
+	{
+		//减档
+		setFanLevel(-1);
+		return;
+	}
+			
 }
 
 
@@ -158,13 +218,12 @@ void main(void)
 	Init_System();
 	Init_GPIO();
 	Init_Interupt();
-	
+	Init_PWM();
 	//设置唤醒
 	IOCB = 0x04;
 	TMR0 = 155;
 	TO = 0;
 	
-	struct Keys key1,key2,key3;
 	//K1开关
 	key1.key_index = 5;
 	//K2加档
@@ -176,9 +235,7 @@ void main(void)
 	resetKey(&key3);
 	//设置IO方向
 	TRISA = 0;
-	TRISB = 0x0E;//1-6脚输入
-	//TRISB = 0;
-	//PORTB = 0;
+	TRISB = 0x7E;//1-6脚输入
 	TRISC = 0;
 	while(1)
 	{
@@ -187,52 +244,18 @@ void main(void)
 		{
 			asm("clrwdt");
 			time0Flag = 0;
-			key1.key_addr_result = key2.key_addr_result = key3.key_addr_result = PORTB;
-			sacnKeyInput(&key1);
-			sacnKeyInput(&key2);
-			sacnKeyInput(&key3);
-			countTime++;
-			count10Ms++;
+			scanKeys();
 		}
 		
 		//10毫秒检测一次
 		if(count10Ms == 10)
 		{
-			if(key_read(&key1) != key_no)
-			{
-				//检测到按键了，检测风扇是否存在
-				checkFan();
-				
-			}
-			else if(FAN_STATUS == FAN_STATUS_NONE)
-			{
-				checkFan();
-			}
-			
-			
-			
-			if(key_read(&key2) != key_no)
-			{
-				//加档
-				setFanLevel(1);
-			}
-			
-			if(key_read(&key3) != key_no)
-			{
-				//减档
-				setFanLevel(-1);
-			}
-			
-			
-			
-			
+			checkKeys();		
 			count10Ms = 0;
-			checkUsbStatus();
-			
+			//检测USB状态
+			checkUsbStatus();	
 		}
-		
-		
-		
+			
 		if(countTime == 1000)
 		{
 			countTime = 0;
