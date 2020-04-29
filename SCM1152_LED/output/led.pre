@@ -1,17 +1,17 @@
 
-# 1 "E:\project\scm\SCM1152_LED\led.c"
+# 1 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 
-# 26 "E:\cms\SCMCU_IDE_V2.00.07\data\include\htc.h"
+# 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
 
 extern double __fpnormalize(double);
 
 
-# 13 "E:\cms\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
+# 13 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
 #pragma intrinsic(__builtin_software_breakpoint)
 extern void __builtin_software_breakpoint(void);
 
-# 10 "E:\cms\SCMCU_IDE_V2.00.07\data\include\SC8P1153.h"
+# 10 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\SC8P1153.h"
 volatile unsigned char INDF @0x0000;
 volatile unsigned char TMR0 @0x0001;
 volatile unsigned char PCL @0x0002;
@@ -185,7 +185,7 @@ volatile bit PWMS1 @ ((unsigned)&PWMCTR2*8)+1;
 volatile bit PWMS0 @ ((unsigned)&PWMCTR2*8)+0;
 
 
-# 27 "E:\cms\SCMCU_IDE_V2.00.07\data\include\sc.h"
+# 27 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc.h"
 #pragma intrinsic(__nop)
 extern void __nop(void);
 
@@ -202,7 +202,7 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 7 "E:\project\scm\SCM1152_LED\led.c"
+# 5 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 unsigned char timeoutFlag;
 
 void Init_System()
@@ -221,35 +221,71 @@ TRISB = 0;
 WPUB = 0xFF;
 PDCONB = 0;
 PORTB = 0xFF;
-IOCB = 0xFF;
+IOCB = 0x00;
 }
 
 void main(void)
 {
 Init_System();
 unsigned int count = 0;
-unsigned char index = 0;
+unsigned char FirstFlag = 1;
+unsigned char ledIndex = 4;
 while(1)
 {
 asm("clrwdt");
 if(timeoutFlag)
 {
 timeoutFlag = 0;
+if(count == 400)
+{
+count = 0;
+}
+
+if(FirstFlag)
+{
+switch(count)
+{
+case 100:
+PORTB = 0xFC;
+break;
+case 200:
+PORTB = 0xF9;
+break;
+case 300:
+PORTB = 0xF3;
+FirstFlag = 0;
+break;
+case 0:
+PORTB = 0xFE;
+break;
+}
+}else
+{
+switch(count)
+{
+case 100:
+PORTB = 0xEC;
+break;
+case 200:
+PORTB = 0xF9;
+break;
+case 300:
+PORTB = 0xF3;
+break;
+case 0:
+PORTB = 0xE6;
+break;
+}
+}
+
+
 count++;
-if(count == 500)
-{
-count =0;
-PORTB^=(1<<index++);
-if(index == 5)
-{
-index = 0;
-}
-}
+
 }
 }
 }
 
-# 60
+# 94
 void interrupt Timer0_Isr()
 {
 if(T0IF)

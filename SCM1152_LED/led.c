@@ -1,8 +1,6 @@
 #include<sc.h>
 
-#define setbit(x,y)  x|=(1<<y)
-#define resetbit(x,y)  x&=~(1<<y)
-#define reversebit(x,y)  x^=(1<<y)
+
 
 unsigned char timeoutFlag;
 
@@ -29,23 +27,59 @@ void main(void)
 {
 	Init_System();
 	unsigned int count = 0;
-	unsigned char index = 0;
+	unsigned char FirstFlag = 1;
+	unsigned char ledIndex = 4;
 	while(1)
 	{
 		asm("clrwdt");
 		if(timeoutFlag)
 		{
 			timeoutFlag = 0;
-			count++;
-			if(count == 500)
-			{
-				count =0;
-				reversebit(PORTB,index++);
-				if(index == 5)
+			if(count == 400)
 				{
-					index = 0;
+					count = 0;
+				}
+				
+			if(FirstFlag)
+			{
+				switch(count)
+				{
+					case 100:
+					PORTB = 0xFC;
+					break;
+					case 200:
+					PORTB = 0xF9;
+					break;
+					case 300:
+					PORTB = 0xF3;
+					FirstFlag = 0;
+					break;
+					case 0:
+					PORTB = 0xFE;
+					break;
+				}
+			}else
+			{
+				switch(count)
+				{
+					case 100:
+					PORTB = 0xEC;
+					break;
+					case 200:
+					PORTB = 0xF9;
+					break;
+					case 300:
+					PORTB = 0xF3;
+					break;
+					case 0:
+					PORTB = 0xE6;
+					break;
 				}
 			}
+			
+			
+			count++;
+			
 		}
 	}
 }

@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8P1152A
-opt include "E:\cms\SCMCU_IDE_V2.00.07\data\include\sc8p1152a.cgen.inc"
+opt include "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc8p1152a.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -100,13 +100,12 @@ __pcstackCOMMON:
 	ds	2
 ??_Init_System:	; 1 bytes @ 0x2
 ??_main:	; 1 bytes @ 0x2
+	global	main@FirstFlag
+main@FirstFlag:	; 1 bytes @ 0x2
 	ds	1
 	global	main@count
 main@count:	; 2 bytes @ 0x3
 	ds	2
-	global	main@index
-main@index:	; 1 bytes @ 0x5
-	ds	1
 ;!
 ;!Data Sizes:
 ;!    Strings     0
@@ -118,7 +117,7 @@ main@index:	; 1 bytes @ 0x5
 ;!
 ;!Auto Spaces:
 ;!    Space          Size  Autos    Used
-;!    COMMON           14      6       7
+;!    COMMON           14      5       6
 ;!    BANK0            32      0       0
 
 ;!
@@ -145,7 +144,7 @@ main@index:	; 1 bytes @ 0x5
 ;!    None.
 
 ;;
-;;Main: autosize = 0, tempsize = 1, incstack = 0, save=0
+;;Main: autosize = 0, tempsize = 0, incstack = 0, save=0
 ;;
 
 ;!
@@ -154,8 +153,8 @@ main@index:	; 1 bytes @ 0x5
 ;! ---------------------------------------------------------------------------------
 ;! (Depth) Function   	        Calls       Base Space   Used Autos Params    Refs
 ;! ---------------------------------------------------------------------------------
-;! (0) _main                                                 4     4      0      45
-;!                                              2 COMMON     4     4      0
+;! (0) _main                                                 4     4      0      60
+;!                                              2 COMMON     3     3      0
 ;!                        _Init_System
 ;! ---------------------------------------------------------------------------------
 ;! (1) _Init_System                                          0     0      0       0
@@ -184,29 +183,30 @@ main@index:	; 1 bytes @ 0x5
 ;!BITCOMMON            E      0       0       0        0.0%
 ;!NULL                 0      0       0       0        0.0%
 ;!CODE                 0      0       0       0        0.0%
-;!COMMON               E      6       7       1       50.0%
+;!COMMON               E      5       6       1       42.9%
 ;!BITSFR0              0      0       0       1        0.0%
 ;!SFR0                 0      0       0       1        0.0%
 ;!STACK                0      0       0       2        0.0%
 ;!BANK0               20      0       0       3        0.0%
-;!ABS                  0      0       7       4        0.0%
+;!ABS                  0      0       6       4        0.0%
 ;!BITBANK0            20      0       0       5        0.0%
-;!DATA                 0      0       7       6        0.0%
+;!DATA                 0      0       6       6        0.0%
 
 	global	_main
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 28 in file "E:\project\scm\SCM1152_LED\led.c"
+;;		line 26 in file "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
 ;;  count           2    3[COMMON] unsigned int 
-;;  index           1    5[COMMON] unsigned char 
+;;  FirstFlag       1    2[COMMON] unsigned char 
+;;  ledIndex        1    0        unsigned char 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg, status,2, status,0, pclath, cstack
+;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
 ;;		On entry : B00/0
 ;;		On exit  : 0/0
@@ -214,9 +214,9 @@ main@index:	; 1 bytes @ 0x5
 ;; Data sizes:     COMMON   BANK0
 ;;      Params:         0       0
 ;;      Locals:         3       0
-;;      Temps:          1       0
-;;      Totals:         4       0
-;;Total ram usage:        4 bytes
+;;      Temps:          0       0
+;;      Totals:         3       0
+;;Total ram usage:        3 bytes
 ;; Hardware stack levels required when called:    2
 ;; This function calls:
 ;;		_Init_System
@@ -225,48 +225,49 @@ main@index:	; 1 bytes @ 0x5
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"E:\project\scm\SCM1152_LED\led.c"
-	line	28
+	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
+	line	26
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"E:\project\scm\SCM1152_LED\led.c"
-	line	28
+	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
+	line	26
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
 _main:	
 ;incstack = 0
 	opt	stack 6
-; Regs used in _main: [wreg+status,2+status,0+pclath+cstack]
-	line	30
+; Regs used in _main: [wreg-fsr0h+status,2+status,0+pclath+cstack]
+	line	28
 	
-l698:	
-;led.c: 30: Init_System();
+l709:	
+;led.c: 28: Init_System();
 	fcall	_Init_System
-	line	31
+	line	29
 	
-l700:	
-;led.c: 31: unsigned int count = 0;
+l711:	
+;led.c: 29: unsigned int count = 0;
 	clrf	(main@count)
 	clrf	(main@count+1)
-	line	32
+	line	30
 	
-l702:	
-;led.c: 32: unsigned char index = 0;
-	clrf	(main@index)
-	line	33
-;led.c: 33: while(1)
+l713:	
+;led.c: 31: unsigned char ledIndex = 4;
+	clrf	(main@FirstFlag)
+	incf	(main@FirstFlag),f
+	line	32
+;led.c: 32: while(1)
 	
 l288:	
-	line	35
-# 35 "E:\project\scm\SCM1152_LED\led.c"
+	line	34
+# 34 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 clrwdt ;# 
 psect	maintext
-	line	36
+	line	35
 	
-l704:	
-;led.c: 36: if(timeoutFlag)
+l715:	
+;led.c: 35: if(timeoutFlag)
 	movf	((_timeoutFlag)),w
 	btfsc	status,2
 	goto	u11
@@ -274,24 +275,17 @@ l704:
 u11:
 	goto	l288
 u10:
+	line	37
+	
+l717:	
+;led.c: 36: {
+;led.c: 37: timeoutFlag = 0;
+	clrf	(_timeoutFlag)
 	line	38
 	
-l706:	
-;led.c: 37: {
-;led.c: 38: timeoutFlag = 0;
-	clrf	(_timeoutFlag)
-	line	39
-	
-l708:	
-;led.c: 39: count++;
-	incf	(main@count),f
-	skipnz
-	incf	(main@count+1),f
-	line	40
-	
-l710:	
-;led.c: 40: if(count == 500)
-		movlw	244
+l719:	
+;led.c: 38: if(count == 400)
+		movlw	144
 	xorwf	((main@count)),w
 	skipz
 	goto	u21
@@ -300,56 +294,247 @@ l710:
 	goto	u21
 	goto	u20
 u21:
-	goto	l288
+	goto	l723
 u20:
-	line	42
+	line	40
 	
-l712:	
-;led.c: 41: {
-;led.c: 42: count =0;
+l721:	
+;led.c: 39: {
+;led.c: 40: count = 0;
 	clrf	(main@count)
 	clrf	(main@count+1)
 	line	43
 	
-l714:	
-;led.c: 43: PORTB^=(1<<index++);
-	movlw	low(01h)
-	movwf	(??_main+0)+0
-	incf	(main@index),w
-	goto	u34
-u35:
-	clrc
-	rlf	(??_main+0)+0,f
-u34:
-	addlw	-1
-	skipz
-	goto	u35
-	movf	0+(??_main+0)+0,w
-	xorwf	(5),f	;volatile
+l723:	
+;led.c: 41: }
+;led.c: 43: if(FirstFlag)
+	movf	((main@FirstFlag)),w
+	btfsc	status,2
+	goto	u31
+	goto	u30
+u31:
+	goto	l751
+u30:
+	goto	l739
+	line	48
 	
-l716:	
-	incf	(main@index),f
-	line	44
-	
-l718:	
-;led.c: 44: if(index == 5)
-		movlw	5
-	xorwf	((main@index)),w
-	btfss	status,2
-	goto	u41
-	goto	u40
-u41:
-	goto	l289
-u40:
-	goto	l702
+l727:	
+;led.c: 48: PORTB = 0xFC;
+	movlw	low(0FCh)
+	movwf	(5)	;volatile
 	line	49
+;led.c: 49: break;
+	goto	l753
+	line	51
 	
-l289:	
+l729:	
+;led.c: 51: PORTB = 0xF9;
+	movlw	low(0F9h)
+	movwf	(5)	;volatile
+	line	52
+;led.c: 52: break;
+	goto	l753
+	line	54
+	
+l731:	
+;led.c: 54: PORTB = 0xF3;
+	movlw	low(0F3h)
+	movwf	(5)	;volatile
+	line	55
+	
+l733:	
+;led.c: 55: FirstFlag = 0;
+	clrf	(main@FirstFlag)
+	line	56
+;led.c: 56: break;
+	goto	l753
+	line	58
+	
+l735:	
+;led.c: 58: PORTB = 0xFE;
+	movlw	low(0FEh)
+	movwf	(5)	;volatile
+	line	59
+;led.c: 59: break;
+	goto	l753
+	line	45
+	
+l739:	
+	; Switch on 2 bytes has been partitioned into a top level switch of size 1, and 2 sub-switches
+; Switch size 1, requested type "space"
+; Number of cases is 2, Range of values is 0 to 1
+; switch strategies available:
+; Name         Instructions Cycles
+; simple_byte            7     4 (average)
+; direct_byte            8     6 (fixed)
+; jumptable            260     6 (fixed)
+;	Chosen strategy is simple_byte
+
+	movf (main@count+1),w
+	opt asmopt_push
+	opt asmopt_off
+	xorlw	0^0	; case 0
+	skipnz
+	goto	l895
+	xorlw	1^0	; case 1
+	skipnz
+	goto	l897
+	goto	l753
+	opt asmopt_pop
+	
+l895:	
+; Switch size 1, requested type "space"
+; Number of cases is 3, Range of values is 0 to 200
+; switch strategies available:
+; Name         Instructions Cycles
+; simple_byte           10     6 (average)
+; direct_byte          207     6 (fixed)
+; jumptable            260     6 (fixed)
+;	Chosen strategy is simple_byte
+
+	movf (main@count),w
+	opt asmopt_push
+	opt asmopt_off
+	xorlw	0^0	; case 0
+	skipnz
+	goto	l735
+	xorlw	100^0	; case 100
+	skipnz
+	goto	l727
+	xorlw	200^100	; case 200
+	skipnz
+	goto	l729
+	goto	l753
+	opt asmopt_pop
+	
+l897:	
+; Switch size 1, requested type "space"
+; Number of cases is 1, Range of values is 44 to 44
+; switch strategies available:
+; Name         Instructions Cycles
+; simple_byte            4     3 (average)
+; direct_byte           10     9 (fixed)
+; jumptable            263     9 (fixed)
+;	Chosen strategy is simple_byte
+
+	movf (main@count),w
+	opt asmopt_push
+	opt asmopt_off
+	xorlw	44^0	; case 44
+	skipnz
+	goto	l731
+	goto	l753
+	opt asmopt_pop
+
+	line	66
+	
+l741:	
+;led.c: 66: PORTB = 0xEC;
+	movlw	low(0ECh)
+	movwf	(5)	;volatile
+	line	67
+;led.c: 67: break;
+	goto	l753
+	line	72
+	
+l745:	
+;led.c: 72: PORTB = 0xF3;
+	movlw	low(0F3h)
+	movwf	(5)	;volatile
+	line	73
+;led.c: 73: break;
+	goto	l753
+	line	75
+	
+l747:	
+;led.c: 75: PORTB = 0xE6;
+	movlw	low(0E6h)
+	movwf	(5)	;volatile
+	line	76
+;led.c: 76: break;
+	goto	l753
+	line	63
+	
+l751:	
+	; Switch on 2 bytes has been partitioned into a top level switch of size 1, and 2 sub-switches
+; Switch size 1, requested type "space"
+; Number of cases is 2, Range of values is 0 to 1
+; switch strategies available:
+; Name         Instructions Cycles
+; simple_byte            7     4 (average)
+; direct_byte            8     6 (fixed)
+; jumptable            260     6 (fixed)
+;	Chosen strategy is simple_byte
+
+	movf (main@count+1),w
+	opt asmopt_push
+	opt asmopt_off
+	xorlw	0^0	; case 0
+	skipnz
+	goto	l899
+	xorlw	1^0	; case 1
+	skipnz
+	goto	l901
+	goto	l753
+	opt asmopt_pop
+	
+l899:	
+; Switch size 1, requested type "space"
+; Number of cases is 3, Range of values is 0 to 200
+; switch strategies available:
+; Name         Instructions Cycles
+; simple_byte           10     6 (average)
+; direct_byte          207     6 (fixed)
+; jumptable            260     6 (fixed)
+;	Chosen strategy is simple_byte
+
+	movf (main@count),w
+	opt asmopt_push
+	opt asmopt_off
+	xorlw	0^0	; case 0
+	skipnz
+	goto	l747
+	xorlw	100^0	; case 100
+	skipnz
+	goto	l741
+	xorlw	200^100	; case 200
+	skipnz
+	goto	l729
+	goto	l753
+	opt asmopt_pop
+	
+l901:	
+; Switch size 1, requested type "space"
+; Number of cases is 1, Range of values is 44 to 44
+; switch strategies available:
+; Name         Instructions Cycles
+; simple_byte            4     3 (average)
+; direct_byte           10     9 (fixed)
+; jumptable            263     9 (fixed)
+;	Chosen strategy is simple_byte
+
+	movf (main@count),w
+	opt asmopt_push
+	opt asmopt_off
+	xorlw	44^0	; case 44
+	skipnz
+	goto	l745
+	goto	l753
+	opt asmopt_pop
+
+	line	81
+	
+l753:	
+;led.c: 78: }
+;led.c: 81: count++;
+	incf	(main@count),f
+	skipnz
+	incf	(main@count+1),f
 	goto	l288
 	global	start
 	ljmp	start
 	opt stack 0
-	line	51
+	line	85
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -357,7 +542,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _Init_System *****************
 ;; Defined at:
-;;		line 9 in file "E:\project\scm\SCM1152_LED\led.c"
+;;		line 7 in file "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -385,12 +570,12 @@ GLOBAL	__end_of_main
 ;; This function uses a non-reentrant model
 ;;
 psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	9
+	line	7
 global __ptext1
 __ptext1:	;psect for function _Init_System
 psect	text1
-	file	"E:\project\scm\SCM1152_LED\led.c"
-	line	9
+	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
+	line	7
 	global	__size_of_Init_System
 	__size_of_Init_System	equ	__end_of_Init_System-_Init_System
 	
@@ -398,75 +583,72 @@ _Init_System:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _Init_System: [wreg+status,2]
-	line	11
+	line	9
 	
-l676:	
-# 11 "E:\project\scm\SCM1152_LED\led.c"
+l689:	
+# 9 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 nop ;# 
-	line	12
-# 12 "E:\project\scm\SCM1152_LED\led.c"
+	line	10
+# 10 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 clrwdt ;# 
 psect	text1
-	line	13
+	line	11
 	
-l678:	
-;led.c: 13: INTCON = 0;
+l691:	
+;led.c: 11: INTCON = 0;
 	clrf	(9)	;volatile
-	line	14
+	line	12
 	
-l680:	
-;led.c: 14: OSCCON = 0X71;
+l693:	
+;led.c: 12: OSCCON = 0X71;
 	movlw	low(071h)
 	movwf	(8)	;volatile
+	line	13
+	
+l695:	
+;led.c: 13: OPTION_REG = 0x00;
+	clrf	(7)	;volatile
+	line	14
+	
+l697:	
+;led.c: 14: TMR0 = 0;
+	clrf	(1)	;volatile
 	line	15
 	
-l682:	
-;led.c: 15: OPTION_REG = 0x00;
-	clrf	(7)	;volatile
-	line	16
-	
-l684:	
-;led.c: 16: TMR0 = 0;
-	clrf	(1)	;volatile
-	line	17
-	
-l686:	
-;led.c: 17: INTCON = 0xE0;
+l699:	
+;led.c: 15: INTCON = 0xE0;
 	movlw	low(0E0h)
 	movwf	(9)	;volatile
-	line	18
+	line	16
 	
-l688:	
-;led.c: 18: TMR0PRD = 100;
+l701:	
+;led.c: 16: TMR0PRD = 100;
 	movlw	low(064h)
 	movwf	(15)	;volatile
-	line	21
+	line	19
 	
-l690:	
-;led.c: 21: TRISB = 0;
+l703:	
+;led.c: 19: TRISB = 0;
 	clrf	(6)	;volatile
-	line	22
-;led.c: 22: WPUB = 0xFF;
+	line	20
+;led.c: 20: WPUB = 0xFF;
 	movlw	low(0FFh)
 	movwf	(13)	;volatile
-	line	23
+	line	21
 	
-l692:	
-;led.c: 23: PDCONB = 0;
+l705:	
+;led.c: 21: PDCONB = 0;
 	clrf	(11)	;volatile
-	line	24
+	line	22
 	
-l694:	
-;led.c: 24: PORTB = 0xFF;
+l707:	
+;led.c: 22: PORTB = 0xFF;
 	movlw	low(0FFh)
 	movwf	(5)	;volatile
-	line	25
-	
-l696:	
-;led.c: 25: IOCB = 0xFF;
-	movlw	low(0FFh)
-	movwf	(14)	;volatile
-	line	26
+	line	23
+;led.c: 23: IOCB = 0x00;
+	clrf	(14)	;volatile
+	line	24
 	
 l283:	
 	return
@@ -478,7 +660,7 @@ GLOBAL	__end_of_Init_System
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 60 in file "E:\project\scm\SCM1152_LED\led.c"
+;;		line 94 in file "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -505,12 +687,12 @@ GLOBAL	__end_of_Init_System
 ;; This function uses a non-reentrant model
 ;;
 psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	line	60
+	line	94
 global __ptext2
 __ptext2:	;psect for function _Timer0_Isr
 psect	text2
-	file	"E:\project\scm\SCM1152_LED\led.c"
-	line	60
+	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
+	line	94
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
 	
@@ -532,29 +714,29 @@ interrupt_function:
 	movwf	(??_Timer0_Isr+1)
 	ljmp	_Timer0_Isr
 psect	text2
-	line	62
+	line	96
 	
-i1l722:	
-;led.c: 62: if(T0IF)
+i1l771:	
+;led.c: 96: if(T0IF)
 	btfss	(74/8),(74)&7	;volatile
-	goto	u5_21
-	goto	u5_20
-u5_21:
-	goto	i1l300
-u5_20:
-	line	68
+	goto	u4_21
+	goto	u4_20
+u4_21:
+	goto	i1l313
+u4_20:
+	line	102
 	
-i1l724:	
-;led.c: 63: {
-;led.c: 68: T0IF = 0;
+i1l773:	
+;led.c: 97: {
+;led.c: 102: T0IF = 0;
 	bcf	(74/8),(74)&7	;volatile
-	line	69
-;led.c: 69: timeoutFlag = 1;
+	line	103
+;led.c: 103: timeoutFlag = 1;
 	clrf	(_timeoutFlag)
 	incf	(_timeoutFlag),f
-	line	71
+	line	105
 	
-i1l300:	
+i1l313:	
 	movf	(??_Timer0_Isr+1),w
 	movwf	pclath
 	swapf	(??_Timer0_Isr+0)^0FFFFFF80h,w
