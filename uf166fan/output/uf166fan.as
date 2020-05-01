@@ -30,13 +30,9 @@ skipnc	macro
 skipnz	macro
 	btfsc	3,2
 	endm
-	FNCALL	_main,_Init_GPIO
-	FNCALL	_main,_Init_Interupt
-	FNCALL	_main,_Init_PWM
-	FNCALL	_main,_Init_System
+	FNCALL	_main,_Init_Config
 	FNCALL	_main,_checkKeys
 	FNCALL	_main,_checkUsbStatus
-	FNCALL	_main,_resetKey
 	FNCALL	_main,_scanKeys
 	FNCALL	_scanKeys,_sacnKeyInput
 	FNCALL	_checkKeys,_checkFan
@@ -51,7 +47,18 @@ skipnz	macro
 	FNCALL	_setFanLevel,_setLedOn
 	FNCALL	_closeFan,_Init_PWM
 	FNCALL	_closeFan,_setLedOn
+	FNCALL	_Init_Config,_Init_GPIO
+	FNCALL	_Init_Config,_Init_Interupt
+	FNCALL	_Init_Config,_Init_PWM
+	FNCALL	_Init_Config,_Init_System
+	FNCALL	_Init_Config,_resetKey
 	FNROOT	_main
+	FNCALL	_Timer0_Isr,i1_Init_Config
+	FNCALL	i1_Init_Config,i1_Init_GPIO
+	FNCALL	i1_Init_Config,i1_Init_Interupt
+	FNCALL	i1_Init_Config,i1_Init_PWM
+	FNCALL	i1_Init_Config,i1_Init_System
+	FNCALL	i1_Init_Config,i1_resetKey
 	FNCALL	intlevel1,_Timer0_Isr
 	global	intlevel1
 	FNROOT	intlevel1
@@ -61,11 +68,11 @@ psect	idataBANK0,class=CODE,space=0,delta=2,noexec
 global __pidataBANK0
 __pidataBANK0:
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	21
+	line	24
 
 ;initializer for _FAN_STATUS
 	retlw	02h
-	line	19
+	line	22
 
 ;initializer for _currentLevel
 	retlw	02h
@@ -96,6 +103,8 @@ _TMR0	set	1
 _TMR2IF	set	97
 	global	_T0IF
 _T0IF	set	90
+	global	_RBIF
+_RBIF	set	88
 	global	_TO
 _TO	set	28
 	global	_IOCB
@@ -158,13 +167,13 @@ psect	dataBANK0,class=BANK0,space=1,noexec
 global __pdataBANK0
 __pdataBANK0:
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	21
+	line	24
 _FAN_STATUS:
        ds      1
 
 psect	dataBANK0
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	19
+	line	22
 _currentLevel:
        ds      1
 
@@ -217,8 +226,10 @@ ljmp _main	;jump to C main() function
 psect	cstackCOMMON,class=COMMON,space=1,noexec
 global __pcstackCOMMON
 __pcstackCOMMON:
+?_setLedOn:	; 1 bytes @ 0x0
 ?_sacnKeyInput:	; 1 bytes @ 0x0
 ?_key_read:	; 1 bytes @ 0x0
+?_Init_Config:	; 1 bytes @ 0x0
 ?_Init_System:	; 1 bytes @ 0x0
 ?_Init_GPIO:	; 1 bytes @ 0x0
 ?_Init_Interupt:	; 1 bytes @ 0x0
@@ -232,85 +243,101 @@ __pcstackCOMMON:
 ?_checkKeys:	; 1 bytes @ 0x0
 ?_main:	; 1 bytes @ 0x0
 ?_Timer0_Isr:	; 1 bytes @ 0x0
-??_Timer0_Isr:	; 1 bytes @ 0x0
 ?_key_driver:	; 1 bytes @ 0x0
-	ds	2
-?_setLedOn:	; 1 bytes @ 0x2
-??_sacnKeyInput:	; 1 bytes @ 0x2
-??_Init_System:	; 1 bytes @ 0x2
-??_Init_GPIO:	; 1 bytes @ 0x2
-??_Init_Interupt:	; 1 bytes @ 0x2
-??_resetKey:	; 1 bytes @ 0x2
-??_checkUsbStatus:	; 1 bytes @ 0x2
-??_Init_PWM:	; 1 bytes @ 0x2
-??_key_driver:	; 1 bytes @ 0x2
-?___bmul:	; 1 bytes @ 0x2
-	global	?___awdiv
-?___awdiv:	; 2 bytes @ 0x2
-	global	key_driver@key_return
-key_driver@key_return:	; 1 bytes @ 0x2
-	global	resetKey@key
-resetKey@key:	; 1 bytes @ 0x2
-	global	___bmul@multiplicand
-___bmul@multiplicand:	; 1 bytes @ 0x2
-	global	setLedOn@ledIndex
-setLedOn@ledIndex:	; 2 bytes @ 0x2
-	global	___awdiv@divisor
-___awdiv@divisor:	; 2 bytes @ 0x2
+?i1_Init_PWM:	; 1 bytes @ 0x0
+??i1_Init_PWM:	; 1 bytes @ 0x0
+?i1_Init_Config:	; 1 bytes @ 0x0
+?i1_resetKey:	; 1 bytes @ 0x0
+??i1_resetKey:	; 1 bytes @ 0x0
+?i1_Init_System:	; 1 bytes @ 0x0
+??i1_Init_System:	; 1 bytes @ 0x0
+?i1_Init_GPIO:	; 1 bytes @ 0x0
+??i1_Init_GPIO:	; 1 bytes @ 0x0
+?i1_Init_Interupt:	; 1 bytes @ 0x0
+??i1_Init_Interupt:	; 1 bytes @ 0x0
+	global	i1resetKey@key
+i1resetKey@key:	; 1 bytes @ 0x0
 	ds	1
-??___bmul:	; 1 bytes @ 0x3
-	global	key_driver@key_read
-key_driver@key_read:	; 1 bytes @ 0x3
-	global	___bmul@product
-___bmul@product:	; 1 bytes @ 0x3
-	ds	1
+??_Timer0_Isr:	; 1 bytes @ 0x1
+??i1_Init_Config:	; 1 bytes @ 0x1
+	ds	3
 ??_setLedOn:	; 1 bytes @ 0x4
-??_closeFan:	; 1 bytes @ 0x4
+??_sacnKeyInput:	; 1 bytes @ 0x4
+??_Init_System:	; 1 bytes @ 0x4
+??_Init_GPIO:	; 1 bytes @ 0x4
+??_Init_Interupt:	; 1 bytes @ 0x4
+??_resetKey:	; 1 bytes @ 0x4
+??_checkUsbStatus:	; 1 bytes @ 0x4
+??_Init_PWM:	; 1 bytes @ 0x4
+??_key_driver:	; 1 bytes @ 0x4
+?___bmul:	; 1 bytes @ 0x4
+??___awdiv:	; 1 bytes @ 0x4
+	global	setLedOn@ledIndex
+setLedOn@ledIndex:	; 1 bytes @ 0x4
+	global	key_driver@key_return
+key_driver@key_return:	; 1 bytes @ 0x4
+	global	resetKey@key
+resetKey@key:	; 1 bytes @ 0x4
+	global	___bmul@multiplicand
+___bmul@multiplicand:	; 1 bytes @ 0x4
+	ds	1
+??_Init_Config:	; 1 bytes @ 0x5
+??_closeFan:	; 1 bytes @ 0x5
+??___bmul:	; 1 bytes @ 0x5
+	global	key_driver@key_read
+key_driver@key_read:	; 1 bytes @ 0x5
+	global	___bmul@product
+___bmul@product:	; 1 bytes @ 0x5
+	ds	1
 	global	sacnKeyInput@key
-sacnKeyInput@key:	; 1 bytes @ 0x4
+sacnKeyInput@key:	; 1 bytes @ 0x6
 	global	key_driver@key
-key_driver@key:	; 1 bytes @ 0x4
+key_driver@key:	; 1 bytes @ 0x6
 	global	___bmul@multiplier
-___bmul@multiplier:	; 1 bytes @ 0x4
-	global	___awdiv@dividend
-___awdiv@dividend:	; 2 bytes @ 0x4
+___bmul@multiplier:	; 1 bytes @ 0x6
 	ds	1
-??_key_read:	; 1 bytes @ 0x5
-??_scanKeys:	; 1 bytes @ 0x5
-	global	key_read@key_return
-key_read@key_return:	; 1 bytes @ 0x5
-	ds	1
-??_setFanLevel:	; 1 bytes @ 0x6
-??_checkFan:	; 1 bytes @ 0x6
-??___awdiv:	; 1 bytes @ 0x6
-	global	key_read@key_read
-key_read@key_read:	; 1 bytes @ 0x6
-	ds	1
-	global	key_read@key
-key_read@key:	; 1 bytes @ 0x7
-	ds	1
-??_checkKeys:	; 1 bytes @ 0x8
-??_main:	; 1 bytes @ 0x8
+??_key_read:	; 1 bytes @ 0x7
+??_setFanLevel:	; 1 bytes @ 0x7
+??_scanKeys:	; 1 bytes @ 0x7
+??_checkKeys:	; 1 bytes @ 0x7
+??_main:	; 1 bytes @ 0x7
 psect	cstackBANK0,class=BANK0,space=1,noexec
 global __pcstackBANK0
 __pcstackBANK0:
+	global	?___awdiv
+?___awdiv:	; 2 bytes @ 0x0
+	global	key_read@key_return
+key_read@key_return:	; 1 bytes @ 0x0
+	global	___awdiv@divisor
+___awdiv@divisor:	; 2 bytes @ 0x0
+	ds	1
+	global	key_read@key_read
+key_read@key_read:	; 1 bytes @ 0x1
+	ds	1
+	global	key_read@key
+key_read@key:	; 1 bytes @ 0x2
+	global	___awdiv@dividend
+___awdiv@dividend:	; 2 bytes @ 0x2
+	ds	2
 	global	___awdiv@counter
-___awdiv@counter:	; 1 bytes @ 0x0
+___awdiv@counter:	; 1 bytes @ 0x4
 	ds	1
 	global	___awdiv@sign
-___awdiv@sign:	; 1 bytes @ 0x1
+___awdiv@sign:	; 1 bytes @ 0x5
 	ds	1
 	global	___awdiv@quotient
-___awdiv@quotient:	; 2 bytes @ 0x2
+___awdiv@quotient:	; 2 bytes @ 0x6
+	ds	2
+	global	setFanLevel@levelWidth
+setFanLevel@levelWidth:	; 2 bytes @ 0x8
 	ds	2
 	global	setFanLevel@level
-setFanLevel@level:	; 1 bytes @ 0x4
+setFanLevel@level:	; 1 bytes @ 0xA
 	ds	1
-	global	setFanLevel@levelWidth
-setFanLevel@levelWidth:	; 2 bytes @ 0x5
-	ds	2
 	global	setFanLevel@tempLevel
-setFanLevel@tempLevel:	; 1 bytes @ 0x7
+setFanLevel@tempLevel:	; 1 bytes @ 0xB
+	ds	1
+??_checkFan:	; 1 bytes @ 0xC
 	ds	1
 ;!
 ;!Data Sizes:
@@ -323,8 +350,8 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 ;!
 ;!Auto Spaces:
 ;!    Space          Size  Autos    Used
-;!    COMMON           14      8      11
-;!    BANK0            80      8      35
+;!    COMMON           14      7      10
+;!    BANK0            80     13      40
 ;!    BANK1            80      0       0
 
 ;!
@@ -348,18 +375,18 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 ;!Critical Paths under _main in COMMON
 ;!
 ;!    _scanKeys->_sacnKeyInput
-;!    _checkKeys->_key_read
 ;!    _key_read->_key_driver
-;!    _setFanLevel->___awdiv
+;!    _setFanLevel->___bmul
 ;!    _closeFan->_setLedOn
+;!    _Init_Config->_resetKey
 ;!
 ;!Critical Paths under _Timer0_Isr in COMMON
 ;!
-;!    None.
+;!    i1_Init_Config->i1_resetKey
 ;!
 ;!Critical Paths under _main in BANK0
 ;!
-;!    _checkKeys->_setFanLevel
+;!    _checkKeys->_checkFan
 ;!    _checkFan->_setFanLevel
 ;!    _setFanLevel->___awdiv
 ;!
@@ -385,91 +412,114 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 ;! ---------------------------------------------------------------------------------
 ;! (Depth) Function   	        Calls       Base Space   Used Autos Params    Refs
 ;! ---------------------------------------------------------------------------------
-;! (0) _main                                                 0     0      0    3375
-;!                          _Init_GPIO
-;!                      _Init_Interupt
-;!                           _Init_PWM
-;!                        _Init_System
+;! (0) _main                                                 0     0      0    3277
+;!                        _Init_Config
 ;!                          _checkKeys
 ;!                     _checkUsbStatus
-;!                           _resetKey
 ;!                           _scanKeys
 ;! ---------------------------------------------------------------------------------
 ;! (1) _scanKeys                                             0     0      0     169
 ;!                       _sacnKeyInput
 ;! ---------------------------------------------------------------------------------
 ;! (2) _sacnKeyInput                                         3     3      0     169
-;!                                              2 COMMON     3     3      0
-;! ---------------------------------------------------------------------------------
-;! (1) _resetKey                                             1     1      0     169
-;!                                              2 COMMON     1     1      0
+;!                                              4 COMMON     3     3      0
 ;! ---------------------------------------------------------------------------------
 ;! (1) _checkUsbStatus                                       1     1      0       0
-;!                                              2 COMMON     1     1      0
+;!                                              4 COMMON     1     1      0
 ;! ---------------------------------------------------------------------------------
-;! (1) _checkKeys                                            0     0      0    3037
+;! (1) _checkKeys                                            0     0      0    2939
 ;!                           _checkFan
 ;!                           _closeFan
 ;!                           _key_read
 ;!                        _setFanLevel
 ;! ---------------------------------------------------------------------------------
-;! (2) _key_read                                             3     3      0     689
-;!                                              5 COMMON     3     3      0
+;! (2) _key_read                                             3     3      0     953
+;!                                              0 BANK0      3     3      0
 ;!                         _key_driver
 ;! ---------------------------------------------------------------------------------
-;! (3) _key_driver                                           3     3      0     361
-;!                                              2 COMMON     3     3      0
+;! (3) _key_driver                                           3     3      0     507
+;!                                              4 COMMON     3     3      0
 ;! ---------------------------------------------------------------------------------
-;! (2) _checkFan                                             1     1      0    1174
-;!                                              6 COMMON     1     1      0
+;! (2) _checkFan                                             1     1      0     993
+;!                                             12 BANK0      1     1      0
 ;!                           _closeFan
 ;!                        _setFanLevel
 ;! ---------------------------------------------------------------------------------
-;! (2) _setFanLevel                                          4     4      0    1046
-;!                                              4 BANK0      4     4      0
+;! (2) _setFanLevel                                          4     4      0     971
+;!                                              8 BANK0      4     4      0
 ;!                            ___awdiv
 ;!                             ___bmul
 ;!                           _setLedOn
 ;! ---------------------------------------------------------------------------------
 ;! (3) ___bmul                                               3     2      1     145
-;!                                              2 COMMON     3     2      1
+;!                                              4 COMMON     3     2      1
 ;! ---------------------------------------------------------------------------------
 ;! (3) ___awdiv                                              8     4      4     606
-;!                                              2 COMMON     4     0      4
-;!                                              0 BANK0      4     4      0
+;!                                              0 BANK0      8     4      4
 ;! ---------------------------------------------------------------------------------
-;! (2) _closeFan                                             0     0      0     128
+;! (2) _closeFan                                             0     0      0      22
 ;!                           _Init_PWM
 ;!                           _setLedOn
 ;! ---------------------------------------------------------------------------------
-;! (3) _setLedOn                                             2     0      2     128
-;!                                              2 COMMON     2     0      2
+;! (3) _setLedOn                                             1     1      0      22
+;!                                              4 COMMON     1     1      0
+;! ---------------------------------------------------------------------------------
+;! (1) _Init_Config                                          0     0      0     169
+;!                          _Init_GPIO
+;!                      _Init_Interupt
+;!                           _Init_PWM
+;!                        _Init_System
+;!                           _resetKey
+;! ---------------------------------------------------------------------------------
+;! (2) _resetKey                                             1     1      0     169
+;!                                              4 COMMON     1     1      0
+;! ---------------------------------------------------------------------------------
+;! (2) _Init_System                                          0     0      0       0
 ;! ---------------------------------------------------------------------------------
 ;! (3) _Init_PWM                                             0     0      0       0
 ;! ---------------------------------------------------------------------------------
-;! (1) _Init_System                                          0     0      0       0
+;! (2) _Init_Interupt                                        0     0      0       0
 ;! ---------------------------------------------------------------------------------
-;! (1) _Init_Interupt                                        0     0      0       0
-;! ---------------------------------------------------------------------------------
-;! (1) _Init_GPIO                                            0     0      0       0
+;! (2) _Init_GPIO                                            0     0      0       0
 ;! ---------------------------------------------------------------------------------
 ;! Estimated maximum stack depth 3
 ;! ---------------------------------------------------------------------------------
 ;! (Depth) Function   	        Calls       Base Space   Used Autos Params    Refs
 ;! ---------------------------------------------------------------------------------
-;! (5) _Timer0_Isr                                           2     2      0       0
-;!                                              0 COMMON     2     2      0
+;! (5) _Timer0_Isr                                           3     3      0      88
+;!                                              1 COMMON     3     3      0
+;!                      i1_Init_Config
 ;! ---------------------------------------------------------------------------------
-;! Estimated maximum stack depth 5
+;! (6) i1_Init_Config                                        0     0      0      88
+;!                        i1_Init_GPIO
+;!                    i1_Init_Interupt
+;!                         i1_Init_PWM
+;!                      i1_Init_System
+;!                         i1_resetKey
+;! ---------------------------------------------------------------------------------
+;! (7) i1_resetKey                                           1     1      0      88
+;!                                              0 COMMON     1     1      0
+;! ---------------------------------------------------------------------------------
+;! (7) i1_Init_System                                        0     0      0       0
+;! ---------------------------------------------------------------------------------
+;! (7) i1_Init_PWM                                           0     0      0       0
+;! ---------------------------------------------------------------------------------
+;! (7) i1_Init_Interupt                                      0     0      0       0
+;! ---------------------------------------------------------------------------------
+;! (7) i1_Init_GPIO                                          0     0      0       0
+;! ---------------------------------------------------------------------------------
+;! Estimated maximum stack depth 7
 ;! ---------------------------------------------------------------------------------
 ;!
 ;! Call Graph Graphs:
 ;!
 ;! _main (ROOT)
-;!   _Init_GPIO
-;!   _Init_Interupt
-;!   _Init_PWM
-;!   _Init_System
+;!   _Init_Config
+;!     _Init_GPIO
+;!     _Init_Interupt
+;!     _Init_PWM
+;!     _Init_System
+;!     _resetKey
 ;!   _checkKeys
 ;!     _checkFan
 ;!       _closeFan
@@ -489,11 +539,16 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 ;!       ___bmul
 ;!       _setLedOn
 ;!   _checkUsbStatus
-;!   _resetKey
 ;!   _scanKeys
 ;!     _sacnKeyInput
 ;!
 ;! _Timer0_Isr (ROOT)
+;!   i1_Init_Config
+;!     i1_Init_GPIO
+;!     i1_Init_Interupt
+;!     i1_Init_PWM
+;!     i1_Init_System
+;!     i1_resetKey
 ;!
 
 ;! Address spaces:
@@ -507,15 +562,15 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 ;!BITBANK1            50      0       0       6        0.0%
 ;!SFR1                 0      0       0       2        0.0%
 ;!BITSFR1              0      0       0       2        0.0%
-;!BANK0               50      8      23       5       43.8%
+;!BANK0               50      D      28       5       50.0%
 ;!BITBANK0            50      0       0       4        0.0%
 ;!SFR0                 0      0       0       1        0.0%
 ;!BITSFR0              0      0       0       1        0.0%
-;!COMMON               E      8       B       1       78.6%
+;!COMMON               E      7       A       1       71.4%
 ;!BITCOMMON            E      0       0       0        0.0%
 ;!CODE                 0      0       0       0        0.0%
-;!DATA                 0      0      2E       8        0.0%
-;!ABS                  0      0      2E       3        0.0%
+;!DATA                 0      0      32       8        0.0%
+;!ABS                  0      0      32       3        0.0%
 ;!NULL                 0      0       0       0        0.0%
 ;!STACK                0      0       0       2        0.0%
 
@@ -523,7 +578,7 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 214 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 227 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -542,15 +597,11 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 ;;      Temps:          0       0       0
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
-;; Hardware stack levels required when called:    5
+;; Hardware stack levels required when called:    7
 ;; This function calls:
-;;		_Init_GPIO
-;;		_Init_Interupt
-;;		_Init_PWM
-;;		_Init_System
+;;		_Init_Config
 ;;		_checkKeys
 ;;		_checkUsbStatus
-;;		_resetKey
 ;;		_scanKeys
 ;; This function is called by:
 ;;		Startup code after reset
@@ -558,195 +609,109 @@ setFanLevel@tempLevel:	; 1 bytes @ 0x7
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	214
+	line	227
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	214
+	line	227
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
 _main:	
 ;incstack = 0
-	opt	stack 3
+	opt	stack 1
 ; Regs used in _main: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	216
-	
-l2490:	
-;main.c: 216: Init_System();
-	fcall	_Init_System
-	line	217
-;main.c: 217: Init_GPIO();
-	fcall	_Init_GPIO
-	line	218
-;main.c: 218: Init_Interupt();
-	fcall	_Init_Interupt
-	line	219
-;main.c: 219: Init_PWM();
-	fcall	_Init_PWM
-	line	221
-	
-l2492:	
-;main.c: 221: IOCB = 0x04;
-	movlw	low(04h)
-	movwf	(150)^080h	;volatile
-	line	222
-	
-l2494:	
-;main.c: 222: TMR0 = 155;
-	movlw	low(09Bh)
-	bcf	status, 5	;RP0=0, select bank0
-	movwf	(1)	;volatile
-	line	223
-	
-l2496:	
-;main.c: 223: TO = 0;
-	bcf	(28/8),(28)&7	;volatile
-	line	226
-	
-l2498:	
-;main.c: 226: key1.key_index = 5;
-	movlw	low(05h)
-	movwf	0+(_key1)+06h
 	line	228
 	
-l2500:	
-;main.c: 228: key2.key_index = 4;
-	movlw	low(04h)
-	movwf	0+(_key2)+06h
-	line	230
-	
-l2502:	
-;main.c: 230: key3.key_index = 3;
-	movlw	low(03h)
-	movwf	0+(_key3)+06h
+l2726:	
+;main.c: 228: Init_Config();
+	fcall	_Init_Config
 	line	231
 	
-l2504:	
-;main.c: 231: resetKey(&key1);
-	movlw	(low(_key1|((0x0)<<8)))&0ffh
-	fcall	_resetKey
-	line	232
-	
-l2506:	
-;main.c: 232: resetKey(&key2);
-	movlw	(low(_key2|((0x0)<<8)))&0ffh
-	fcall	_resetKey
-	line	233
-	
-l2508:	
-;main.c: 233: resetKey(&key3);
-	movlw	(low(_key3|((0x0)<<8)))&0ffh
-	fcall	_resetKey
-	line	235
-	
-l2510:	
-;main.c: 235: TRISA = 0;
-	bsf	status, 5	;RP0=1, select bank1
-	bcf	status, 6	;RP1=0, select bank1
-	clrf	(133)^080h	;volatile
-	line	236
-	
-l2512:	
-;main.c: 236: TRISB = 0x7E;
-	movlw	low(07Eh)
-	movwf	(134)^080h	;volatile
-	line	237
-	
-l2514:	
-;main.c: 237: TRISC = 0;
-	clrf	(135)^080h	;volatile
-	line	241
-	
-l2516:	
-;main.c: 239: {
-;main.c: 241: if(time0Flag)
+l2728:	
+;main.c: 231: if (time0Flag) {
 	movf	((_time0Flag)),w
 	btfsc	status,2
-	goto	u931
-	goto	u930
-u931:
-	goto	l2524
-u930:
-	line	243
+	goto	u1071
+	goto	u1070
+u1071:
+	goto	l2736
+u1070:
+	line	232
 	
-l2518:	
-# 243 "C:\SCMCU WorkSpace\uf166fan\main.c"
+l2730:	
+# 232 "C:\SCMCU WorkSpace\uf166fan\main.c"
 clrwdt ;# 
 psect	maintext
-	line	244
+	line	233
 	
-l2520:	
-;main.c: 244: time0Flag = 0;
+l2732:	
+;main.c: 233: time0Flag = 0;
 	clrf	(_time0Flag)
-	line	245
+	line	234
 	
-l2522:	
-;main.c: 245: scanKeys();
+l2734:	
+;main.c: 234: scanKeys();
 	fcall	_scanKeys
-	line	249
+	line	238
 	
-l2524:	
-;main.c: 246: }
-;main.c: 249: if(count10Ms == 10)
+l2736:	
+;main.c: 235: }
+;main.c: 238: if (count10Ms == 10) {
 		movlw	10
 	bcf	status, 5	;RP0=0, select bank0
 	xorwf	((_count10Ms)),w
 iorwf	((_count10Ms+1)),w
 	btfss	status,2
-	goto	u941
-	goto	u940
-u941:
-	goto	l2532
-u940:
-	line	251
+	goto	u1081
+	goto	u1080
+u1081:
+	goto	l2744
+u1080:
+	line	239
 	
-l2526:	
-;main.c: 250: {
-;main.c: 251: checkKeys();
+l2738:	
+;main.c: 239: checkKeys();
 	fcall	_checkKeys
-	line	252
+	line	240
 	
-l2528:	
-;main.c: 252: count10Ms = 0;
-	bcf	status, 5	;RP0=0, select bank0
-	bcf	status, 6	;RP1=0, select bank0
+l2740:	
+;main.c: 240: count10Ms = 0;
 	clrf	(_count10Ms)
 	clrf	(_count10Ms+1)
-	line	254
+	line	242
 	
-l2530:	
-;main.c: 254: checkUsbStatus();
+l2742:	
+;main.c: 242: checkUsbStatus();
 	fcall	_checkUsbStatus
-	line	257
+	line	245
 	
-l2532:	
-;main.c: 255: }
-;main.c: 257: if(countTime == 1000)
+l2744:	
+;main.c: 243: }
+;main.c: 245: if (countTime == 1000) {
 		movlw	232
 	xorwf	((_countTime)),w
 	movlw	3
 	skipnz
 	xorwf	((_countTime+1)),w
 	btfss	status,2
-	goto	u951
-	goto	u950
-u951:
-	goto	l2516
-u950:
-	line	259
+	goto	u1091
+	goto	u1090
+u1091:
+	goto	l2728
+u1090:
+	line	246
 	
-l2534:	
-;main.c: 258: {
-;main.c: 259: countTime = 0;
+l2746:	
+;main.c: 246: countTime = 0;
 	clrf	(_countTime)
 	clrf	(_countTime+1)
-	goto	l2516
+	goto	l2728
 	global	start
 	ljmp	start
 	opt stack 0
-	line	263
+	line	250
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -754,7 +719,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _scanKeys *****************
 ;; Defined at:
-;;		line 162 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 185 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -774,7 +739,7 @@ GLOBAL	__end_of_main
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    2
+;; Hardware stack levels required when called:    4
 ;; This function calls:
 ;;		_sacnKeyInput
 ;; This function is called by:
@@ -782,66 +747,66 @@ GLOBAL	__end_of_main
 ;; This function uses a non-reentrant model
 ;;
 psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	162
+	line	185
 global __ptext1
 __ptext1:	;psect for function _scanKeys
 psect	text1
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	162
+	line	185
 	global	__size_of_scanKeys
 	__size_of_scanKeys	equ	__end_of_scanKeys-_scanKeys
 	
 _scanKeys:	
 ;incstack = 0
-	opt	stack 5
+	opt	stack 3
 ; Regs used in _scanKeys: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	164
+	line	186
 	
-l2208:	
-;main.c: 164: key1.key_addr_result = key2.key_addr_result = key3.key_addr_result = PORTB;
+l2354:	
+;main.c: 186: key1.key_addr_result = key2.key_addr_result = key3.key_addr_result = PORTB;
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movf	(6),w	;volatile
 	movwf	0+(_key3)+05h
 	movwf	0+(_key2)+05h
 	movwf	0+(_key1)+05h
-	line	165
+	line	187
 	
-l2210:	
-;main.c: 165: sacnKeyInput(&key1);
+l2356:	
+;main.c: 187: sacnKeyInput(&key1);
 	movlw	(low(_key1|((0x0)<<8)))&0ffh
 	fcall	_sacnKeyInput
-	line	166
+	line	188
 	
-l2212:	
-;main.c: 166: sacnKeyInput(&key2);
+l2358:	
+;main.c: 188: sacnKeyInput(&key2);
 	movlw	(low(_key2|((0x0)<<8)))&0ffh
 	fcall	_sacnKeyInput
-	line	167
+	line	189
 	
-l2214:	
-;main.c: 167: sacnKeyInput(&key3);
+l2360:	
+;main.c: 189: sacnKeyInput(&key3);
 	movlw	(low(_key3|((0x0)<<8)))&0ffh
 	fcall	_sacnKeyInput
-	line	168
+	line	190
 	
-l2216:	
-;main.c: 168: countTime++;
+l2362:	
+;main.c: 190: countTime++;
 	incf	(_countTime),f
 	skipnz
 	incf	(_countTime+1),f
-	line	169
+	line	191
 	
-l2218:	
-;main.c: 169: count10Ms++;
+l2364:	
+;main.c: 191: count10Ms++;
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	incf	(_count10Ms),f
 	skipnz
 	incf	(_count10Ms+1),f
-	line	170
+	line	192
 	
-l608:	
+l611:	
 	return
 	opt stack 0
 GLOBAL	__end_of_scanKeys
@@ -856,7 +821,7 @@ GLOBAL	__end_of_scanKeys
 ;;  key             1    wreg     PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
 ;; Auto vars:     Size  Location     Type
-;;  key             1    4[COMMON] PTR struct Keys
+;;  key             1    6[COMMON] PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
@@ -873,7 +838,7 @@ GLOBAL	__end_of_scanKeys
 ;;      Totals:         3       0       0
 ;;Total ram usage:        3 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
@@ -893,14 +858,14 @@ psect	text2
 	
 _sacnKeyInput:	
 ;incstack = 0
-	opt	stack 5
+	opt	stack 3
 ; Regs used in _sacnKeyInput: [wreg-fsr0h+status,2+status,0]
 ;sacnKeyInput@key stored from wreg
 	movwf	(sacnKeyInput@key)
-	line	5
+	line	4
 	
-l2166:	
-;scankey.c: 5: key->key_input = ((key->key_addr_result) >> (key->key_index)&1);
+l2246:	
+;scankey.c: 4: key->key_input = ((key->key_addr_result) >> (key->key_index)&1);
 	movf	(sacnKeyInput@key),w
 	addlw	05h
 	movwf	fsr0
@@ -911,14 +876,14 @@ l2166:
 	addlw	06h
 	movwf	fsr0
 	incf	indf,w
-	goto	u594
-u595:
+	goto	u624
+u625:
 	clrc
 	rrf	(??_sacnKeyInput+0)+0,f
-u594:
+u624:
 	addlw	-1
 	skipz
-	goto	u595
+	goto	u625
 	movf	0+(??_sacnKeyInput+0)+0,w
 	movwf	(??_sacnKeyInput+1)+0
 	movf	(sacnKeyInput@key),w
@@ -931,95 +896,19 @@ u594:
 	movwf	fsr0
 	movlw	low(01h)
 	andwf	indf,f
-	line	7
+	line	6
 	
-l638:	
+l648:	
 	return
 	opt stack 0
 GLOBAL	__end_of_sacnKeyInput
 	__end_of_sacnKeyInput:
 	signat	_sacnKeyInput,4217
-	global	_resetKey
-
-;; *************** function _resetKey *****************
-;; Defined at:
-;;		line 115 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
-;; Parameters:    Size  Location     Type
-;;  key             1    wreg     PTR struct Keys
-;;		 -> key3(7), key2(7), key1(7), 
-;; Auto vars:     Size  Location     Type
-;;  key             1    2[COMMON] PTR struct Keys
-;;		 -> key3(7), key2(7), key1(7), 
-;; Return value:  Size  Location     Type
-;;                  1    wreg      void 
-;; Registers used:
-;;		wreg, fsr0l, fsr0h, status,2, status,0
-;; Tracked objects:
-;;		On entry : 0/0
-;;		On exit  : 800/0
-;;		Unchanged: 0/0
-;; Data sizes:     COMMON   BANK0   BANK1
-;;      Params:         0       0       0
-;;      Locals:         1       0       0
-;;      Temps:          0       0       0
-;;      Totals:         1       0       0
-;;Total ram usage:        1 bytes
-;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
-;; This function calls:
-;;		Nothing
-;; This function is called by:
-;;		_main
-;; This function uses a non-reentrant model
-;;
-psect	text3,local,class=CODE,delta=2,merge=1,group=0
-	line	115
-global __ptext3
-__ptext3:	;psect for function _resetKey
-psect	text3
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
-	line	115
-	global	__size_of_resetKey
-	__size_of_resetKey	equ	__end_of_resetKey-_resetKey
-	
-_resetKey:	
-;incstack = 0
-	opt	stack 6
-; Regs used in _resetKey: [wreg-fsr0h+status,2+status,0]
-;resetKey@key stored from wreg
-	movwf	(resetKey@key)
-	line	117
-	
-l2276:	
-;scankey.c: 117: key->key_timer_cnt1 =key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
-	movf	(resetKey@key),w
-	addlw	03h
-	movwf	fsr0
-	bcf	status, 7	;select IRP bank0
-	clrf	indf
-	incf	(resetKey@key),w
-	movwf	fsr0
-	clrf	indf
-	movf	(resetKey@key),w
-	addlw	02h
-	movwf	fsr0
-	clrf	indf
-	movf	(resetKey@key),w
-	movwf	fsr0
-	clrf	indf
-	line	118
-	
-l669:	
-	return
-	opt stack 0
-GLOBAL	__end_of_resetKey
-	__end_of_resetKey:
-	signat	_resetKey,4217
 	global	_checkUsbStatus
 
 ;; *************** function _checkUsbStatus *****************
 ;; Defined at:
-;;		line 29 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 36 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1039,32 +928,32 @@ GLOBAL	__end_of_resetKey
 ;;      Totals:         1       0       0
 ;;Total ram usage:        1 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
 ;;		_main
 ;; This function uses a non-reentrant model
 ;;
-psect	text4,local,class=CODE,delta=2,merge=1,group=0
+psect	text3,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	29
-global __ptext4
-__ptext4:	;psect for function _checkUsbStatus
-psect	text4
+	line	36
+global __ptext3
+__ptext3:	;psect for function _checkUsbStatus
+psect	text3
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	29
+	line	36
 	global	__size_of_checkUsbStatus
 	__size_of_checkUsbStatus	equ	__end_of_checkUsbStatus-_checkUsbStatus
 	
 _checkUsbStatus:	
 ;incstack = 0
-	opt	stack 6
+	opt	stack 4
 ; Regs used in _checkUsbStatus: [wreg+status,2+status,0]
-	line	31
+	line	37
 	
-l2198:	
-;main.c: 31: if(((PORTB) >> (2)&1) == 1){
+l2344:	
+;main.c: 37: if (((PORTB) >> (2)&1) == 1) {
 	movf	(6),w	;volatile
 	movwf	(??_checkUsbStatus+0)+0
 	clrc
@@ -1072,62 +961,62 @@ l2198:
 	clrc
 	rrf	(??_checkUsbStatus+0)+0,f
 	btfss	0+(??_checkUsbStatus+0)+0,(0)&7
-	goto	u631
-	goto	u630
-u631:
-	goto	l571
-u630:
-	line	32
+	goto	u661
+	goto	u660
+u661:
+	goto	l573
+u660:
+	line	38
 	
-l2200:	
-;main.c: 32: if(((PORTB) >> (1)&1) == 1){
+l2346:	
+;main.c: 38: if (((PORTB) >> (1)&1) == 1) {
 	movf	(6),w	;volatile
 	movwf	(??_checkUsbStatus+0)+0
 	clrc
 	rrf	(??_checkUsbStatus+0)+0,f
 	btfss	0+(??_checkUsbStatus+0)+0,(0)&7
-	goto	u641
-	goto	u640
-u641:
-	goto	l2204
-u640:
-	line	34
+	goto	u671
+	goto	u670
+u671:
+	goto	l2350
+u670:
+	line	40
 	
-l2202:	
-;main.c: 34: PORTA&=~(1<<0);
+l2348:	
+;main.c: 40: PORTA&=~(1<<0);
 	bcf	(5)+(0/8),(0)&7	;volatile
-	line	35
-;main.c: 35: }else if(countTime == 1000){
-	goto	l576
+	line	41
+;main.c: 41: } else if (countTime == 1000) {
+	goto	l578
 	
-l2204:	
+l2350:	
 		movlw	232
 	xorwf	((_countTime)),w
 	movlw	3
 	skipnz
 	xorwf	((_countTime+1)),w
 	btfss	status,2
-	goto	u651
-	goto	u650
-u651:
-	goto	l576
-u650:
-	line	37
-	
-l2206:	
-;main.c: 37: PORTA^=(1<<0);
-	movlw	low(01h)
-	xorwf	(5),f	;volatile
-	goto	l576
-	line	39
-	
-l571:	
-	line	41
-;main.c: 41: PORTA|=(1<<0);
-	bsf	(5)+(0/8),(0)&7	;volatile
+	goto	u681
+	goto	u680
+u681:
+	goto	l578
+u680:
 	line	43
 	
-l576:	
+l2352:	
+;main.c: 43: PORTA^=(1<<0);
+	movlw	low(01h)
+	xorwf	(5),f	;volatile
+	goto	l578
+	line	45
+	
+l573:	
+	line	47
+;main.c: 47: PORTA|=(1<<0);
+	bsf	(5)+(0/8),(0)&7	;volatile
+	line	49
+	
+l578:	
 	return
 	opt stack 0
 GLOBAL	__end_of_checkUsbStatus
@@ -1137,7 +1026,7 @@ GLOBAL	__end_of_checkUsbStatus
 
 ;; *************** function _checkKeys *****************
 ;; Defined at:
-;;		line 173 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 195 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1148,7 +1037,7 @@ GLOBAL	__end_of_checkUsbStatus
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
 ;;		On entry : 300/0
-;;		On exit  : 0/0
+;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1
 ;;      Params:         0       0       0
@@ -1157,7 +1046,7 @@ GLOBAL	__end_of_checkUsbStatus
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    4
+;; Hardware stack levels required when called:    6
 ;; This function calls:
 ;;		_checkFan
 ;;		_closeFan
@@ -1167,135 +1056,124 @@ GLOBAL	__end_of_checkUsbStatus
 ;;		_main
 ;; This function uses a non-reentrant model
 ;;
-psect	text5,local,class=CODE,delta=2,merge=1,group=0
-	line	173
-global __ptext5
-__ptext5:	;psect for function _checkKeys
-psect	text5
+psect	text4,local,class=CODE,delta=2,merge=1,group=0
+	line	195
+global __ptext4
+__ptext4:	;psect for function _checkKeys
+psect	text4
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	173
+	line	195
 	global	__size_of_checkKeys
 	__size_of_checkKeys	equ	__end_of_checkKeys-_checkKeys
 	
 _checkKeys:	
 ;incstack = 0
-	opt	stack 3
+	opt	stack 1
 ; Regs used in _checkKeys: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	175
+	line	196
 	
-l2462:	
-;main.c: 175: if(key_read(&key1) != 0)
+l2698:	
+;main.c: 196: if (key_read(&key1) != 0) {
 	movlw	(low(_key1|((0x0)<<8)))&0ffh
 	fcall	_key_read
 	xorlw	0
 	skipnz
-	goto	u881
-	goto	u880
-u881:
-	goto	l2476
-u880:
-	line	179
+	goto	u1021
+	goto	u1020
+u1021:
+	goto	l2712
+u1020:
+	line	199
 	
-l2464:	
-;main.c: 176: {
-;main.c: 179: if(FAN_STATUS == 1)
-	bcf	status, 5	;RP0=0, select bank0
-	bcf	status, 6	;RP1=0, select bank0
+l2700:	
+;main.c: 199: if (FAN_STATUS == 1) {
 		decf	((_FAN_STATUS)),w
 	btfss	status,2
-	goto	u891
-	goto	u890
-u891:
-	goto	l2468
-u890:
-	line	182
+	goto	u1031
+	goto	u1030
+u1031:
+	goto	l2704
+u1030:
+	line	201
 	
-l2466:	
-;main.c: 180: {
-;main.c: 182: closeFan();
+l2702:	
+;main.c: 201: closeFan();
 	fcall	_closeFan
-	line	183
-;main.c: 183: }else
-	goto	l614
-	line	185
+	line	202
+;main.c: 202: } else {
+	goto	l617
+	line	203
 	
-l2468:	
-;main.c: 184: {
-;main.c: 185: FAN_STATUS = 2;
+l2704:	
+;main.c: 203: FAN_STATUS = 2;
 	movlw	low(02h)
 	movwf	(_FAN_STATUS)
-	line	186
+	line	204
 	
-l2470:	
-;main.c: 186: checkFan();
+l2706:	
+;main.c: 204: checkFan();
 	fcall	_checkFan
-	goto	l614
-	line	190
+	goto	l617
+	line	207
 	
-l2476:	
-;main.c: 190: else if(FAN_STATUS == 2)
+l2712:	
 		movlw	2
-	bcf	status, 5	;RP0=0, select bank0
-	bcf	status, 6	;RP1=0, select bank0
 	xorwf	((_FAN_STATUS)),w
 	btfss	status,2
-	goto	u901
-	goto	u900
-u901:
-	goto	l615
-u900:
-	line	192
+	goto	u1041
+	goto	u1040
+u1041:
+	goto	l618
+u1040:
+	line	208
 	
-l2478:	
-;main.c: 191: {
-;main.c: 192: checkFan();
+l2714:	
+;main.c: 208: checkFan();
 	fcall	_checkFan
-	line	197
+	line	212
 	
-l615:	
-;main.c: 193: }
-;main.c: 197: if(key_read(&key2) != 0)
+l618:	
+;main.c: 209: }
+;main.c: 212: if (key_read(&key2) != 0) {
 	movlw	(low(_key2|((0x0)<<8)))&0ffh
 	fcall	_key_read
 	xorlw	0
 	skipnz
-	goto	u911
-	goto	u910
-u911:
-	goto	l2484
-u910:
-	line	200
+	goto	u1051
+	goto	u1050
+u1051:
+	goto	l2720
+u1050:
+	line	214
 	
-l2480:	
-;main.c: 198: {
-;main.c: 200: setFanLevel(1);
+l2716:	
+;main.c: 214: setFanLevel(1);
 	movlw	low(01h)
 	fcall	_setFanLevel
-	goto	l614
-	line	204
+	goto	l617
+	line	218
 	
-l2484:	
-;main.c: 202: }
-;main.c: 204: if(key_read(&key3) != 0)
+l2720:	
+;main.c: 216: }
+;main.c: 218: if (key_read(&key3) != 0) {
 	movlw	(low(_key3|((0x0)<<8)))&0ffh
 	fcall	_key_read
 	xorlw	0
 	skipnz
-	goto	u921
-	goto	u920
-u921:
-	goto	l614
-u920:
-	line	207
+	goto	u1061
+	goto	u1060
+u1061:
+	goto	l617
+u1060:
+	line	220
 	
-l2486:	
-;main.c: 205: {
-;main.c: 207: setFanLevel(-1);
+l2722:	
+;main.c: 220: setFanLevel(-1);
 	movlw	low(0FFh)
 	fcall	_setFanLevel
-	line	211
+	line	224
 	
-l614:	
+l617:	
 	return
 	opt stack 0
 GLOBAL	__end_of_checkKeys
@@ -1305,140 +1183,136 @@ GLOBAL	__end_of_checkKeys
 
 ;; *************** function _key_read *****************
 ;; Defined at:
-;;		line 75 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;;		line 66 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
 ;; Parameters:    Size  Location     Type
 ;;  key             1    wreg     PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
 ;; Auto vars:     Size  Location     Type
-;;  key             1    7[COMMON] PTR struct Keys
+;;  key             1    2[BANK0 ] PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
-;;  key_read        1    6[COMMON] unsigned char 
-;;  key_return      1    5[COMMON] unsigned char 
+;;  key_read        1    1[BANK0 ] unsigned char 
+;;  key_return      1    0[BANK0 ] unsigned char 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      unsigned char 
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 0/0
-;;		On exit  : 800/0
+;;		On entry : 300/0
+;;		On exit  : B00/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1
 ;;      Params:         0       0       0
-;;      Locals:         3       0       0
+;;      Locals:         0       3       0
 ;;      Temps:          0       0       0
-;;      Totals:         3       0       0
+;;      Totals:         0       3       0
 ;;Total ram usage:        3 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    2
+;; Hardware stack levels required when called:    4
 ;; This function calls:
 ;;		_key_driver
 ;; This function is called by:
 ;;		_checkKeys
 ;; This function uses a non-reentrant model
 ;;
-psect	text6,local,class=CODE,delta=2,merge=1,group=0
+psect	text5,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
-	line	75
-global __ptext6
-__ptext6:	;psect for function _key_read
-psect	text6
+	line	66
+global __ptext5
+__ptext5:	;psect for function _key_read
+psect	text5
 	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
-	line	75
+	line	66
 	global	__size_of_key_read
 	__size_of_key_read	equ	__end_of_key_read-_key_read
 	
 _key_read:	
 ;incstack = 0
-	opt	stack 4
+	opt	stack 2
 ; Regs used in _key_read: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 ;key_read@key stored from wreg
 	movwf	(key_read@key)
-	line	78
+	line	68
 	
-l2168:	
-;scankey.c: 78: unsigned char key_return = 0;
+l2668:	
+;scankey.c: 68: unsigned char key_return = 0;
 	clrf	(key_read@key_return)
-	line	79
+	line	69
 	
-l2170:	
-;scankey.c: 79: unsigned char key_read = key_driver(key);
+l2670:	
+;scankey.c: 69: unsigned char key_read = key_driver(key);
 	movf	(key_read@key),w
 	fcall	_key_driver
 	movwf	(key_read@key_read)
-	line	81
-;scankey.c: 81: switch(key->key_state_buffer2)
-	goto	l2192
-	line	84
+	line	71
+;scankey.c: 71: switch (key->key_state_buffer2) {
+	goto	l2692
+	line	73
 	
-l2172:	
-;scankey.c: 84: if(key_read == 1)
+l2672:	
+;scankey.c: 73: if (key_read == 1) {
 		decf	((key_read@key_read)),w
 	btfss	status,2
-	goto	u601
-	goto	u600
-u601:
-	goto	l2176
-u600:
-	line	86
+	goto	u991
+	goto	u990
+u991:
+	goto	l2676
+u990:
+	line	74
 	
-l2174:	
-;scankey.c: 85: {
-;scankey.c: 86: key->key_timer_cnt2 = 0;
+l2674:	
+;scankey.c: 74: key->key_timer_cnt2 = 0;
 	movf	(key_read@key),w
 	addlw	02h
 	movwf	fsr0
 	clrf	indf
-	line	87
-;scankey.c: 87: key->key_state_buffer2 = 1;
+	line	75
+;scankey.c: 75: key->key_state_buffer2 = 1;
 	movf	(key_read@key),w
 	addlw	03h
 	movwf	fsr0
 	clrf	indf
 	incf	indf,f
-	line	88
-;scankey.c: 88: }
-	goto	l2194
-	line	90
+	line	76
+;scankey.c: 76: } else
+	goto	l2694
+	line	77
 	
-l2176:	
-;scankey.c: 89: else
-;scankey.c: 90: key_return = key_read;
+l2676:	
+;scankey.c: 77: key_return = key_read;
 	movf	(key_read@key_read),w
 	movwf	(key_read@key_return)
-	goto	l2194
-	line	94
+	goto	l2694
+	line	81
 	
-l2178:	
-;scankey.c: 94: if(key_read == 1)
+l2678:	
+;scankey.c: 81: if (key_read == 1)
 		decf	((key_read@key_read)),w
 	btfss	status,2
-	goto	u611
-	goto	u610
-u611:
-	goto	l2184
-u610:
-	line	96
+	goto	u1001
+	goto	u1000
+u1001:
+	goto	l2684
+u1000:
+	line	83
 	
-l2180:	
-;scankey.c: 95: {
-;scankey.c: 96: key_return = 2;
+l2680:	
+;scankey.c: 82: {
+;scankey.c: 83: key_return = 2;
 	movlw	low(02h)
 	movwf	(key_read@key_return)
-	line	97
+	line	84
 	
-l2182:	
-;scankey.c: 97: key->key_state_buffer2 = 0;
+l2682:	
+;scankey.c: 84: key->key_state_buffer2 = 0;
 	movf	(key_read@key),w
 	addlw	03h
 	movwf	fsr0
 	clrf	indf
-	line	98
-;scankey.c: 98: }
-	goto	l2194
-	line	99
+	line	85
+;scankey.c: 85: } else if (++(key->key_timer_cnt2) >= 50) {
+	goto	l2694
 	
-l2184:	
-;scankey.c: 99: else if(++(key->key_timer_cnt2) >= 50)
+l2684:	
 	movf	(key_read@key),w
 	addlw	02h
 	movwf	fsr0
@@ -1446,30 +1320,29 @@ l2184:
 	movlw	low(032h)
 	subwf	(indf),w
 	skipc
-	goto	u621
-	goto	u620
-u621:
-	goto	l2194
-u620:
-	line	104
+	goto	u1011
+	goto	u1010
+u1011:
+	goto	l2694
+u1010:
+	line	89
 	
-l2186:	
-;scankey.c: 100: {
-;scankey.c: 104: key_return = 1;
+l2686:	
+;scankey.c: 89: key_return = 1;
 	clrf	(key_read@key_return)
 	incf	(key_read@key_return),f
-	line	105
+	line	90
 	
-l2188:	
-;scankey.c: 105: key->key_state_buffer2 = 0;
+l2688:	
+;scankey.c: 90: key->key_state_buffer2 = 0;
 	movf	(key_read@key),w
 	addlw	03h
 	movwf	fsr0
 	clrf	indf
-	goto	l2194
-	line	81
+	goto	l2694
+	line	71
 	
-l2192:	
+l2692:	
 	movf	(key_read@key),w
 	addlw	03h
 	movwf	fsr0
@@ -1487,21 +1360,21 @@ l2192:
 	opt asmopt_off
 	xorlw	0^0	; case 0
 	skipnz
-	goto	l2172
+	goto	l2672
 	xorlw	1^0	; case 1
 	skipnz
-	goto	l2178
-	goto	l2194
+	goto	l2678
+	goto	l2694
 	opt asmopt_pop
 
-	line	111
+	line	96
 	
-l2194:	
-;scankey.c: 111: return key_return;
+l2694:	
+;scankey.c: 96: return key_return;
 	movf	(key_read@key_return),w
-	line	112
+	line	97
 	
-l666:	
+l676:	
 	return
 	opt stack 0
 GLOBAL	__end_of_key_read
@@ -1511,23 +1384,23 @@ GLOBAL	__end_of_key_read
 
 ;; *************** function _key_driver *****************
 ;; Defined at:
-;;		line 10 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;;		line 9 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
 ;; Parameters:    Size  Location     Type
 ;;  key             1    wreg     PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
 ;; Auto vars:     Size  Location     Type
-;;  key             1    4[COMMON] PTR struct Keys
+;;  key             1    6[COMMON] PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
-;;  key_read        1    3[COMMON] unsigned char 
-;;  key_return      1    2[COMMON] unsigned char 
+;;  key_read        1    5[COMMON] unsigned char 
+;;  key_return      1    4[COMMON] unsigned char 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      unsigned char 
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0
 ;; Tracked objects:
-;;		On entry : 0/0
-;;		On exit  : 800/0
-;;		Unchanged: 0/0
+;;		On entry : 300/0
+;;		On exit  : B00/0
+;;		Unchanged: 300/0
 ;; Data sizes:     COMMON   BANK0   BANK1
 ;;      Params:         0       0       0
 ;;      Locals:         3       0       0
@@ -1535,190 +1408,183 @@ GLOBAL	__end_of_key_read
 ;;      Totals:         3       0       0
 ;;Total ram usage:        3 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
 ;;		_key_read
 ;; This function uses a non-reentrant model
 ;;
-psect	text7,local,class=CODE,delta=2,merge=1,group=0
-	line	10
-global __ptext7
-__ptext7:	;psect for function _key_driver
-psect	text7
+psect	text6,local,class=CODE,delta=2,merge=1,group=0
+	line	9
+global __ptext6
+__ptext6:	;psect for function _key_driver
+psect	text6
 	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
-	line	10
+	line	9
 	global	__size_of_key_driver
 	__size_of_key_driver	equ	__end_of_key_driver-_key_driver
 	
 _key_driver:	
 ;incstack = 0
-	opt	stack 4
+	opt	stack 2
 ; Regs used in _key_driver: [wreg-fsr0h+status,2+status,0]
 ;key_driver@key stored from wreg
 	movwf	(key_driver@key)
-	line	14
+	line	12
 	
-l2096:	
-;scankey.c: 14: unsigned char key_return = 0;
+l2600:	
+;scankey.c: 12: unsigned char key_return = 0;
 	clrf	(key_driver@key_return)
-	line	15
+	line	13
 	
-l2098:	
-;scankey.c: 15: unsigned char key_read = key->key_input;
+l2602:	
+;scankey.c: 13: unsigned char key_read = key->key_input;
 	movf	(key_driver@key),w
 	addlw	04h
 	movwf	fsr0
 	bcf	status, 7	;select IRP bank0
 	movf	indf,w
 	movwf	(key_driver@key_read)
+	line	15
+;scankey.c: 15: switch (key->key_state_buffer1) {
+	goto	l2634
 	line	17
-;scankey.c: 17: switch(key->key_state_buffer1)
-	goto	l2130
-	line	20
 	
-l2100:	
-;scankey.c: 20: if(key_read == 0)
+l2604:	
+;scankey.c: 17: if (key_read == 0) {
 	movf	((key_driver@key_read)),w
 	btfss	status,2
-	goto	u501
-	goto	u500
-u501:
-	goto	l2132
-u500:
-	line	22
+	goto	u901
+	goto	u900
+u901:
+	goto	l2636
+u900:
+	line	18
 	
-l2102:	
-;scankey.c: 21: {
-;scankey.c: 22: key->key_state_buffer1 = 1;
+l2606:	
+;scankey.c: 18: key->key_state_buffer1 = 1;
 	incf	(key_driver@key),w
 	movwf	fsr0
 	clrf	indf
 	incf	indf,f
-	goto	l2132
-	line	29
+	goto	l2636
+	line	25
 	
-l2104:	
-;scankey.c: 29: if(key_read == 0)
+l2608:	
+;scankey.c: 25: if (key_read == 0) {
 	movf	((key_driver@key_read)),w
 	btfss	status,2
-	goto	u511
-	goto	u510
-u511:
-	goto	l2110
-u510:
-	line	31
+	goto	u911
+	goto	u910
+u911:
+	goto	l2614
+u910:
+	line	26
 	
-l2106:	
-;scankey.c: 30: {
-;scankey.c: 31: key->key_timer_cnt1 = 0;
+l2610:	
+;scankey.c: 26: key->key_timer_cnt1 = 0;
 	movf	(key_driver@key),w
 	movwf	fsr0
 	clrf	indf
-	line	32
+	line	27
 	
-l2108:	
-;scankey.c: 32: key->key_state_buffer1 = 2;
+l2612:	
+;scankey.c: 27: key->key_state_buffer1 = 2;
 	incf	(key_driver@key),w
 	movwf	fsr0
 	movlw	low(02h)
 	movwf	indf
-	line	36
-;scankey.c: 36: }
-	goto	l2132
+	line	31
+;scankey.c: 31: } else {
+	goto	l2636
+	line	32
+	
+l2614:	
+;scankey.c: 32: key->key_state_buffer1 = 0;
+	incf	(key_driver@key),w
+	movwf	fsr0
+	clrf	indf
+	goto	l2636
 	line	39
 	
-l2110:	
-;scankey.c: 37: else
-;scankey.c: 38: {
-;scankey.c: 39: key->key_state_buffer1 = 0;
-	incf	(key_driver@key),w
-	movwf	fsr0
-	clrf	indf
-	goto	l2132
-	line	46
-	
-l2112:	
-;scankey.c: 46: if(key_read == 1)
+l2616:	
+;scankey.c: 39: if (key_read == 1) {
 		decf	((key_driver@key_read)),w
 	btfss	status,2
-	goto	u521
-	goto	u520
-u521:
-	goto	l2118
-u520:
-	line	48
+	goto	u921
+	goto	u920
+u921:
+	goto	l2622
+u920:
+	line	40
 	
-l2114:	
-;scankey.c: 47: {
-;scankey.c: 48: key_return = 1;
+l2618:	
+;scankey.c: 40: key_return = 1;
 	clrf	(key_driver@key_return)
 	incf	(key_driver@key_return),f
-	line	49
+	line	41
 	
-l2116:	
-;scankey.c: 49: key->key_state_buffer1 = 0;
+l2620:	
+;scankey.c: 41: key->key_state_buffer1 = 0;
 	incf	(key_driver@key),w
 	movwf	fsr0
 	clrf	indf
-	line	50
-;scankey.c: 50: }
-	goto	l2132
-	line	51
+	line	42
+;scankey.c: 42: } else if (++(key->key_timer_cnt1) >= 100)
+	goto	l2636
 	
-l2118:	
-;scankey.c: 51: else if(++(key->key_timer_cnt1) >= 100)
+l2622:	
 	movf	(key_driver@key),w
 	movwf	fsr0
 	incf	indf,f
 	movlw	low(064h)
 	subwf	(indf),w
 	skipc
-	goto	u531
-	goto	u530
-u531:
-	goto	l2132
-u530:
-	line	53
+	goto	u931
+	goto	u930
+u931:
+	goto	l2636
+u930:
+	line	44
 	
-l2120:	
-;scankey.c: 52: {
-;scankey.c: 53: key_return = 3;
+l2624:	
+;scankey.c: 43: {
+;scankey.c: 44: key_return = 3;
 	movlw	low(03h)
 	movwf	(key_driver@key_return)
-	line	54
+	line	45
 	
-l2122:	
-;scankey.c: 54: key->key_state_buffer1 = 3;
+l2626:	
+;scankey.c: 45: key->key_state_buffer1 = 3;
 	incf	(key_driver@key),w
 	movwf	fsr0
 	movlw	low(03h)
 	movwf	indf
-	goto	l2132
-	line	60
+	goto	l2636
+	line	51
 	
-l2124:	
-;scankey.c: 60: if(key_read == 1)
+l2628:	
+;scankey.c: 51: if (key_read == 1)
 		decf	((key_driver@key_read)),w
 	btfss	status,2
-	goto	u541
-	goto	u540
-u541:
-	goto	l2132
-u540:
-	line	62
+	goto	u941
+	goto	u940
+u941:
+	goto	l2636
+u940:
+	line	53
 	
-l2126:	
-;scankey.c: 61: {
-;scankey.c: 62: key->key_state_buffer1 = 0;
+l2630:	
+;scankey.c: 52: {
+;scankey.c: 53: key->key_state_buffer1 = 0;
 	incf	(key_driver@key),w
 	movwf	fsr0
 	clrf	indf
-	goto	l2132
-	line	17
+	goto	l2636
+	line	15
 	
-l2130:	
+l2634:	
 	incf	(key_driver@key),w
 	movwf	fsr0
 	movf	indf,w
@@ -1735,30 +1601,30 @@ l2130:
 	movlw	4
 	subwf	fsr,w
 skipnc
-goto l2132
-movlw high(S2586)
+goto l2636
+movlw high(S2798)
 movwf pclath
-	movlw low(S2586)
+	movlw low(S2798)
 	addwf fsr,w
 	movwf pc
 psect	swtext1,local,class=CONST,delta=2
 global __pswtext1
 __pswtext1:
-S2586:
-	ljmp	l2100
-	ljmp	l2104
-	ljmp	l2112
-	ljmp	l2124
-psect	text7
+S2798:
+	ljmp	l2604
+	ljmp	l2608
+	ljmp	l2616
+	ljmp	l2628
+psect	text6
 
-	line	67
+	line	58
 	
-l2132:	
-;scankey.c: 67: return key_return;
+l2636:	
+;scankey.c: 58: return key_return;
 	movf	(key_driver@key_return),w
-	line	68
+	line	59
 	
-l654:	
+l664:	
 	return
 	opt stack 0
 GLOBAL	__end_of_key_driver
@@ -1768,7 +1634,7 @@ GLOBAL	__end_of_key_driver
 
 ;; *************** function _checkFan *****************
 ;; Defined at:
-;;		line 99 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 104 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1784,11 +1650,11 @@ GLOBAL	__end_of_key_driver
 ;; Data sizes:     COMMON   BANK0   BANK1
 ;;      Params:         0       0       0
 ;;      Locals:         0       0       0
-;;      Temps:          1       0       0
-;;      Totals:         1       0       0
+;;      Temps:          0       1       0
+;;      Totals:         0       1       0
 ;;Total ram usage:        1 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    3
+;; Hardware stack levels required when called:    5
 ;; This function calls:
 ;;		_closeFan
 ;;		_setFanLevel
@@ -1796,126 +1662,123 @@ GLOBAL	__end_of_key_driver
 ;;		_checkKeys
 ;; This function uses a non-reentrant model
 ;;
-psect	text8,local,class=CODE,delta=2,merge=1,group=0
+psect	text7,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	99
-global __ptext8
-__ptext8:	;psect for function _checkFan
-psect	text8
+	line	104
+global __ptext7
+__ptext7:	;psect for function _checkFan
+psect	text7
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	99
+	line	104
 	global	__size_of_checkFan
 	__size_of_checkFan	equ	__end_of_checkFan-_checkFan
 	
 _checkFan:	
 ;incstack = 0
-	opt	stack 3
+	opt	stack 1
 ; Regs used in _checkFan: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	102
-	
-l2438:	
-;main.c: 102: PORTA|=(1<<1);
-	bsf	(5)+(1/8),(1)&7	;volatile
-	line	103
-	
-l2440:	
-;main.c: 103: setFanLevel(0);
-	movlw	low(0)
-	fcall	_setFanLevel
-	line	105
-	
-l2442:	
-;main.c: 105: TRISC&=~(1<<2);
-	bsf	status, 5	;RP0=1, select bank1
-	bcf	(135)^080h+(2/8),(2)&7	;volatile
 	line	106
 	
-l2444:	
-;main.c: 106: T2CON = 0X04;
-	movlw	low(04h)
-	bcf	status, 5	;RP0=0, select bank0
-	movwf	(18)	;volatile
+l2646:	
+;main.c: 106: PORTA|=(1<<1);
+	bsf	(5)+(1/8),(1)&7	;volatile
+	line	108
+;main.c: 108: TRISC&=~(1<<2);
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	(135)^080h+(2/8),(2)&7	;volatile
 	line	109
+;main.c: 109: PORTA|=(1<<2);
+	bcf	status, 5	;RP0=0, select bank0
+	bsf	(5)+(2/8),(2)&7	;volatile
+	line	110
 	
-l2446:	
-;main.c: 109: if(((PORTB) >> (6)&1) == 0)
+l2648:	
+;main.c: 110: T2CON = 0X04;
+	movlw	low(04h)
+	movwf	(18)	;volatile
+	line	113
+	
+l2650:	
+;main.c: 113: if (((PORTB) >> (6)&1) == 0) {
 	movf	(6),w	;volatile
 	movwf	(??_checkFan+0)+0
 	movlw	06h
-u845:
+u955:
 	clrc
 	rrf	(??_checkFan+0)+0,f
 	addlw	-1
 	skipz
-	goto	u845
+	goto	u955
 	btfsc	0+(??_checkFan+0)+0,(0)&7
-	goto	u851
-	goto	u850
-u851:
-	goto	l2450
-u850:
-	line	111
-	
-l2448:	
-;main.c: 110: {
-;main.c: 111: FAN_STATUS = 1;
-	clrf	(_FAN_STATUS)
-	incf	(_FAN_STATUS),f
-	line	112
-;main.c: 112: }else
-	goto	l2452
+	goto	u961
+	goto	u960
+u961:
+	goto	l2654
+u960:
 	line	114
 	
-l2450:	
-;main.c: 113: {
-;main.c: 114: FAN_STATUS = 2;
+l2652:	
+;main.c: 114: FAN_STATUS = 1;
+	clrf	(_FAN_STATUS)
+	incf	(_FAN_STATUS),f
+	line	115
+;main.c: 115: } else {
+	goto	l2656
+	line	116
+	
+l2654:	
+;main.c: 116: FAN_STATUS = 2;
 	movlw	low(02h)
 	movwf	(_FAN_STATUS)
-	line	118
+	line	119
 	
-l2452:	
-;main.c: 115: }
-;main.c: 118: if(FAN_STATUS == 2)
+l2656:	
+;main.c: 117: }
+;main.c: 119: setFanLevel(0);
+	movlw	low(0)
+	fcall	_setFanLevel
+	line	122
+	
+l2658:	
+;main.c: 122: if (FAN_STATUS == 2) {
 		movlw	2
 	xorwf	((_FAN_STATUS)),w
 	btfss	status,2
-	goto	u861
-	goto	u860
-u861:
-	goto	l595
-u860:
-	line	120
+	goto	u971
+	goto	u970
+u971:
+	goto	l598
+u970:
+	line	123
 	
-l2454:	
-;main.c: 119: {
-;main.c: 120: fan_check_time++;
+l2660:	
+;main.c: 123: fan_check_time++;
 	incf	(_fan_check_time),f
 	skipnz
 	incf	(_fan_check_time+1),f
-	line	121
+	line	124
 	
-l2456:	
-;main.c: 121: if(fan_check_time == 3000)
+l2662:	
+;main.c: 124: if (fan_check_time == 3000) {
 		movlw	184
 	xorwf	((_fan_check_time)),w
 	movlw	11
 	skipnz
 	xorwf	((_fan_check_time+1)),w
 	btfss	status,2
-	goto	u871
-	goto	u870
-u871:
-	goto	l595
-u870:
-	line	123
+	goto	u981
+	goto	u980
+u981:
+	goto	l598
+u980:
+	line	125
 	
-l2458:	
-;main.c: 122: {
-;main.c: 123: closeFan();
+l2664:	
+;main.c: 125: closeFan();
 	fcall	_closeFan
 	line	131
 	
-l595:	
+l598:	
 	return
 	opt stack 0
 GLOBAL	__end_of_checkFan
@@ -1925,19 +1788,19 @@ GLOBAL	__end_of_checkFan
 
 ;; *************** function _setFanLevel *****************
 ;; Defined at:
-;;		line 60 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 65 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;  level           1    wreg     unsigned char 
 ;; Auto vars:     Size  Location     Type
-;;  level           1    4[BANK0 ] unsigned char 
-;;  levelWidth      2    5[BANK0 ] unsigned int 
-;;  tempLevel       1    7[BANK0 ] unsigned char 
+;;  level           1   10[BANK0 ] unsigned char 
+;;  levelWidth      2    8[BANK0 ] unsigned int 
+;;  tempLevel       1   11[BANK0 ] unsigned char 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 800/0
+;;		On entry : B00/0
 ;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1
@@ -1947,7 +1810,7 @@ GLOBAL	__end_of_checkFan
 ;;      Totals:         0       4       0
 ;;Total ram usage:        4 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    2
+;; Hardware stack levels required when called:    4
 ;; This function calls:
 ;;		___awdiv
 ;;		___bmul
@@ -1957,30 +1820,48 @@ GLOBAL	__end_of_checkFan
 ;;		_checkKeys
 ;; This function uses a non-reentrant model
 ;;
-psect	text9,local,class=CODE,delta=2,merge=1,group=0
-	line	60
-global __ptext9
-__ptext9:	;psect for function _setFanLevel
-psect	text9
+psect	text8,local,class=CODE,delta=2,merge=1,group=0
+	line	65
+global __ptext8
+__ptext8:	;psect for function _setFanLevel
+psect	text8
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	60
+	line	65
 	global	__size_of_setFanLevel
 	__size_of_setFanLevel	equ	__end_of_setFanLevel-_setFanLevel
 	
 _setFanLevel:	
 ;incstack = 0
-	opt	stack 4
+	opt	stack 2
 ; Regs used in _setFanLevel: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 ;setFanLevel@level stored from wreg
-	bcf	status, 5	;RP0=0, select bank0
-	bcf	status, 6	;RP1=0, select bank0
 	movwf	(setFanLevel@level)
-	line	62
+	line	66
 	
-l2418:	
-;main.c: 62: unsigned int levelWidth = (PR2+1)/4;
+l2576:	
+;main.c: 66: if(level == 0)
+	movf	((setFanLevel@level)),w
+	btfss	status,2
+	goto	u861
+	goto	u860
+u861:
+	goto	l2580
+u860:
+	line	68
+	
+l2578:	
+;main.c: 67: {
+;main.c: 68: currentLevel = 2;
+	movlw	low(02h)
+	movwf	(_currentLevel)
+	line	70
+	
+l2580:	
+;main.c: 69: }
+;main.c: 70: unsigned int levelWidth = (PR2 + 1) / 4;
 	bsf	status, 5	;RP0=1, select bank1
 	movf	(146)^080h,w	;volatile
+	bcf	status, 5	;RP0=0, select bank0
 	movwf	(___awdiv@dividend)
 	clrf	(___awdiv@dividend+1)
 	incf	(___awdiv@dividend),f
@@ -1994,90 +1875,85 @@ l2418:
 	movwf	(setFanLevel@levelWidth+1)
 	movf	(0+(?___awdiv)),w
 	movwf	(setFanLevel@levelWidth)
-	line	63
+	line	71
 	
-l2420:	
-;main.c: 63: char tempLevel = currentLevel + level;
+l2582:	
+;main.c: 71: char tempLevel = currentLevel + level;
 	movf	(setFanLevel@level),w
 	addwf	(_currentLevel),w
 	movwf	(setFanLevel@tempLevel)
-	line	64
+	line	72
 	
-l2422:	
-;main.c: 64: if(tempLevel > 4)
+l2584:	
+;main.c: 72: if (tempLevel > 4) {
 	movlw	low(05h)
 	subwf	(setFanLevel@tempLevel),w
 	skipc
-	goto	u811
-	goto	u810
-u811:
-	goto	l2426
-u810:
-	line	66
-	
-l2424:	
-;main.c: 65: {
-;main.c: 66: tempLevel = 4;
-	movlw	low(04h)
-	movwf	(setFanLevel@tempLevel)
-	line	69
-	
-l2426:	
-;main.c: 67: }
-;main.c: 69: if(tempLevel < 1)
-	movf	((setFanLevel@tempLevel)),w
-	btfss	status,2
-	goto	u821
-	goto	u820
-u821:
-	goto	l2430
-u820:
-	line	71
-	
-l2428:	
-;main.c: 70: {
-;main.c: 71: tempLevel = 1;
-	clrf	(setFanLevel@tempLevel)
-	incf	(setFanLevel@tempLevel),f
+	goto	u871
+	goto	u870
+u871:
+	goto	l2588
+u870:
 	line	73
 	
-l2430:	
-;main.c: 72: }
-;main.c: 73: currentLevel = tempLevel;
+l2586:	
+;main.c: 73: tempLevel = 4;
+	movlw	low(04h)
+	movwf	(setFanLevel@tempLevel)
+	line	76
+	
+l2588:	
+;main.c: 74: }
+;main.c: 76: if (tempLevel < 1) {
+	movf	((setFanLevel@tempLevel)),w
+	btfss	status,2
+	goto	u881
+	goto	u880
+u881:
+	goto	l2592
+u880:
+	line	77
+	
+l2590:	
+;main.c: 77: tempLevel = 1;
+	clrf	(setFanLevel@tempLevel)
+	incf	(setFanLevel@tempLevel),f
+	line	80
+	
+l2592:	
+;main.c: 78: }
+;main.c: 80: if (FAN_STATUS == 1) {
+		decf	((_FAN_STATUS)),w
+	btfss	status,2
+	goto	u891
+	goto	u890
+u891:
+	goto	l588
+u890:
+	line	81
+	
+l2594:	
+;main.c: 81: currentLevel = tempLevel;
 	movf	(setFanLevel@tempLevel),w
 	movwf	(_currentLevel)
-	line	75
+	line	83
 	
-l2432:	
-;main.c: 75: CCPR1L = levelWidth*currentLevel;
+l2596:	
+;main.c: 83: CCPR1L = levelWidth * currentLevel;
 	movf	(setFanLevel@levelWidth),w
 	movwf	(___bmul@multiplicand)
 	movf	(_currentLevel),w
 	fcall	___bmul
 	movwf	(21)	;volatile
-	line	76
+	line	84
 	
-l2434:	
-;main.c: 76: if(FAN_STATUS == 1)
-		decf	((_FAN_STATUS)),w
-	btfss	status,2
-	goto	u831
-	goto	u830
-u831:
-	goto	l585
-u830:
-	line	78
-	
-l2436:	
-;main.c: 77: {
-;main.c: 78: setLedOn(currentLevel);
+l2598:	
+;main.c: 84: setLedOn(currentLevel);
 	movf	(_currentLevel),w
-	movwf	(setLedOn@ledIndex)
-	clrf	(setLedOn@ledIndex+1)
 	fcall	_setLedOn
-	line	81
+	line	87
 	
-l585:	
+l588:	
 	return
 	opt stack 0
 GLOBAL	__end_of_setFanLevel
@@ -2090,10 +1966,10 @@ GLOBAL	__end_of_setFanLevel
 ;;		line 4 in file "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\Umul8.c"
 ;; Parameters:    Size  Location     Type
 ;;  multiplier      1    wreg     unsigned char 
-;;  multiplicand    1    2[COMMON] unsigned char 
+;;  multiplicand    1    4[COMMON] unsigned char 
 ;; Auto vars:     Size  Location     Type
-;;  multiplier      1    4[COMMON] unsigned char 
-;;  product         1    3[COMMON] unsigned char 
+;;  multiplier      1    6[COMMON] unsigned char 
+;;  product         1    5[COMMON] unsigned char 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      unsigned char 
 ;; Registers used:
@@ -2109,19 +1985,19 @@ GLOBAL	__end_of_setFanLevel
 ;;      Totals:         3       0       0
 ;;Total ram usage:        3 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
 ;;		_setFanLevel
 ;; This function uses a non-reentrant model
 ;;
-psect	text10,local,class=CODE,delta=2,merge=1,group=1
+psect	text9,local,class=CODE,delta=2,merge=1,group=1
 	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\Umul8.c"
 	line	4
-global __ptext10
-__ptext10:	;psect for function ___bmul
-psect	text10
+global __ptext9
+__ptext9:	;psect for function ___bmul
+psect	text9
 	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\Umul8.c"
 	line	4
 	global	__size_of___bmul
@@ -2129,53 +2005,53 @@ psect	text10
 	
 ___bmul:	
 ;incstack = 0
-	opt	stack 4
+	opt	stack 2
 ; Regs used in ___bmul: [wreg+status,2+status,0]
 ;___bmul@multiplier stored from wreg
 	movwf	(___bmul@multiplier)
 	line	6
 	
-l2004:	
+l2082:	
 	clrf	(___bmul@product)
 	line	43
 	
-l2006:	
+l2084:	
 	btfss	(___bmul@multiplier),(0)&7
-	goto	u381
-	goto	u380
-u381:
-	goto	l2010
-u380:
+	goto	u401
+	goto	u400
+u401:
+	goto	l2088
+u400:
 	line	44
 	
-l2008:	
+l2086:	
 	movf	(___bmul@multiplicand),w
 	addwf	(___bmul@product),f
 	line	45
 	
-l2010:	
+l2088:	
 	clrc
 	rlf	(___bmul@multiplicand),f
 	line	46
 	
-l2012:	
+l2090:	
 	clrc
 	rrf	(___bmul@multiplier),f
 	line	47
 	movf	((___bmul@multiplier)),w
 	btfss	status,2
-	goto	u391
-	goto	u390
-u391:
-	goto	l2006
-u390:
+	goto	u411
+	goto	u410
+u411:
+	goto	l2084
+u410:
 	line	50
 	
-l2014:	
+l2092:	
 	movf	(___bmul@product),w
 	line	51
 	
-l1238:	
+l1248:	
 	return
 	opt stack 0
 GLOBAL	__end_of___bmul
@@ -2187,40 +2063,40 @@ GLOBAL	__end_of___bmul
 ;; Defined at:
 ;;		line 6 in file "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
 ;; Parameters:    Size  Location     Type
-;;  divisor         2    2[COMMON] int 
-;;  dividend        2    4[COMMON] int 
+;;  divisor         2    0[BANK0 ] int 
+;;  dividend        2    2[BANK0 ] int 
 ;; Auto vars:     Size  Location     Type
-;;  quotient        2    2[BANK0 ] int 
-;;  sign            1    1[BANK0 ] unsigned char 
-;;  counter         1    0[BANK0 ] unsigned char 
+;;  quotient        2    6[BANK0 ] int 
+;;  sign            1    5[BANK0 ] unsigned char 
+;;  counter         1    4[BANK0 ] unsigned char 
 ;; Return value:  Size  Location     Type
-;;                  2    2[COMMON] int 
+;;                  2    0[BANK0 ] int 
 ;; Registers used:
 ;;		wreg, status,2, status,0
 ;; Tracked objects:
-;;		On entry : B00/100
+;;		On entry : B00/0
 ;;		On exit  : B00/0
 ;;		Unchanged: 800/0
 ;; Data sizes:     COMMON   BANK0   BANK1
-;;      Params:         4       0       0
+;;      Params:         0       4       0
 ;;      Locals:         0       4       0
 ;;      Temps:          0       0       0
-;;      Totals:         4       4       0
+;;      Totals:         0       8       0
 ;;Total ram usage:        8 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
 ;;		_setFanLevel
 ;; This function uses a non-reentrant model
 ;;
-psect	text11,local,class=CODE,delta=2,merge=1,group=1
+psect	text10,local,class=CODE,delta=2,merge=1,group=1
 	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
 	line	6
-global __ptext11
-__ptext11:	;psect for function ___awdiv
-psect	text11
+global __ptext10
+__ptext10:	;psect for function ___awdiv
+psect	text10
 	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
 	line	6
 	global	__size_of___awdiv
@@ -2228,25 +2104,24 @@ psect	text11
 	
 ___awdiv:	
 ;incstack = 0
-	opt	stack 4
+	opt	stack 2
 ; Regs used in ___awdiv: [wreg+status,2+status,0]
 	line	14
 	
-l2374:	
-	bcf	status, 5	;RP0=0, select bank0
+l2532:	
 	clrf	(___awdiv@sign)
 	line	15
 	
-l2376:	
+l2534:	
 	btfss	(___awdiv@divisor+1),7
-	goto	u741
-	goto	u740
-u741:
-	goto	l2382
-u740:
+	goto	u791
+	goto	u790
+u791:
+	goto	l2540
+u790:
 	line	16
 	
-l2378:	
+l2536:	
 	comf	(___awdiv@divisor),f
 	comf	(___awdiv@divisor+1),f
 	incf	(___awdiv@divisor),f
@@ -2254,21 +2129,21 @@ l2378:
 	incf	(___awdiv@divisor+1),f
 	line	17
 	
-l2380:	
+l2538:	
 	clrf	(___awdiv@sign)
 	incf	(___awdiv@sign),f
 	line	19
 	
-l2382:	
+l2540:	
 	btfss	(___awdiv@dividend+1),7
-	goto	u751
-	goto	u750
-u751:
-	goto	l2388
-u750:
+	goto	u801
+	goto	u800
+u801:
+	goto	l2546
+u800:
 	line	20
 	
-l2384:	
+l2542:	
 	comf	(___awdiv@dividend),f
 	comf	(___awdiv@dividend+1),f
 	incf	(___awdiv@dividend),f
@@ -2276,35 +2151,35 @@ l2384:
 	incf	(___awdiv@dividend+1),f
 	line	21
 	
-l2386:	
+l2544:	
 	movlw	low(01h)
 	xorwf	(___awdiv@sign),f
 	line	23
 	
-l2388:	
+l2546:	
 	clrf	(___awdiv@quotient)
 	clrf	(___awdiv@quotient+1)
 	line	24
 	
-l2390:	
+l2548:	
 	movf	((___awdiv@divisor)),w
 iorwf	((___awdiv@divisor+1)),w
 	btfsc	status,2
-	goto	u761
-	goto	u760
-u761:
-	goto	l2410
-u760:
+	goto	u811
+	goto	u810
+u811:
+	goto	l2568
+u810:
 	line	25
 	
-l2392:	
+l2550:	
 	clrf	(___awdiv@counter)
 	incf	(___awdiv@counter),f
 	line	26
-	goto	l2396
+	goto	l2554
 	line	27
 	
-l2394:	
+l2552:	
 	clrc
 	rlf	(___awdiv@divisor),f
 	rlf	(___awdiv@divisor+1),f
@@ -2312,38 +2187,38 @@ l2394:
 	incf	(___awdiv@counter),f
 	line	26
 	
-l2396:	
+l2554:	
 	btfss	(___awdiv@divisor+1),(15)&7
-	goto	u771
-	goto	u770
-u771:
-	goto	l2394
-u770:
+	goto	u821
+	goto	u820
+u821:
+	goto	l2552
+u820:
 	line	31
 	
-l2398:	
+l2556:	
 	clrc
 	rlf	(___awdiv@quotient),f
 	rlf	(___awdiv@quotient+1),f
 	line	32
 	
-l2400:	
+l2558:	
 	movf	(___awdiv@divisor+1),w
 	subwf	(___awdiv@dividend+1),w
 	skipz
-	goto	u785
+	goto	u835
 	movf	(___awdiv@divisor),w
 	subwf	(___awdiv@dividend),w
-u785:
+u835:
 	skipc
-	goto	u781
-	goto	u780
-u781:
-	goto	l2406
-u780:
+	goto	u831
+	goto	u830
+u831:
+	goto	l2564
+u830:
 	line	33
 	
-l2402:	
+l2560:	
 	movf	(___awdiv@divisor),w
 	subwf	(___awdiv@dividend),f
 	movf	(___awdiv@divisor+1),w
@@ -2352,36 +2227,36 @@ l2402:
 	subwf	(___awdiv@dividend+1),f
 	line	34
 	
-l2404:	
+l2562:	
 	bsf	(___awdiv@quotient)+(0/8),(0)&7
 	line	36
 	
-l2406:	
+l2564:	
 	clrc
 	rrf	(___awdiv@divisor+1),f
 	rrf	(___awdiv@divisor),f
 	line	37
 	
-l2408:	
+l2566:	
 	decfsz	(___awdiv@counter),f
-	goto	u791
-	goto	u790
-u791:
-	goto	l2398
-u790:
+	goto	u841
+	goto	u840
+u841:
+	goto	l2556
+u840:
 	line	39
 	
-l2410:	
+l2568:	
 	movf	((___awdiv@sign)),w
 	btfsc	status,2
-	goto	u801
-	goto	u800
-u801:
-	goto	l2414
-u800:
+	goto	u851
+	goto	u850
+u851:
+	goto	l2572
+u850:
 	line	40
 	
-l2412:	
+l2570:	
 	comf	(___awdiv@quotient),f
 	comf	(___awdiv@quotient+1),f
 	incf	(___awdiv@quotient),f
@@ -2389,14 +2264,14 @@ l2412:
 	incf	(___awdiv@quotient+1),f
 	line	41
 	
-l2414:	
+l2572:	
 	movf	(___awdiv@quotient+1),w
 	movwf	(?___awdiv+1)
 	movf	(___awdiv@quotient),w
 	movwf	(?___awdiv)
 	line	42
 	
-l1350:	
+l1360:	
 	return
 	opt stack 0
 GLOBAL	__end_of___awdiv
@@ -2406,7 +2281,7 @@ GLOBAL	__end_of___awdiv
 
 ;; *************** function _closeFan *****************
 ;; Defined at:
-;;		line 84 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 90 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2426,7 +2301,7 @@ GLOBAL	__end_of___awdiv
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    2
+;; Hardware stack levels required when called:    4
 ;; This function calls:
 ;;		_Init_PWM
 ;;		_setLedOn
@@ -2435,67 +2310,65 @@ GLOBAL	__end_of___awdiv
 ;;		_checkKeys
 ;; This function uses a non-reentrant model
 ;;
-psect	text12,local,class=CODE,delta=2,merge=1,group=0
+psect	text11,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	84
-global __ptext12
-__ptext12:	;psect for function _closeFan
-psect	text12
+	line	90
+global __ptext11
+__ptext11:	;psect for function _closeFan
+psect	text11
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	84
+	line	90
 	global	__size_of_closeFan
 	__size_of_closeFan	equ	__end_of_closeFan-_closeFan
 	
 _closeFan:	
 ;incstack = 0
-	opt	stack 4
+	opt	stack 2
 ; Regs used in _closeFan: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	86
+	line	91
 	
-l2082:	
-;main.c: 86: Init_PWM();
+l2164:	
+;main.c: 91: Init_PWM();
 	fcall	_Init_PWM
-	line	87
+	line	92
 	
-l2084:	
-;main.c: 87: currentLevel = 2;
+l2166:	
+;main.c: 92: currentLevel = 2;
 	movlw	low(02h)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(_currentLevel)
-	line	88
+	line	93
 	
-l2086:	
-;main.c: 88: setLedOn(5);
-	movlw	05h
-	movwf	(setLedOn@ledIndex)
-	clrf	(setLedOn@ledIndex+1)
+l2168:	
+;main.c: 93: setLedOn(5);
+	movlw	low(05h)
 	fcall	_setLedOn
-	line	89
+	line	94
 	
-l2088:	
-;main.c: 89: PORTA|=(1<<0);
+l2170:	
+;main.c: 94: PORTA|=(1<<0);
 	bsf	(5)+(0/8),(0)&7	;volatile
-	line	91
+	line	96
 	
-l2090:	
-;main.c: 91: TRISC|=(1<<2);
+l2172:	
+;main.c: 96: TRISC|=(1<<2);
 	bsf	status, 5	;RP0=1, select bank1
 	bsf	(135)^080h+(2/8),(2)&7	;volatile
-	line	92
+	line	97
 	
-l2092:	
-;main.c: 92: fan_check_time = 0;
+l2174:	
+;main.c: 97: fan_check_time = 0;
 	bcf	status, 5	;RP0=0, select bank0
 	clrf	(_fan_check_time)
 	clrf	(_fan_check_time+1)
-	line	93
+	line	98
 	
-l2094:	
-;main.c: 93: FAN_STATUS = 0;
+l2176:	
+;main.c: 98: FAN_STATUS = 0;
 	clrf	(_FAN_STATUS)
-	line	95
+	line	100
 	
-l588:	
+l591:	
 	return
 	opt stack 0
 GLOBAL	__end_of_closeFan
@@ -2505,11 +2378,11 @@ GLOBAL	__end_of_closeFan
 
 ;; *************** function _setLedOn *****************
 ;; Defined at:
-;;		line 138 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 135 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
-;;  ledIndex        2    2[COMMON] int 
+;;  ledIndex        1    wreg     unsigned char 
 ;; Auto vars:     Size  Location     Type
-;;		None
+;;  ledIndex        1    4[COMMON] unsigned char 
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
@@ -2519,13 +2392,13 @@ GLOBAL	__end_of_closeFan
 ;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1
-;;      Params:         2       0       0
-;;      Locals:         0       0       0
+;;      Params:         0       0       0
+;;      Locals:         1       0       0
 ;;      Temps:          0       0       0
-;;      Totals:         2       0       0
-;;Total ram usage:        2 bytes
+;;      Totals:         1       0       0
+;;Total ram usage:        1 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
@@ -2533,149 +2406,212 @@ GLOBAL	__end_of_closeFan
 ;;		_closeFan
 ;; This function uses a non-reentrant model
 ;;
-psect	text13,local,class=CODE,delta=2,merge=1,group=0
-	line	138
-global __ptext13
-__ptext13:	;psect for function _setLedOn
-psect	text13
+psect	text12,local,class=CODE,delta=2,merge=1,group=0
+	line	135
+global __ptext12
+__ptext12:	;psect for function _setLedOn
+psect	text12
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	138
+	line	135
 	global	__size_of_setLedOn
 	__size_of_setLedOn	equ	__end_of_setLedOn-_setLedOn
 	
 _setLedOn:	
 ;incstack = 0
-	opt	stack 4
+	opt	stack 2
 ; Regs used in _setLedOn: [wreg-fsr0h+status,2+status,0]
-	line	140
+;setLedOn@ledIndex stored from wreg
+	movwf	(setLedOn@ledIndex)
+	line	136
 	
-l1992:	
-;main.c: 140: switch(ledIndex)
-	goto	l1998
-	line	142
-;main.c: 141: {
-;main.c: 142: case 1:
-	
-l599:	
-	line	143
-;main.c: 143: PORTB&=~(1<<7); PORTC|=(1<<0); PORTC&=~(1<<1);
-	bcf	(6)+(7/8),(7)&7	;volatile
-	bsf	(7)+(0/8),(0)&7	;volatile
-	bcf	(7)+(1/8),(1)&7	;volatile
-	line	144
-;main.c: 144: break;
-	goto	l605
-	line	145
-;main.c: 145: case 2:
-	
-l601:	
-	line	146
-;main.c: 146: PORTB|=(1<<7); PORTC&=~(1<<0); PORTC|=(1<<1);
-	bsf	(6)+(7/8),(7)&7	;volatile
-	bcf	(7)+(0/8),(0)&7	;volatile
-	bsf	(7)+(1/8),(1)&7	;volatile
-	line	147
-;main.c: 147: break;
-	goto	l605
-	line	149
-;main.c: 149: case 3:
+l2072:	
+;main.c: 136: switch(ledIndex) {
+	goto	l2076
+	line	137
+;main.c: 137: case 1:
 	
 l602:	
-	line	150
-;main.c: 150: PORTB|=(1<<7); PORTC&=~(1<<0); PORTC&=~(1<<1);
-	bsf	(6)+(7/8),(7)&7	;volatile
-	bcf	(7)+(0/8),(0)&7	;volatile
-	bcf	(7)+(1/8),(1)&7	;volatile
-	line	151
-;main.c: 151: break;
-	goto	l605
-	line	152
-;main.c: 152: case 4:
-	
-l603:	
-	line	153
-;main.c: 153: PORTB&=~(1<<7); PORTC|=(1<<0); PORTC|=(1<<1);
+	line	139
+;main.c: 139: TRISC&=~(1<<1);
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	(135)^080h+(1/8),(1)&7	;volatile
+	line	140
+;main.c: 140: TRISB|=(1<<7);
+	bsf	(134)^080h+(7/8),(7)&7	;volatile
+	line	141
+;main.c: 141: TRISC&=~(1<<0);
+	bcf	(135)^080h+(0/8),(0)&7	;volatile
+	line	142
+;main.c: 142: PORTB&=~(1<<7);
+	bcf	status, 5	;RP0=0, select bank0
 	bcf	(6)+(7/8),(7)&7	;volatile
+	line	143
+;main.c: 143: PORTC|=(1<<0);
 	bsf	(7)+(0/8),(0)&7	;volatile
-	bsf	(7)+(1/8),(1)&7	;volatile
-	line	154
-;main.c: 154: break;
-	goto	l605
-	line	155
-;main.c: 155: default:
+	line	144
+;main.c: 144: PORTC&=~(1<<1);
+	bcf	(7)+(1/8),(1)&7	;volatile
+	line	145
+;main.c: 145: break;
+	goto	l608
+	line	146
+;main.c: 146: case 2:
 	
 l604:	
-	line	156
-;main.c: 156: PORTB&=~(1<<7); PORTC&=~(1<<0); PORTC&=~(1<<1);
+	line	147
+;main.c: 147: TRISC&=~(1<<1);
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	(135)^080h+(1/8),(1)&7	;volatile
+	line	148
+;main.c: 148: TRISB|=(1<<7);
+	bsf	(134)^080h+(7/8),(7)&7	;volatile
+	line	149
+;main.c: 149: TRISC&=~(1<<0);
+	bcf	(135)^080h+(0/8),(0)&7	;volatile
+	line	150
+;main.c: 150: PORTB&=~(1<<7);
+	bcf	status, 5	;RP0=0, select bank0
 	bcf	(6)+(7/8),(7)&7	;volatile
+	line	151
+;main.c: 151: PORTC&=~(1<<0);
 	bcf	(7)+(0/8),(0)&7	;volatile
-	bcf	(7)+(1/8),(1)&7	;volatile
-	line	157
-;main.c: 157: break;
-	goto	l605
-	line	140
-	
-l1998:	
-	; Switch on 2 bytes has been partitioned into a top level switch of size 1, and 1 sub-switches
-; Switch size 1, requested type "space"
-; Number of cases is 1, Range of values is 0 to 0
-; switch strategies available:
-; Name         Instructions Cycles
-; simple_byte            4     3 (average)
-; direct_byte            7     6 (fixed)
-; jumptable            260     6 (fixed)
-;	Chosen strategy is simple_byte
-
-	movf (setLedOn@ledIndex+1),w
-	opt asmopt_push
-	opt asmopt_off
-	xorlw	0^0	; case 0
-	skipnz
-	goto	l2588
-	goto	l604
-	opt asmopt_pop
-	
-l2588:	
-; Switch size 1, requested type "space"
-; Number of cases is 4, Range of values is 1 to 4
-; switch strategies available:
-; Name         Instructions Cycles
-; simple_byte           13     7 (average)
-; direct_byte           13     9 (fixed)
-; jumptable            263     9 (fixed)
-;	Chosen strategy is simple_byte
-
-	movf (setLedOn@ledIndex),w
-	opt asmopt_push
-	opt asmopt_off
-	xorlw	1^0	; case 1
-	skipnz
-	goto	l599
-	xorlw	2^1	; case 2
-	skipnz
-	goto	l601
-	xorlw	3^2	; case 3
-	skipnz
-	goto	l602
-	xorlw	4^3	; case 4
-	skipnz
-	goto	l603
-	goto	l604
-	opt asmopt_pop
-
-	line	159
+	line	152
+;main.c: 152: PORTC|=(1<<1);
+	bsf	(7)+(1/8),(1)&7	;volatile
+	line	153
+;main.c: 153: break;
+	goto	l608
+	line	154
+;main.c: 154: case 3:
 	
 l605:	
+	line	156
+;main.c: 156: TRISC|=(1<<0);
+	bsf	status, 5	;RP0=1, select bank1
+	bsf	(135)^080h+(0/8),(0)&7	;volatile
+	line	157
+;main.c: 157: TRISB&=~(1<<7);
+	bcf	(134)^080h+(7/8),(7)&7	;volatile
+	line	158
+;main.c: 158: TRISC&=~(1<<1);
+	bcf	(135)^080h+(1/8),(1)&7	;volatile
+	line	159
+;main.c: 159: PORTB|=(1<<7);
+	bcf	status, 5	;RP0=0, select bank0
+	bsf	(6)+(7/8),(7)&7	;volatile
+	line	160
+;main.c: 160: PORTC&=~(1<<0);
+	bcf	(7)+(0/8),(0)&7	;volatile
+	line	161
+;main.c: 161: PORTC&=~(1<<1);
+	bcf	(7)+(1/8),(1)&7	;volatile
+	line	162
+;main.c: 162: break;
+	goto	l608
+	line	163
+;main.c: 163: case 4:
+	
+l606:	
+	line	164
+;main.c: 164: TRISC|=(1<<0);
+	bsf	status, 5	;RP0=1, select bank1
+	bsf	(135)^080h+(0/8),(0)&7	;volatile
+	line	165
+;main.c: 165: TRISB&=~(1<<7);
+	bcf	(134)^080h+(7/8),(7)&7	;volatile
+	line	166
+;main.c: 166: TRISC&=~(1<<1);
+	bcf	(135)^080h+(1/8),(1)&7	;volatile
+	line	167
+;main.c: 167: PORTB&=~(1<<7);
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	(6)+(7/8),(7)&7	;volatile
+	line	168
+;main.c: 168: PORTC|=(1<<0);
+	bsf	(7)+(0/8),(0)&7	;volatile
+	line	169
+;main.c: 169: PORTC|=(1<<1);
+	bsf	(7)+(1/8),(1)&7	;volatile
+	line	170
+;main.c: 170: break;
+	goto	l608
+	line	171
+;main.c: 171: case 5:
+	
+l607:	
+	line	173
+;main.c: 173: TRISC|=(1<<0);
+	bsf	status, 5	;RP0=1, select bank1
+	bsf	(135)^080h+(0/8),(0)&7	;volatile
+	line	174
+;main.c: 174: TRISB|=(1<<7);
+	bsf	(134)^080h+(7/8),(7)&7	;volatile
+	line	175
+;main.c: 175: TRISC|=(1<<1);
+	bsf	(135)^080h+(1/8),(1)&7	;volatile
+	line	176
+;main.c: 176: PORTC&=~(1<<0);
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	(7)+(0/8),(0)&7	;volatile
+	line	177
+;main.c: 177: PORTB&=~(1<<7);
+	bcf	(6)+(7/8),(7)&7	;volatile
+	line	178
+;main.c: 178: PORTC&=~(1<<1);
+	bcf	(7)+(1/8),(1)&7	;volatile
+	line	179
+;main.c: 179: break;
+	goto	l608
+	line	136
+	
+l2076:	
+	movf	(setLedOn@ledIndex),w
+	; Switch size 1, requested type "space"
+; Number of cases is 5, Range of values is 1 to 5
+; switch strategies available:
+; Name         Instructions Cycles
+; direct_byte           14     9 (fixed)
+; simple_byte           16     9 (average)
+; jumptable            263     9 (fixed)
+;	Chosen strategy is direct_byte
+
+	addlw	-1
+	skipc
+goto l608
+	movwf fsr
+	movlw	5
+	subwf	fsr,w
+skipnc
+goto l608
+movlw high(S2800)
+movwf pclath
+	movlw low(S2800)
+	addwf fsr,w
+	movwf pc
+psect	swtext2,local,class=CONST,delta=2
+global __pswtext2
+__pswtext2:
+S2800:
+	ljmp	l602
+	ljmp	l604
+	ljmp	l605
+	ljmp	l606
+	ljmp	l607
+psect	text12
+
+	line	181
+	
+l608:	
 	return
 	opt stack 0
 GLOBAL	__end_of_setLedOn
 	__end_of_setLedOn:
 	signat	_setLedOn,4217
-	global	_Init_PWM
+	global	_Init_Config
 
-;; *************** function _Init_PWM *****************
+;; *************** function _Init_Config *****************
 ;; Defined at:
-;;		line 45 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 252 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2683,10 +2619,10 @@ GLOBAL	__end_of_setLedOn
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg, status,2
+;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 300/0
-;;		On exit  : 300/100
+;;		On entry : B00/0
+;;		On exit  : B00/100
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1
 ;;      Params:         0       0       0
@@ -2695,72 +2631,202 @@ GLOBAL	__end_of_setLedOn
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    4
 ;; This function calls:
-;;		Nothing
+;;		_Init_GPIO
+;;		_Init_Interupt
+;;		_Init_PWM
+;;		_Init_System
+;;		_resetKey
 ;; This function is called by:
-;;		_closeFan
 ;;		_main
 ;; This function uses a non-reentrant model
 ;;
-psect	text14,local,class=CODE,delta=2,merge=1,group=0
-	line	45
-global __ptext14
-__ptext14:	;psect for function _Init_PWM
-psect	text14
+psect	text13,local,class=CODE,delta=2,merge=1,group=0
+	line	252
+global __ptext13
+__ptext13:	;psect for function _Init_Config
+psect	text13
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	45
-	global	__size_of_Init_PWM
-	__size_of_Init_PWM	equ	__end_of_Init_PWM-_Init_PWM
+	line	252
+	global	__size_of_Init_Config
+	__size_of_Init_Config	equ	__end_of_Init_Config-_Init_Config
 	
-_Init_PWM:	
+_Init_Config:	
 ;incstack = 0
-	opt	stack 4
-; Regs used in _Init_PWM: [wreg+status,2]
-	line	47
+	opt	stack 3
+; Regs used in _Init_Config: [wreg-fsr0h+status,2+status,0+pclath+cstack]
+	line	254
 	
-l1982:	
-;main.c: 47: CCP1CON = 0x0F;
-	movlw	low(0Fh)
-	movwf	(23)	;volatile
-	line	48
+l2394:	
+;main.c: 254: Init_System();
+	fcall	_Init_System
+	line	255
+;main.c: 255: Init_GPIO();
+	fcall	_Init_GPIO
+	line	256
+;main.c: 256: Init_Interupt();
+	fcall	_Init_Interupt
+	line	257
+;main.c: 257: Init_PWM();
+	fcall	_Init_PWM
+	line	259
 	
-l1984:	
-;main.c: 48: T2CON = 0;
-	clrf	(18)	;volatile
-	line	49
+l2396:	
+;main.c: 259: IOCB = 0x04;
+	movlw	low(04h)
+	movwf	(150)^080h	;volatile
+	line	260
 	
-l1986:	
-;main.c: 49: PR2 = 199;
-	movlw	low(0C7h)
-	bsf	status, 5	;RP0=1, select bank1
-	movwf	(146)^080h	;volatile
-	line	51
-;main.c: 51: CCPR1L = 0;
+l2398:	
+;main.c: 260: TMR0 = 155;
+	movlw	low(09Bh)
 	bcf	status, 5	;RP0=0, select bank0
-	clrf	(21)	;volatile
-	line	52
+	movwf	(1)	;volatile
+	line	261
 	
-l1988:	
-;main.c: 52: TMR2IF = 0;
-	bcf	(97/8),(97)&7	;volatile
-	line	53
-;main.c: 53: T2CON = 0;
-	clrf	(18)	;volatile
-	line	55
+l2400:	
+;main.c: 261: TO = 0;
+	bcf	(28/8),(28)&7	;volatile
+	line	264
 	
-l1990:	
-;main.c: 55: TRISC&=~(1<<2);
+l2402:	
+;main.c: 264: key1.key_index = 5;
+	movlw	low(05h)
+	movwf	0+(_key1)+06h
+	line	266
+	
+l2404:	
+;main.c: 266: key2.key_index = 4;
+	movlw	low(04h)
+	movwf	0+(_key2)+06h
+	line	268
+	
+l2406:	
+;main.c: 268: key3.key_index = 3;
+	movlw	low(03h)
+	movwf	0+(_key3)+06h
+	line	269
+	
+l2408:	
+;main.c: 269: resetKey(&key1);
+	movlw	(low(_key1|((0x0)<<8)))&0ffh
+	fcall	_resetKey
+	line	270
+	
+l2410:	
+;main.c: 270: resetKey(&key2);
+	movlw	(low(_key2|((0x0)<<8)))&0ffh
+	fcall	_resetKey
+	line	271
+	
+l2412:	
+;main.c: 271: resetKey(&key3);
+	movlw	(low(_key3|((0x0)<<8)))&0ffh
+	fcall	_resetKey
+	line	273
+	
+l2414:	
+;main.c: 273: TRISA = 0;
 	bsf	status, 5	;RP0=1, select bank1
-	bcf	(135)^080h+(2/8),(2)&7	;volatile
-	line	57
+	bcf	status, 6	;RP1=0, select bank1
+	clrf	(133)^080h	;volatile
+	line	274
 	
-l579:	
+l2416:	
+;main.c: 274: TRISB = 0x7E;
+	movlw	low(07Eh)
+	movwf	(134)^080h	;volatile
+	line	275
+	
+l2418:	
+;main.c: 275: TRISC = 0;
+	clrf	(135)^080h	;volatile
+	line	276
+	
+l635:	
 	return
 	opt stack 0
-GLOBAL	__end_of_Init_PWM
-	__end_of_Init_PWM:
-	signat	_Init_PWM,89
+GLOBAL	__end_of_Init_Config
+	__end_of_Init_Config:
+	signat	_Init_Config,89
+	global	_resetKey
+
+;; *************** function _resetKey *****************
+;; Defined at:
+;;		line 100 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;; Parameters:    Size  Location     Type
+;;  key             1    wreg     PTR struct Keys
+;;		 -> key3(7), key2(7), key1(7), 
+;; Auto vars:     Size  Location     Type
+;;  key             1    4[COMMON] PTR struct Keys
+;;		 -> key3(7), key2(7), key1(7), 
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, fsr0l, fsr0h, status,2, status,0
+;; Tracked objects:
+;;		On entry : 0/0
+;;		On exit  : 800/0
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         1       0       0
+;;      Temps:          0       0       0
+;;      Totals:         1       0       0
+;;Total ram usage:        1 bytes
+;; Hardware stack levels used:    1
+;; Hardware stack levels required when called:    3
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		_Init_Config
+;; This function uses a non-reentrant model
+;;
+psect	text14,local,class=CODE,delta=2,merge=1,group=0
+	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	line	100
+global __ptext14
+__ptext14:	;psect for function _resetKey
+psect	text14
+	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	line	100
+	global	__size_of_resetKey
+	__size_of_resetKey	equ	__end_of_resetKey-_resetKey
+	
+_resetKey:	
+;incstack = 0
+	opt	stack 3
+; Regs used in _resetKey: [wreg-fsr0h+status,2+status,0]
+;resetKey@key stored from wreg
+	movwf	(resetKey@key)
+	line	101
+	
+l2304:	
+;scankey.c: 101: key->key_timer_cnt1 = key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
+	movf	(resetKey@key),w
+	addlw	03h
+	movwf	fsr0
+	bcf	status, 7	;select IRP bank0
+	clrf	indf
+	incf	(resetKey@key),w
+	movwf	fsr0
+	clrf	indf
+	movf	(resetKey@key),w
+	addlw	02h
+	movwf	fsr0
+	clrf	indf
+	movf	(resetKey@key),w
+	movwf	fsr0
+	clrf	indf
+	line	102
+	
+l679:	
+	return
+	opt stack 0
+GLOBAL	__end_of_resetKey
+	__end_of_resetKey:
+	signat	_resetKey,4217
 	global	_Init_System
 
 ;; *************** function _Init_System *****************
@@ -2785,11 +2851,11 @@ GLOBAL	__end_of_Init_PWM
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
-;;		_main
+;;		_Init_Config
 ;; This function uses a non-reentrant model
 ;;
 psect	text15,local,class=CODE,delta=2,merge=1,group=0
@@ -2805,53 +2871,139 @@ psect	text15
 	
 _Init_System:	
 ;incstack = 0
-	opt	stack 6
+	opt	stack 3
 ; Regs used in _Init_System: [wreg+status,2]
-	line	5
+	line	4
 	
-l2248:	
-# 5 "C:\SCMCU WorkSpace\uf166fan\init.c"
+l2278:	
+# 4 "C:\SCMCU WorkSpace\uf166fan\init.c"
 nop ;# 
-	line	6
-# 6 "C:\SCMCU WorkSpace\uf166fan\init.c"
+	line	5
+# 5 "C:\SCMCU WorkSpace\uf166fan\init.c"
 clrwdt ;# 
 psect	text15
+	line	6
+	
+l2280:	
+;init.c: 6: INTCON = 0;
+	clrf	(11)	;volatile
 	line	7
 	
-l2250:	
-;init.c: 7: INTCON = 0;
-	clrf	(11)	;volatile
-	line	8
-	
-l2252:	
-;init.c: 8: OSCCON = 0X71;
+l2282:	
+;init.c: 7: OSCCON = 0X71;
 	movlw	low(071h)
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	movwf	(143)^080h	;volatile
-	line	9
+	line	8
 	
-l2254:	
-;init.c: 9: OPTION_REG = 0x00;
+l2284:	
+;init.c: 8: OPTION_REG = 0x00;
 	clrf	(129)^080h	;volatile
 	line	10
 	
-l2256:	
-;init.c: 10: INTCON = 0x00;
-	clrf	(11)	;volatile
-	line	14
-	
-l1208:	
+l1218:	
 	return
 	opt stack 0
 GLOBAL	__end_of_Init_System
 	__end_of_Init_System:
 	signat	_Init_System,89
+	global	_Init_PWM
+
+;; *************** function _Init_PWM *****************
+;; Defined at:
+;;		line 51 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, status,2
+;; Tracked objects:
+;;		On entry : 300/0
+;;		On exit  : 300/100
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         0       0       0
+;;      Temps:          0       0       0
+;;      Totals:         0       0       0
+;;Total ram usage:        0 bytes
+;; Hardware stack levels used:    1
+;; Hardware stack levels required when called:    3
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		_closeFan
+;;		_Init_Config
+;; This function uses a non-reentrant model
+;;
+psect	text16,local,class=CODE,delta=2,merge=1,group=0
+	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	line	51
+global __ptext16
+__ptext16:	;psect for function _Init_PWM
+psect	text16
+	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	line	51
+	global	__size_of_Init_PWM
+	__size_of_Init_PWM	equ	__end_of_Init_PWM-_Init_PWM
+	
+_Init_PWM:	
+;incstack = 0
+	opt	stack 2
+; Regs used in _Init_PWM: [wreg+status,2]
+	line	52
+	
+l2062:	
+;main.c: 52: CCP1CON = 0x0F;
+	movlw	low(0Fh)
+	movwf	(23)	;volatile
+	line	53
+	
+l2064:	
+;main.c: 53: T2CON = 0;
+	clrf	(18)	;volatile
+	line	54
+	
+l2066:	
+;main.c: 54: PR2 = 7;
+	movlw	low(07h)
+	bsf	status, 5	;RP0=1, select bank1
+	movwf	(146)^080h	;volatile
+	line	56
+;main.c: 56: CCPR1L = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(21)	;volatile
+	line	57
+	
+l2068:	
+;main.c: 57: TMR2IF = 0;
+	bcf	(97/8),(97)&7	;volatile
+	line	58
+;main.c: 58: T2CON = 0;
+	clrf	(18)	;volatile
+	line	60
+	
+l2070:	
+;main.c: 60: TRISC&=~(1<<2);
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	(135)^080h+(2/8),(2)&7	;volatile
+	line	62
+	
+l581:	
+	return
+	opt stack 0
+GLOBAL	__end_of_Init_PWM
+	__end_of_Init_PWM:
+	signat	_Init_PWM,89
 	global	_Init_Interupt
 
 ;; *************** function _Init_Interupt *****************
 ;; Defined at:
-;;		line 32 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 27 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2871,45 +3023,46 @@ GLOBAL	__end_of_Init_System
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
-;;		_main
+;;		_Init_Config
 ;; This function uses a non-reentrant model
 ;;
-psect	text16,local,class=CODE,delta=2,merge=1,group=0
-	line	32
-global __ptext16
-__ptext16:	;psect for function _Init_Interupt
-psect	text16
+psect	text17,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
-	line	32
+	line	27
+global __ptext17
+__ptext17:	;psect for function _Init_Interupt
+psect	text17
+	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	line	27
 	global	__size_of_Init_Interupt
 	__size_of_Init_Interupt	equ	__end_of_Init_Interupt-_Init_Interupt
 	
 _Init_Interupt:	
 ;incstack = 0
-	opt	stack 6
+	opt	stack 3
 ; Regs used in _Init_Interupt: [wreg+status,2]
-	line	34
+	line	28
 	
-l2272:	
-;init.c: 34: OPTION_REG = 0x00;
+l2300:	
+;init.c: 28: OPTION_REG = 0x00;
 	clrf	(129)^080h	;volatile
-	line	35
-;init.c: 35: TMR0 = 0;
+	line	29
+;init.c: 29: TMR0 = 0;
 	bcf	status, 5	;RP0=0, select bank0
 	clrf	(1)	;volatile
-	line	36
+	line	30
 	
-l2274:	
-;init.c: 36: INTCON = 0xE0;
+l2302:	
+;init.c: 30: INTCON = 0xE0;
 	movlw	low(0E0h)
 	movwf	(11)	;volatile
-	line	38
+	line	32
 	
-l1214:	
+l1224:	
 	return
 	opt stack 0
 GLOBAL	__end_of_Init_Interupt
@@ -2919,7 +3072,7 @@ GLOBAL	__end_of_Init_Interupt
 
 ;; *************** function _Init_GPIO *****************
 ;; Defined at:
-;;		line 17 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 13 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2939,86 +3092,86 @@ GLOBAL	__end_of_Init_Interupt
 ;;      Totals:         0       0       0
 ;;Total ram usage:        0 bytes
 ;; Hardware stack levels used:    1
-;; Hardware stack levels required when called:    1
+;; Hardware stack levels required when called:    3
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
-;;		_main
+;;		_Init_Config
 ;; This function uses a non-reentrant model
 ;;
-psect	text17,local,class=CODE,delta=2,merge=1,group=0
-	line	17
-global __ptext17
-__ptext17:	;psect for function _Init_GPIO
-psect	text17
+psect	text18,local,class=CODE,delta=2,merge=1,group=0
+	line	13
+global __ptext18
+__ptext18:	;psect for function _Init_GPIO
+psect	text18
 	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
-	line	17
+	line	13
 	global	__size_of_Init_GPIO
 	__size_of_Init_GPIO	equ	__end_of_Init_GPIO-_Init_GPIO
 	
 _Init_GPIO:	
 ;incstack = 0
-	opt	stack 6
+	opt	stack 3
 ; Regs used in _Init_GPIO: [wreg+status,2]
-	line	19
+	line	14
 	
-l2258:	
-;init.c: 19: TRISA = 0;
+l2286:	
+;init.c: 14: TRISA = 0;
 	clrf	(133)^080h	;volatile
-	line	20
-;init.c: 20: TRISB = 0;
+	line	15
+;init.c: 15: TRISB = 0;
 	clrf	(134)^080h	;volatile
-	line	21
-;init.c: 21: TRISC = 0;
+	line	16
+;init.c: 16: TRISC = 0;
 	clrf	(135)^080h	;volatile
-	line	22
+	line	17
 	
-l2260:	
-;init.c: 22: WPUA = 0xFF;
+l2288:	
+;init.c: 17: WPUA = 0xFF;
 	movlw	low(0FFh)
 	bsf	status, 6	;RP1=1, select bank3
 	movwf	(398)^0180h	;volatile
-	line	23
+	line	18
 	
-l2262:	
-;init.c: 23: WPUB = 0xFF;
+l2290:	
+;init.c: 18: WPUB = 0xFF;
 	movlw	low(0FFh)
 	bcf	status, 6	;RP1=0, select bank1
 	movwf	(149)^080h	;volatile
-	line	24
+	line	19
 	
-l2264:	
-;init.c: 24: WPUC = 0xFF;
+l2292:	
+;init.c: 19: WPUC = 0xFF;
 	movlw	low(0FFh)
 	bsf	status, 6	;RP1=1, select bank3
 	movwf	(399)^0180h	;volatile
-	line	25
+	line	20
 	
-l2266:	
-;init.c: 25: PORTA = 0xFF;
+l2294:	
+;init.c: 20: PORTA = 0xFF;
 	movlw	low(0FFh)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movwf	(5)	;volatile
-	line	26
+	line	21
 	
-l2268:	
-;init.c: 26: PORTB = 0xFF;
+l2296:	
+;init.c: 21: PORTB = 0xFF;
 	movlw	low(0FFh)
 	movwf	(6)	;volatile
-	line	27
+	line	22
 	
-l2270:	
-;init.c: 27: PORTC = 0xFF;
+l2298:	
+;init.c: 22: PORTC = 0xFF;
 	movlw	low(0FFh)
 	movwf	(7)	;volatile
-	line	28
-;init.c: 28: IOCB = 0x00;
+	line	23
+;init.c: 23: IOCB = 0x00;
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(150)^080h	;volatile
-	line	30
+	line	25
 	
-l1211:	
+l1221:	
 	return
 	opt stack 0
 GLOBAL	__end_of_Init_GPIO
@@ -3028,7 +3181,7 @@ GLOBAL	__end_of_Init_GPIO
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 273 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 322 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3036,7 +3189,7 @@ GLOBAL	__end_of_Init_GPIO
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg, status,2, status,0
+;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
 ;;		On entry : 0/0
 ;;		On exit  : 0/0
@@ -3044,31 +3197,32 @@ GLOBAL	__end_of_Init_GPIO
 ;; Data sizes:     COMMON   BANK0   BANK1
 ;;      Params:         0       0       0
 ;;      Locals:         0       0       0
-;;      Temps:          2       0       0
-;;      Totals:         2       0       0
-;;Total ram usage:        2 bytes
+;;      Temps:          3       0       0
+;;      Totals:         3       0       0
+;;Total ram usage:        3 bytes
 ;; Hardware stack levels used:    1
+;; Hardware stack levels required when called:    2
 ;; This function calls:
-;;		Nothing
+;;		i1_Init_Config
 ;; This function is called by:
 ;;		Interrupt level 1
 ;; This function uses a non-reentrant model
 ;;
-psect	text18,local,class=CODE,delta=2,merge=1,group=0
+psect	text19,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	273
-global __ptext18
-__ptext18:	;psect for function _Timer0_Isr
-psect	text18
+	line	322
+global __ptext19
+__ptext19:	;psect for function _Timer0_Isr
+psect	text19
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	273
+	line	322
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
 	
 _Timer0_Isr:	
 ;incstack = 0
-	opt	stack 3
-; Regs used in _Timer0_Isr: [wreg+status,2+status,0]
+	opt	stack 1
+; Regs used in _Timer0_Isr: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 psect	intentry,class=CODE,delta=2
 global __pintentry
 __pintentry:
@@ -3079,45 +3233,69 @@ interrupt_function:
 	movwf	saved_w
 	swapf	status,w
 	movwf	(??_Timer0_Isr+0)
-	movf	pclath,w
+	movf	fsr0,w
 	movwf	(??_Timer0_Isr+1)
+	movf	pclath,w
+	movwf	(??_Timer0_Isr+2)
 	ljmp	_Timer0_Isr
-psect	text18
-	line	275
+psect	text19
+	line	323
 	
-i1l1934:	
-;main.c: 275: if(T0IF)
+i1l2468:	
+;main.c: 323: if (T0IF) {
 	btfss	(90/8),(90)&7	;volatile
-	goto	u37_21
-	goto	u37_20
-u37_21:
-	goto	i1l635
-u37_20:
-	line	278
+	goto	u77_21
+	goto	u77_20
+u77_21:
+	goto	i1l2476
+u77_20:
+	line	325
 	
-i1l1936:	
-;main.c: 276: {
-;main.c: 278: TMR0 += 155;
+i1l2470:	
+;main.c: 325: TMR0 += 155;
 	movlw	low(09Bh)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	addwf	(1),f	;volatile
-	line	281
+	line	328
 	
-i1l1938:	
-;main.c: 281: T0IF = 0;
+i1l2472:	
+;main.c: 328: T0IF = 0;
 	bcf	(90/8),(90)&7	;volatile
-	line	282
+	line	329
 	
-i1l1940:	
-;main.c: 282: time0Flag =1;
+i1l2474:	
+;main.c: 329: time0Flag = 1;
 	clrf	(_time0Flag)
 	incf	(_time0Flag),f
-	line	286
+	line	333
 	
-i1l635:	
-	movf	(??_Timer0_Isr+1),w
+i1l2476:	
+;main.c: 331: }
+;main.c: 333: if (RBIF) {
+	btfss	(88/8),(88)&7	;volatile
+	goto	u78_21
+	goto	u78_20
+u78_21:
+	goto	i1l645
+u78_20:
+	line	334
+	
+i1l2478:	
+;main.c: 334: RBIF = 0;
+	bcf	(88/8),(88)&7	;volatile
+	line	335
+	
+i1l2480:	
+;main.c: 335: Init_Config();
+	fcall	i1_Init_Config
+	line	337
+	
+i1l645:	
+	movf	(??_Timer0_Isr+2),w
 	movwf	pclath
+	movf	(??_Timer0_Isr+1),w
+	movwf	fsr0
 	swapf	(??_Timer0_Isr+0)^0FFFFFF80h,w
 	movwf	status
 	swapf	saved_w,f
@@ -3127,6 +3305,570 @@ i1l635:
 GLOBAL	__end_of_Timer0_Isr
 	__end_of_Timer0_Isr:
 	signat	_Timer0_Isr,89
+	global	i1_Init_Config
+
+;; *************** function i1_Init_Config *****************
+;; Defined at:
+;;		line 252 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
+;; Tracked objects:
+;;		On entry : 0/0
+;;		On exit  : B00/100
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         0       0       0
+;;      Temps:          0       0       0
+;;      Totals:         0       0       0
+;;Total ram usage:        0 bytes
+;; Hardware stack levels used:    1
+;; Hardware stack levels required when called:    1
+;; This function calls:
+;;		i1_Init_GPIO
+;;		i1_Init_Interupt
+;;		i1_Init_PWM
+;;		i1_Init_System
+;;		i1_resetKey
+;; This function is called by:
+;;		_Timer0_Isr
+;; This function uses a non-reentrant model
+;;
+psect	text20,local,class=CODE,delta=2,merge=1,group=0
+	line	252
+global __ptext20
+__ptext20:	;psect for function i1_Init_Config
+psect	text20
+	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	line	252
+	global	__size_ofi1_Init_Config
+	__size_ofi1_Init_Config	equ	__end_ofi1_Init_Config-i1_Init_Config
+	
+i1_Init_Config:	
+;incstack = 0
+	opt	stack 1
+; Regs used in i1_Init_Config: [wreg-fsr0h+status,2+status,0+pclath+cstack]
+	line	254
+	
+i1l2420:	
+;main.c: 254: Init_System();
+	fcall	i1_Init_System
+	line	255
+;main.c: 255: Init_GPIO();
+	fcall	i1_Init_GPIO
+	line	256
+;main.c: 256: Init_Interupt();
+	fcall	i1_Init_Interupt
+	line	257
+;main.c: 257: Init_PWM();
+	fcall	i1_Init_PWM
+	line	259
+	
+i1l2422:	
+;main.c: 259: IOCB = 0x04;
+	movlw	low(04h)
+	movwf	(150)^080h	;volatile
+	line	260
+	
+i1l2424:	
+;main.c: 260: TMR0 = 155;
+	movlw	low(09Bh)
+	bcf	status, 5	;RP0=0, select bank0
+	movwf	(1)	;volatile
+	line	261
+	
+i1l2426:	
+;main.c: 261: TO = 0;
+	bcf	(28/8),(28)&7	;volatile
+	line	264
+	
+i1l2428:	
+;main.c: 264: key1.key_index = 5;
+	movlw	low(05h)
+	movwf	0+(_key1)+06h
+	line	266
+	
+i1l2430:	
+;main.c: 266: key2.key_index = 4;
+	movlw	low(04h)
+	movwf	0+(_key2)+06h
+	line	268
+	
+i1l2432:	
+;main.c: 268: key3.key_index = 3;
+	movlw	low(03h)
+	movwf	0+(_key3)+06h
+	line	269
+	
+i1l2434:	
+;main.c: 269: resetKey(&key1);
+	movlw	(low(_key1|((0x0)<<8)))&0ffh
+	fcall	i1_resetKey
+	line	270
+	
+i1l2436:	
+;main.c: 270: resetKey(&key2);
+	movlw	(low(_key2|((0x0)<<8)))&0ffh
+	fcall	i1_resetKey
+	line	271
+	
+i1l2438:	
+;main.c: 271: resetKey(&key3);
+	movlw	(low(_key3|((0x0)<<8)))&0ffh
+	fcall	i1_resetKey
+	line	273
+	
+i1l2440:	
+;main.c: 273: TRISA = 0;
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	status, 6	;RP1=0, select bank1
+	clrf	(133)^080h	;volatile
+	line	274
+	
+i1l2442:	
+;main.c: 274: TRISB = 0x7E;
+	movlw	low(07Eh)
+	movwf	(134)^080h	;volatile
+	line	275
+	
+i1l2444:	
+;main.c: 275: TRISC = 0;
+	clrf	(135)^080h	;volatile
+	line	276
+	
+i1l635:	
+	return
+	opt stack 0
+GLOBAL	__end_ofi1_Init_Config
+	__end_ofi1_Init_Config:
+	signat	i1_Init_Config,89
+	global	i1_resetKey
+
+;; *************** function i1_resetKey *****************
+;; Defined at:
+;;		line 100 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;; Parameters:    Size  Location     Type
+;;  key             1    wreg     PTR struct Keys
+;;		 -> key3(7), key2(7), key1(7), 
+;; Auto vars:     Size  Location     Type
+;;  key             1    0[COMMON] PTR struct Keys
+;;		 -> key3(7), key2(7), key1(7), 
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, fsr0l, fsr0h, status,2, status,0
+;; Tracked objects:
+;;		On entry : 0/0
+;;		On exit  : 800/0
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         1       0       0
+;;      Temps:          0       0       0
+;;      Totals:         1       0       0
+;;Total ram usage:        1 bytes
+;; Hardware stack levels used:    1
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		i1_Init_Config
+;; This function uses a non-reentrant model
+;;
+psect	text21,local,class=CODE,delta=2,merge=1,group=0
+	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	line	100
+global __ptext21
+__ptext21:	;psect for function i1_resetKey
+psect	text21
+	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	line	100
+	global	__size_ofi1_resetKey
+	__size_ofi1_resetKey	equ	__end_ofi1_resetKey-i1_resetKey
+	
+i1_resetKey:	
+;incstack = 0
+	opt	stack 1
+; Regs used in i1_resetKey: [wreg-fsr0h+status,2+status,0]
+;i1resetKey@key stored from wreg
+	movwf	(i1resetKey@key)
+	line	101
+	
+i1l2316:	
+;scankey.c: 101: key->key_timer_cnt1 = key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
+	movf	(i1resetKey@key),w
+	addlw	03h
+	movwf	fsr0
+	bcf	status, 7	;select IRP bank0
+	clrf	indf
+	incf	(i1resetKey@key),w
+	movwf	fsr0
+	clrf	indf
+	movf	(i1resetKey@key),w
+	addlw	02h
+	movwf	fsr0
+	clrf	indf
+	movf	(i1resetKey@key),w
+	movwf	fsr0
+	clrf	indf
+	line	102
+	
+i1l679:	
+	return
+	opt stack 0
+GLOBAL	__end_ofi1_resetKey
+	__end_ofi1_resetKey:
+	signat	i1_resetKey,89
+	global	i1_Init_System
+
+;; *************** function i1_Init_System *****************
+;; Defined at:
+;;		line 3 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, status,2
+;; Tracked objects:
+;;		On entry : 0/0
+;;		On exit  : 300/100
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         0       0       0
+;;      Temps:          0       0       0
+;;      Totals:         0       0       0
+;;Total ram usage:        0 bytes
+;; Hardware stack levels used:    1
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		i1_Init_Config
+;; This function uses a non-reentrant model
+;;
+psect	text22,local,class=CODE,delta=2,merge=1,group=0
+	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	line	3
+global __ptext22
+__ptext22:	;psect for function i1_Init_System
+psect	text22
+	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	line	3
+	global	__size_ofi1_Init_System
+	__size_ofi1_Init_System	equ	__end_ofi1_Init_System-i1_Init_System
+	
+i1_Init_System:	
+;incstack = 0
+	opt	stack 1
+; Regs used in i1_Init_System: [wreg+status,2]
+	line	4
+	
+i1l2318:	
+# 4 "C:\SCMCU WorkSpace\uf166fan\init.c"
+nop ;# 
+	line	5
+# 5 "C:\SCMCU WorkSpace\uf166fan\init.c"
+clrwdt ;# 
+psect	text22
+	line	6
+	
+i1l2320:	
+;init.c: 6: INTCON = 0;
+	clrf	(11)	;volatile
+	line	7
+	
+i1l2322:	
+;init.c: 7: OSCCON = 0X71;
+	movlw	low(071h)
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	status, 6	;RP1=0, select bank1
+	movwf	(143)^080h	;volatile
+	line	8
+	
+i1l2324:	
+;init.c: 8: OPTION_REG = 0x00;
+	clrf	(129)^080h	;volatile
+	line	10
+	
+i1l1218:	
+	return
+	opt stack 0
+GLOBAL	__end_ofi1_Init_System
+	__end_ofi1_Init_System:
+	signat	i1_Init_System,89
+	global	i1_Init_PWM
+
+;; *************** function i1_Init_PWM *****************
+;; Defined at:
+;;		line 51 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, status,2
+;; Tracked objects:
+;;		On entry : 300/0
+;;		On exit  : 300/100
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         0       0       0
+;;      Temps:          0       0       0
+;;      Totals:         0       0       0
+;;Total ram usage:        0 bytes
+;; Hardware stack levels used:    1
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		i1_Init_Config
+;; This function uses a non-reentrant model
+;;
+psect	text23,local,class=CODE,delta=2,merge=1,group=0
+	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	line	51
+global __ptext23
+__ptext23:	;psect for function i1_Init_PWM
+psect	text23
+	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	line	51
+	global	__size_ofi1_Init_PWM
+	__size_ofi1_Init_PWM	equ	__end_ofi1_Init_PWM-i1_Init_PWM
+	
+i1_Init_PWM:	
+;incstack = 0
+	opt	stack 1
+; Regs used in i1_Init_PWM: [wreg+status,2]
+	line	52
+	
+i1l2306:	
+;main.c: 52: CCP1CON = 0x0F;
+	movlw	low(0Fh)
+	movwf	(23)	;volatile
+	line	53
+	
+i1l2308:	
+;main.c: 53: T2CON = 0;
+	clrf	(18)	;volatile
+	line	54
+	
+i1l2310:	
+;main.c: 54: PR2 = 7;
+	movlw	low(07h)
+	bsf	status, 5	;RP0=1, select bank1
+	movwf	(146)^080h	;volatile
+	line	56
+;main.c: 56: CCPR1L = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(21)	;volatile
+	line	57
+	
+i1l2312:	
+;main.c: 57: TMR2IF = 0;
+	bcf	(97/8),(97)&7	;volatile
+	line	58
+;main.c: 58: T2CON = 0;
+	clrf	(18)	;volatile
+	line	60
+	
+i1l2314:	
+;main.c: 60: TRISC&=~(1<<2);
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	(135)^080h+(2/8),(2)&7	;volatile
+	line	62
+	
+i1l581:	
+	return
+	opt stack 0
+GLOBAL	__end_ofi1_Init_PWM
+	__end_ofi1_Init_PWM:
+	signat	i1_Init_PWM,89
+	global	i1_Init_Interupt
+
+;; *************** function i1_Init_Interupt *****************
+;; Defined at:
+;;		line 27 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, status,2
+;; Tracked objects:
+;;		On entry : 300/100
+;;		On exit  : 300/0
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         0       0       0
+;;      Temps:          0       0       0
+;;      Totals:         0       0       0
+;;Total ram usage:        0 bytes
+;; Hardware stack levels used:    1
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		i1_Init_Config
+;; This function uses a non-reentrant model
+;;
+psect	text24,local,class=CODE,delta=2,merge=1,group=0
+	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	line	27
+global __ptext24
+__ptext24:	;psect for function i1_Init_Interupt
+psect	text24
+	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	line	27
+	global	__size_ofi1_Init_Interupt
+	__size_ofi1_Init_Interupt	equ	__end_ofi1_Init_Interupt-i1_Init_Interupt
+	
+i1_Init_Interupt:	
+;incstack = 0
+	opt	stack 1
+; Regs used in i1_Init_Interupt: [wreg+status,2]
+	line	28
+	
+i1l2340:	
+;init.c: 28: OPTION_REG = 0x00;
+	clrf	(129)^080h	;volatile
+	line	29
+;init.c: 29: TMR0 = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(1)	;volatile
+	line	30
+	
+i1l2342:	
+;init.c: 30: INTCON = 0xE0;
+	movlw	low(0E0h)
+	movwf	(11)	;volatile
+	line	32
+	
+i1l1224:	
+	return
+	opt stack 0
+GLOBAL	__end_ofi1_Init_Interupt
+	__end_ofi1_Init_Interupt:
+	signat	i1_Init_Interupt,89
+	global	i1_Init_GPIO
+
+;; *************** function i1_Init_GPIO *****************
+;; Defined at:
+;;		line 13 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, status,2
+;; Tracked objects:
+;;		On entry : 300/100
+;;		On exit  : 300/100
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1
+;;      Params:         0       0       0
+;;      Locals:         0       0       0
+;;      Temps:          0       0       0
+;;      Totals:         0       0       0
+;;Total ram usage:        0 bytes
+;; Hardware stack levels used:    1
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		i1_Init_Config
+;; This function uses a non-reentrant model
+;;
+psect	text25,local,class=CODE,delta=2,merge=1,group=0
+	line	13
+global __ptext25
+__ptext25:	;psect for function i1_Init_GPIO
+psect	text25
+	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	line	13
+	global	__size_ofi1_Init_GPIO
+	__size_ofi1_Init_GPIO	equ	__end_ofi1_Init_GPIO-i1_Init_GPIO
+	
+i1_Init_GPIO:	
+;incstack = 0
+	opt	stack 1
+; Regs used in i1_Init_GPIO: [wreg+status,2]
+	line	14
+	
+i1l2326:	
+;init.c: 14: TRISA = 0;
+	clrf	(133)^080h	;volatile
+	line	15
+;init.c: 15: TRISB = 0;
+	clrf	(134)^080h	;volatile
+	line	16
+;init.c: 16: TRISC = 0;
+	clrf	(135)^080h	;volatile
+	line	17
+	
+i1l2328:	
+;init.c: 17: WPUA = 0xFF;
+	movlw	low(0FFh)
+	bsf	status, 6	;RP1=1, select bank3
+	movwf	(398)^0180h	;volatile
+	line	18
+	
+i1l2330:	
+;init.c: 18: WPUB = 0xFF;
+	movlw	low(0FFh)
+	bcf	status, 6	;RP1=0, select bank1
+	movwf	(149)^080h	;volatile
+	line	19
+	
+i1l2332:	
+;init.c: 19: WPUC = 0xFF;
+	movlw	low(0FFh)
+	bsf	status, 6	;RP1=1, select bank3
+	movwf	(399)^0180h	;volatile
+	line	20
+	
+i1l2334:	
+;init.c: 20: PORTA = 0xFF;
+	movlw	low(0FFh)
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	movwf	(5)	;volatile
+	line	21
+	
+i1l2336:	
+;init.c: 21: PORTB = 0xFF;
+	movlw	low(0FFh)
+	movwf	(6)	;volatile
+	line	22
+	
+i1l2338:	
+;init.c: 22: PORTC = 0xFF;
+	movlw	low(0FFh)
+	movwf	(7)	;volatile
+	line	23
+;init.c: 23: IOCB = 0x00;
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(150)^080h	;volatile
+	line	25
+	
+i1l1221:	
+	return
+	opt stack 0
+GLOBAL	__end_ofi1_Init_GPIO
+	__end_ofi1_Init_GPIO:
+	signat	i1_Init_GPIO,89
 global	___latbits
 ___latbits	equ	0
 	global	btemp

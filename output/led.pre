@@ -1,29 +1,5 @@
 
-# 1 "C:\SCMCU WorkSpace\uf166fan\main.c"
-
-# 18 "C:\SCMCU WorkSpace\uf166fan\scankey.h"
-struct Keys {
-unsigned char key_timer_cnt1;
-unsigned char key_state_buffer1;
-
-unsigned char key_timer_cnt2;
-unsigned char key_state_buffer2;
-
-char key_input;
-
-char key_addr_result;
-
-char key_index;
-};
-
-
-unsigned char key_read(struct Keys *keys);
-
-static unsigned char key_driver(struct Keys *keys);
-
-void sacnKeyInput(struct Keys *key);
-
-void resetKey(struct Keys *key);
+# 1 "C:\SCMCU WorkSpace\led.c"
 
 # 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
@@ -428,322 +404,94 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 5 "C:\SCMCU WorkSpace\uf166fan\init.h"
-void Init_System();
-void Init_GPIO();
-void Init_Interupt();
+# 3 "C:\SCMCU WorkSpace\delay.h"
+void delay_1us(void);
 
-# 19 "C:\SCMCU WorkSpace\uf166fan\main.c"
-static unsigned char time0Flag = 0;
-static unsigned int countTime = 0;
-static unsigned int count10Ms = 0;
-unsigned char currentLevel = 2;
+void delay_3us(void);
 
-unsigned char FAN_STATUS = 2;
+void delay_10us(void);
 
-unsigned int fan_check_time = 0;
+void delay_50us(void);
 
-struct Keys key1, key2, key3;
+void delay_100us(void);
 
-void setLedOn(unsigned char ledIndex);
+void delay_1ms(void);
 
-void Init_Config();
+void delay_ms(unsigned int ms);
 
-void Sleep_Mode();
-
-void checkUsbStatus() {
-if (((PORTB) >> (2)&1) == 1) {
-if (((PORTB) >> (1)&1) == 1) {
-
-PORTA&=~(1<<0);
-} else if (countTime == 1000) {
-
-PORTA^=(1<<0);
-}
-} else {
-
-PORTA|=(1<<0);
-}
-}
-
-void Init_PWM() {
-CCP1CON = 0x0F;
-T2CON = 0;
-PR2 = 7;
-
-CCPR1L = 0;
-TMR2IF = 0;
-T2CON = 0;
-
-TRISC&=~(1<<2);
-
-}
-
-
-void setFanLevel(char level) {
-if(level == 0)
-{
-currentLevel = 2;
-}
-unsigned int levelWidth = (PR2 + 1) / 4;
-char tempLevel = currentLevel + level;
-if (tempLevel > 4) {
-tempLevel = 4;
-}
-
-if (tempLevel < 1) {
-tempLevel = 1;
-}
-
-if (FAN_STATUS == 1) {
-currentLevel = tempLevel;
-
-CCPR1L = levelWidth * currentLevel;
-setLedOn(currentLevel);
-}
-
-}
-
-
-void closeFan() {
-Init_PWM();
-currentLevel = 2;
-setLedOn(5);
-PORTA|=(1<<0);
-
-TRISC|=(1<<2);
-fan_check_time = 0;
-FAN_STATUS = 0;
-
-}
-
-
-
-void checkFan() {
-
-PORTA|=(1<<1);
-
-TRISC&=~(1<<2);
-PORTA|=(1<<2);
-T2CON = 0X04;
-
-
-if (((PORTB) >> (6)&1) == 0) {
-FAN_STATUS = 1;
-} else {
-FAN_STATUS = 2;
-}
-
-setFanLevel(0);
-
-
-if (FAN_STATUS == 2) {
-fan_check_time++;
-if (fan_check_time == 3000) {
-closeFan();
-return;
-}
-}
-
-
-}
-
-
-
+# 12 "C:\SCMCU WorkSpace\led.c"
 void setLedOn(unsigned char ledIndex) {
 switch(ledIndex) {
 case 1:
 
 TRISC&=~(1<<1);
-TRISB|=(1<<7);
+TRISA|=(1<<7);
 TRISC&=~(1<<0);
-PORTB&=~(1<<7);
+PORTA&=~(1<<7);
 PORTC|=(1<<0);
 PORTC&=~(1<<1);
 break;
 case 2:
 TRISC&=~(1<<1);
-TRISB|=(1<<7);
+TRISA|=(1<<7);
 TRISC&=~(1<<0);
-PORTB&=~(1<<7);
 PORTC&=~(1<<0);
 PORTC|=(1<<1);
 break;
 case 3:
 
 TRISC|=(1<<0);
-TRISB&=~(1<<7);
+TRISA&=~(1<<7);
 TRISC&=~(1<<1);
-PORTB|=(1<<7);
+PORTA|=(1<<7);
 PORTC&=~(1<<0);
 PORTC&=~(1<<1);
 break;
 case 4:
 TRISC|=(1<<0);
-TRISB&=~(1<<7);
+TRISA&=~(1<<7);
 TRISC&=~(1<<1);
-PORTB&=~(1<<7);
+PORTA&=~(1<<7);
 PORTC|=(1<<0);
 PORTC|=(1<<1);
 break;
 case 5:
 
 TRISC|=(1<<0);
-TRISB|=(1<<7);
+TRISA|=(1<<7);
 TRISC|=(1<<1);
 PORTC&=~(1<<0);
-PORTB&=~(1<<7);
+PORTA&=~(1<<7);
 PORTC&=~(1<<1);
 break;
 }
 }
 
 
-
-void scanKeys() {
-key1.key_addr_result = key2.key_addr_result = key3.key_addr_result = PORTB;
-sacnKeyInput(&key1);
-sacnKeyInput(&key2);
-sacnKeyInput(&key3);
-countTime++;
-count10Ms++;
-}
-
-
-void checkKeys() {
-if (key_read(&key1) != 0) {
-
-
-if (FAN_STATUS == 1) {
-
-closeFan();
-} else {
-FAN_STATUS = 2;
-checkFan();
-}
-return;
-} else if (FAN_STATUS == 2) {
-checkFan();
-}
-
-
-if (key_read(&key2) != 0) {
-
-setFanLevel(1);
-return;
-}
-
-if (key_read(&key3) != 0) {
-
-setFanLevel(-1);
-return;
-}
-
-}
-
-
-void main(void) {
-Init_Config();
-while (1) {
-
-if (time0Flag) {
-asm("clrwdt");
-time0Flag = 0;
-scanKeys();
-}
-
-
-if (count10Ms == 10) {
-checkKeys();
-count10Ms = 0;
-
-checkUsbStatus();
-}
-
-if (countTime == 1000) {
-countTime = 0;
-}
-}
-
-}
-
-void Init_Config() {
-
-Init_System();
-Init_GPIO();
-Init_Interupt();
-Init_PWM();
-
-IOCB = 0x04;
-TMR0 = 155;
-TO = 0;
-
-
-key1.key_index = 5;
-
-key2.key_index = 4;
-
-key3.key_index = 3;
-resetKey(&key1);
-resetKey(&key2);
-resetKey(&key3);
-
-TRISA = 0;
-TRISB = 0x7E;
-TRISC = 0;
-}
-
-
-void Sleep_Mode() {
-INTCON = 0;
-
-OPTION_REG = 0;
-
-TRISA = 0B00000000;
-PORTA = 0B00000000;
-WPUA = 0B00000000;
-
-TRISB = 0B00100000;
-PORTB = 0B00000000;
-
-PORTB = 0;
-WPUB = 0B00100000;
-
-IOCB = 0B00100000;
-RBIE = 1;
-GIE = 1;
-
-ADCON0 = 0;
-
-OSCCON = 0X70;
-
-PORTB;
-asm("clrwdt");
-
-asm("sleep");
-
+void main()
+{
 asm("nop");
+asm("clrwdt");
+INTCON = 0;
+OSCCON = 0X71;
 
+TRISC = 0;
+TRISA = 0xFF;
+WPUC = 0xFF;
+PORTA = 0;
+PORTC = 0x00;
 
+while(1)
+{
+setLedOn(2);
+delay_ms(1000);
+setLedOn(1);
+delay_ms(1000);
+setLedOn(3);
+delay_ms(1000);
+setLedOn(4);
+delay_ms(1000);
+setLedOn(5);
+delay_ms(1000);
 }
-
-# 320
-void interrupt
-
-Timer0_Isr() {
-if (T0IF) {
-
-TMR0 += 155;
-
-
-T0IF = 0;
-time0Flag = 1;
-
 }
-
-if (RBIF) {
-RBIF = 0;
-Init_Config();
-}
-}
-

@@ -1,0 +1,299 @@
+---- C:\SCMCU WorkSpace\led.c ----------------------------------------------------------------------
+1:                #include<sc.h>
+2:                #include "delay.h"
+3:                
+4:                #define PBPORTB PORTA
+5:                #define PBTRISB TRISA
+6:                #define getbit(x, y)   ((x) >> (y)&1)
+7:                #define setbit(x, y)  x|=(1<<y)
+8:                #define resetbit(x, y)  x&=~(1<<y)
+9:                #define reversebit(x, y)  x^=(1<<y)
+10:               
+11:               
+12:               void setLedOn(unsigned char ledIndex) {
+  07C2    00F0    LD	0x70,A
+13:                   switch(ledIndex) {
+  07C3    2FE1    JP	0x7E1
+14:                       case 1:
+15:                           //PB7设置为输入脚,PC1和PC0设置为输出
+16:               			resetbit(TRISC, 1);
+17:               			setbit(TRISA, 7);
+18:                           resetbit(TRISC, 0);
+19:                           resetbit(PORTA, 7);
+  07C4    27F7    CALL	0x7F7
+  07C5    1385    CLRB	0x5,7
+20:                           setbit(PORTC, 0);
+  07C6    1407    SETB	0x7,0
+21:                           resetbit(PORTC, 1);            
+  07C7    1087    CLRB	0x7,1
+22:                           break;
+  07C8    0008    RET
+23:                       case 2:
+24:               			resetbit(TRISC, 1);
+25:               			setbit(TRISA, 7);
+26:                           resetbit(TRISC, 0);
+27:                           resetbit(PORTC, 0);
+  07C9    27F7    CALL	0x7F7
+  07CA    1007    CLRB	0x7,0
+28:                           setbit(PORTC, 1);
+  07CB    1487    SETB	0x7,1
+29:                           break;
+  07CC    0008    RET
+30:                       case 3:
+31:                           //PC0设置为输入脚，PB7和PC1设置为输出
+32:               			setbit(TRISC, 0);
+33:               			resetbit(TRISA, 7);
+34:                           resetbit(TRISC, 1);
+35:                           setbit(PORTA, 7);
+  07CD    27F0    CALL	0x7F0
+  07CE    1785    SETB	0x5,7
+36:                           resetbit(PORTC, 0);
+  07CF    1007    CLRB	0x7,0
+37:                           resetbit(PORTC, 1);
+  07D0    1087    CLRB	0x7,1
+38:                           break;
+  07D1    0008    RET
+39:                       case 4:
+40:               			setbit(TRISC, 0);
+41:               			resetbit(TRISA, 7);
+42:                           resetbit(TRISC, 1);
+43:                           resetbit(PORTA, 7);
+  07D2    27F0    CALL	0x7F0
+  07D3    1385    CLRB	0x5,7
+44:                           setbit(PORTC, 0);
+  07D4    1407    SETB	0x7,0
+45:                           setbit(PORTC, 1);
+  07D5    1487    SETB	0x7,1
+46:                           break;
+  07D6    0008    RET
+47:                       case 5:
+48:                           //全部设置为输入脚
+49:               			setbit(TRISC, 0);
+  07D7    1683    SETB	0x3,5
+  07D8    1303    CLRB	0x3,6
+  07D9    1407    SETB	0x7,0
+50:               			setbit(TRISA, 7);
+  07DA    1785    SETB	0x5,7
+51:                           setbit(TRISC, 1);
+  07DB    1487    SETB	0x7,1
+52:               			resetbit(PORTC, 0);
+  07DC    1283    CLRB	0x3,5
+  07DD    1007    CLRB	0x7,0
+53:               			resetbit(PORTA, 7);
+  07DE    1385    CLRB	0x5,7
+54:                           resetbit(PORTC, 1);
+  07DF    1087    CLRB	0x7,1
+55:                           break;
+  07E0    0008    RET
+  07E1    0870    LD	A,0x70
+  07E2    3EFF    ADDIA	0xFF
+  07E3    1C03    SNZB	0x3,0
+  07E4    0008    RET
+  07E5    0084    LD	0x4,A
+  07E6    3005    LDIA	0x5
+  07E7    0204    SUBA	0x4
+  07E8    1803    SZB	0x3,0
+  07E9    0008    RET
+  07EA    3000    LDIA	0x0
+  07EB    008A    LD	0xA,A
+  07EC    3001    LDIA	0x1
+  07ED    0704    ADDA	0x4
+  07EE    0082    LD	0x2,A
+  07EF    0008    RET
+56:                   }
+57:               }
+58:               
+59:               
+60:               void main()
+  0798    0000    NOP
+  0799    0064    CLRWDT
+61:               {
+62:               	asm("nop");
+63:                   asm("clrwdt");
+64:                   INTCON = 0;                    //系统初始化
+  079A    018B    CLR	0xB
+65:                   OSCCON = 0X71;                //配置振荡为8M,开 WDT
+  079B    3071    LDIA	0x71
+  079C    1683    SETB	0x3,5
+  079D    1303    CLRB	0x3,6
+  079E    008F    LD	0xF,A
+66:               	
+67:               	 TRISC = 0;
+  079F    0187    CLR	0x7
+68:               	 TRISA = 0xFF;
+  07A0    30FF    LDIA	0xFF
+  07A1    0085    LD	0x5,A
+69:               	 WPUC = 0xFF;
+  07A2    1703    SETB	0x3,6
+  07A3    008F    LD	0xF,A
+70:               	 PORTA = 0;
+  07A4    1283    CLRB	0x3,5
+  07A5    1303    CLRB	0x3,6
+  07A6    0185    CLR	0x5
+71:               	 PORTC = 0x00;
+  07A7    0187    CLR	0x7
+72:               	 
+73:               	 while(1)
+74:               	 {
+75:               		setLedOn(2);
+  07A8    3002    LDIA	0x2
+  07A9    27C2    CALL	0x7C2
+76:               		delay_ms(1000);
+  07AA    27BD    CALL	0x7BD
+  07AB    278B    CALL	0x78B
+77:               		setLedOn(1);
+  07AC    3001    LDIA	0x1
+  07AD    27C2    CALL	0x7C2
+78:               		delay_ms(1000);
+  07AE    27BD    CALL	0x7BD
+  07AF    278B    CALL	0x78B
+79:               		setLedOn(3);
+  07B0    3003    LDIA	0x3
+  07B1    27C2    CALL	0x7C2
+80:               		delay_ms(1000);
+  07B2    27BD    CALL	0x7BD
+  07B3    278B    CALL	0x78B
+81:               		setLedOn(4);
+  07B4    3004    LDIA	0x4
+  07B5    27C2    CALL	0x7C2
+82:               		delay_ms(1000);
+  07B6    27BD    CALL	0x7BD
+  07B7    278B    CALL	0x78B
+83:               		setLedOn(5);
+  07B8    3005    LDIA	0x5
+  07B9    27C2    CALL	0x7C2
+84:               		delay_ms(1000);
+  07BA    27BD    CALL	0x7BD
+  07BB    278B    CALL	0x78B
+  07BC    2FA8    JP	0x7A8
+85:               	 }
+86:               }
+---- C:\SCMCU WorkSpace\delay.c ----------------------------------------------------------------------
+1:                #include "delay.h"
+2:                
+3:                void delay_1us(void) //1us延时函数，不能连续调用，
+4:                {
+5:                asm("nop");
+6:                asm("nop");
+7:                }
+8:                void delay_3us(void) //3us延时函数,,可重复调用不影响精度
+  077A    0000    NOP
+  077B    0000    NOP
+  077C    0000    NOP
+  077D    0000    NOP
+  077E    0000    NOP
+  077F    0000    NOP
+  0780    0008    RET
+9:                {
+10:               asm("nop");
+11:               asm("nop");
+12:               asm("nop");
+13:               asm("nop");
+14:               asm("nop");
+15:               asm("nop");
+16:               
+17:               }
+18:               void delay_10us(void) //10us延时函数,可重复调用不影响精度
+19:               {
+20:               delay_3us();
+  076F    277A    CALL	0x77A
+21:               delay_3us();
+  0770    277A    CALL	0x77A
+22:               delay_3us();
+  0771    2F7A    JP	0x77A
+23:               }
+24:               void delay_50us(void) //48us延时函数,可重复调用不影响精度
+25:               {
+26:               delay_10us();
+  0775    276F    CALL	0x76F
+27:               delay_10us();
+  0776    276F    CALL	0x76F
+28:               delay_10us();
+  0777    276F    CALL	0x76F
+29:               delay_10us();
+  0778    276F    CALL	0x76F
+30:               delay_10us();
+  0779    2F6F    JP	0x76F
+31:               }
+32:               void delay_100us(void)//exactly 98us延时函数,可重复调用不影响精度
+33:               {
+34:               delay_50us();
+  0772    2775    CALL	0x775
+35:               delay_50us();
+  0773    2775    CALL	0x775
+36:               delay_3us();
+  0774    2F7A    JP	0x77A
+37:               }
+38:               //ms级延时
+39:               void delay_1ms(void)
+40:               {
+41:               delay_100us();
+  0781    2772    CALL	0x772
+42:               delay_100us();
+  0782    2772    CALL	0x772
+43:               delay_100us();
+  0783    2772    CALL	0x772
+44:               delay_100us();
+  0784    2772    CALL	0x772
+45:               delay_100us();
+  0785    2772    CALL	0x772
+46:               delay_100us();
+  0786    2772    CALL	0x772
+47:               delay_100us();
+  0787    2772    CALL	0x772
+48:               delay_100us();
+  0788    2772    CALL	0x772
+49:               delay_100us();
+  0789    2772    CALL	0x772
+50:               delay_100us();
+  078A    2F72    JP	0x772
+51:               }
+52:               void delay_ms(unsigned int ms)
+53:               {
+54:               while(ms--)
+  078B    3001    LDIA	0x1
+  078C    02F0    SUBR	0x70
+  078D    3000    LDIA	0x0
+  078E    1C03    SNZB	0x3,0
+  078F    03F1    DECR	0x71
+  0790    02F1    SUBR	0x71
+  0791    0F70    SZINCA	0x70
+  0792    2F96    JP	0x796
+  0793    0A71    INCA	0x71
+  0794    1903    SZB	0x3,2
+  0795    0008    RET
+55:               delay_1ms();//8MHZ主频时，25分钟误差小于1秒
+  0796    2781    CALL	0x781
+  0797    2F8B    JP	0x78B
+56:               }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    2FFE    JP	0x7FE
+---- start_initialization ------------------------------------------------------------------
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  0001    2FC4    JP	0x7C4
+  0002    2FC9    JP	0x7C9
+  0003    2FCD    JP	0x7CD
+  0004    2FD2    JP	0x7D2
+  0005    2FD7    JP	0x7D7
+  07BD    30E8    LDIA	0xE8
+  07BE    00F0    LD	0x70,A
+  07BF    3003    LDIA	0x3
+  07C0    00F1    LD	0x71,A
+  07C1    0008    RET
+  07F0    1683    SETB	0x3,5
+  07F1    1303    CLRB	0x3,6
+  07F2    1407    SETB	0x7,0
+  07F3    1385    CLRB	0x5,7
+  07F4    1087    CLRB	0x7,1
+  07F5    1283    CLRB	0x3,5
+  07F6    0008    RET
+  07F7    1683    SETB	0x3,5
+  07F8    1303    CLRB	0x3,6
+  07F9    1087    CLRB	0x7,1
+  07FA    1785    SETB	0x5,7
+  07FB    1007    CLRB	0x7,0
+  07FC    1283    CLRB	0x3,5
+  07FD    0008    RET
+  07FE    0183    CLR	0x3

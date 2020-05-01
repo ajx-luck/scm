@@ -7,8 +7,8 @@
 	;
 	; Compiler options:
 	;
-	; -oPWMTEST.cof -mPWMTEST.map --summary=default,-psect,-class \
-	; --fill=0xFFFF --output=intel pwmtest.p1 delay.p1 --chip=SC8P1711C -P \
+	; -oLedTest.cof -mLedTest.map --summary=default,-psect,-class \
+	; --fill=0xFFFF --output=intel led.p1 delay.p1 --chip=SC8P1711C -P \
 	; --runtime=default, --opt=-local,-asmfile,+asm,-speed,+space,-debug \
 	; -E+cmscerr.err -D__DEBUG=1 -g --asmlist --warn=-9 \
 	; --stack=compiled:auto:auto:auto --addrqual=request --mode=pro \
@@ -65,11 +65,7 @@ intlevel5:
 	psect	reset_vec
 reset_vec:
 	; No powerup routine
-	global start
-
-; jump to start
-	goto	start & 0x7FF | (reset_vec & not 0x7FF)
-
+	; No interrupt routine
 
 
 	psect	init

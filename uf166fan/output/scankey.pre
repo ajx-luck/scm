@@ -2,7 +2,7 @@
 # 1 "C:\SCMCU WorkSpace\uf166fan\scankey.c"
 
 # 18 "C:\SCMCU WorkSpace\uf166fan\scankey.h"
-struct Keys{
+struct Keys {
 unsigned char key_timer_cnt1;
 unsigned char key_state_buffer1;
 
@@ -16,31 +16,31 @@ char key_addr_result;
 char key_index;
 };
 
-unsigned char key_read(struct Keys * keys);
-static unsigned char key_driver(struct Keys * keys);
-void sacnKeyInput(struct Keys* key);
-void resetKey(struct Keys* key);
+
+unsigned char key_read(struct Keys *keys);
+
+static unsigned char key_driver(struct Keys *keys);
+
+void sacnKeyInput(struct Keys *key);
+
+void resetKey(struct Keys *key);
 
 # 3 "C:\SCMCU WorkSpace\uf166fan\scankey.c"
-void sacnKeyInput(struct Keys* key)
-{
+void sacnKeyInput(struct Keys *key) {
 key->key_input = ((key->key_addr_result) >> (key->key_index)&1);
 
 }
 
 
-static unsigned char key_driver(struct Keys * key)
-{
+static unsigned char key_driver(struct Keys *key) {
 
 
 unsigned char key_return = 0;
 unsigned char key_read = key->key_input;
 
-switch(key->key_state_buffer1)
-{
+switch (key->key_state_buffer1) {
 case 0:
-if(key_read == 0)
-{
+if (key_read == 0) {
 key->key_state_buffer1 = 1;
 }
 
@@ -48,16 +48,13 @@ key->key_state_buffer1 = 1;
 break;
 
 case 1:
-if(key_read == 0)
-{
+if (key_read == 0) {
 key->key_timer_cnt1 = 0;
 key->key_state_buffer1 = 2;
 
 
 
-}
-else
-{
+} else {
 key->key_state_buffer1 = 0;
 }
 
@@ -65,12 +62,10 @@ key->key_state_buffer1 = 0;
 break;
 
 case 2:
-if(key_read == 1)
-{
+if (key_read == 1) {
 key_return = 1;
 key->key_state_buffer1 = 0;
-}
-else if(++(key->key_timer_cnt1) >= 100)
+} else if (++(key->key_timer_cnt1) >= 100)
 {
 key_return = 3;
 key->key_state_buffer1 = 3;
@@ -79,7 +74,7 @@ key->key_state_buffer1 = 3;
 break;
 
 case 3:
-if(key_read == 1)
+if (key_read == 1)
 {
 key->key_state_buffer1 = 0;
 }
@@ -89,33 +84,27 @@ break;
 return key_return;
 }
 
-# 75
-unsigned char key_read(struct Keys * key)
-{
+# 66
+unsigned char key_read(struct Keys *key) {
 
 unsigned char key_return = 0;
 unsigned char key_read = key_driver(key);
 
-switch(key->key_state_buffer2)
-{
+switch (key->key_state_buffer2) {
 case 0:
-if(key_read == 1)
-{
+if (key_read == 1) {
 key->key_timer_cnt2 = 0;
 key->key_state_buffer2 = 1;
-}
-else
+} else
 key_return = key_read;
 break;
 
 case 1:
-if(key_read == 1)
+if (key_read == 1)
 {
 key_return = 2;
 key->key_state_buffer2 = 0;
-}
-else if(++(key->key_timer_cnt2) >= 50)
-{
+} else if (++(key->key_timer_cnt2) >= 50) {
 
 
 
@@ -130,7 +119,6 @@ return key_return;
 }
 
 
-void resetKey(struct Keys* key)
-{
-key->key_timer_cnt1 =key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
+void resetKey(struct Keys *key) {
+key->key_timer_cnt1 = key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
 }

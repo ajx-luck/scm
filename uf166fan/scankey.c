@@ -1,24 +1,20 @@
 #include "scankey.h"
 
-void sacnKeyInput(struct Keys* key)
-{
-    key->key_input = getbit(key->key_addr_result,key->key_index);
+void sacnKeyInput(struct Keys *key) {
+    key->key_input = getbit(key->key_addr_result, key->key_index);
 
 }
 
 
-static unsigned char key_driver(struct Keys * key)
-{
+static unsigned char key_driver(struct Keys *key) {
 
 
     unsigned char key_return = key_no;
     unsigned char key_read = key->key_input;  //read the I/O states
 
-    switch(key->key_state_buffer1)
-    {
+    switch (key->key_state_buffer1) {
         case key_state_0:
-            if(key_read == 0)
-            {
+            if (key_read == 0) {
                 key->key_state_buffer1 = key_state_1;
             }
 
@@ -26,16 +22,13 @@ static unsigned char key_driver(struct Keys * key)
             break;
 
         case key_state_1:
-            if(key_read == 0)
-            {
+            if (key_read == 0) {
                 key->key_timer_cnt1 = 0;
                 key->key_state_buffer1 = key_state_2;
                 //按键仍然处于按下状态
                 //消抖完成，key_timer开始准备计时
                 //状态切换到按下时间计时状态
-            }
-            else
-            {
+            } else {
                 key->key_state_buffer1 = key_state_0;
             }
 
@@ -43,21 +36,19 @@ static unsigned char key_driver(struct Keys * key)
             break;  //完成软件消抖
 
         case key_state_2:
-            if(key_read == 1)
-            {
+            if (key_read == 1) {
                 key_return = key_click;  //按键抬起，产生一次click操作
                 key->key_state_buffer1 = key_state_0;  //转换到按键初始状态
-            }
-            else if(++(key->key_timer_cnt1) >= 100)  //按键继续按下，计时超过1000ms
+            } else if (++(key->key_timer_cnt1) >= 100)  //按键继续按下，计时超过1000ms
             {
                 key_return = key_long;  //送回长按事件
                 key->key_state_buffer1 = key_state_3;  //转换到等待按键释放状态
-           
+
             }
             break;
 
         case key_state_3:  //等待按键释放
-            if(key_read == 1)  //按键释放
+            if (key_read == 1)  //按键释放
             {
                 key->key_state_buffer1 = key_state_0;  //切回按键初始状态
             }
@@ -72,32 +63,26 @@ static unsigned char key_driver(struct Keys * key)
                                         返回上层正确的无键、单击、双击、长按四种状态
 本函数由上层循环调用，间隔10ms
 ***************************************************************************/
-unsigned char key_read(struct Keys * key)
-{
-   
+unsigned char key_read(struct Keys *key) {
+
     unsigned char key_return = key_no;
     unsigned char key_read = key_driver(key);
 //    printf("IO:%d  key status: %d\n",getSimpleKeyInput(key_input),key);
-    switch(key->key_state_buffer2)
-    {
+    switch (key->key_state_buffer2) {
         case key_state_0:
-            if(key_read == key_click)
-            {
+            if (key_read == key_click) {
                 key->key_timer_cnt2 = 0;  //第一次单击，不返回，到下个状态判断是否会出现双击
                 key->key_state_buffer2 = key_state_1;
-            }
-            else
+            } else
                 key_return = key_read;  //对于无键、长按，返回原事件
             break;
 
         case key_state_1:
-            if(key_read == key_click)  //又一次单击，时间间隔小于500ms
+            if (key_read == key_click)  //又一次单击，时间间隔小于500ms
             {
                 key_return = key_double;  //返回双击事件，回到初始状态
                 key->key_state_buffer2 = key_state_0;
-            }
-            else if(++(key->key_timer_cnt2) >= 50)
-            {
+            } else if (++(key->key_timer_cnt2) >= 50) {
                 //这里500ms内肯定读到的都是无键事件，因为长按大于1000ms
                 //在1s前底层返回的都是无键
 
@@ -112,7 +97,6 @@ unsigned char key_read(struct Keys * key)
 }
 
 
-void resetKey(struct Keys* key)
-{
-	key->key_timer_cnt1 =key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
+void resetKey(struct Keys *key) {
+    key->key_timer_cnt1 = key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
 }
