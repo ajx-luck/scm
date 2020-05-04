@@ -1,1 +1,1 @@
- init.d  init.p1:  C:/SCMCU\ WorkSpace/uf166fan/init.c C:/SCMCU\ WorkSpace/uf166fan/init.h
+ init.d  init.p1:  E:/project/scm/uf166fan/init.c E:/project/scm/uf166fan/init.h

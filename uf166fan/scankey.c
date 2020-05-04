@@ -6,7 +6,7 @@ void sacnKeyInput(struct Keys *key) {
 }
 
 
-static unsigned char key_driver(struct Keys *key) {
+unsigned char key_driver(struct Keys *key) {
 
 
     unsigned char key_return = key_no;

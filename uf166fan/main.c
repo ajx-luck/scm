@@ -8,8 +8,8 @@
 #define FAN_STATUS_ON  1
 #define FAN_STATUS_NONE 2
 
-#define PBPORTB PORTB
-#define PBTRISB TRISB
+#define PBPORTB PORTA
+#define PBTRISB TRISA
 
 #define LED_1  1
 #define LED_2  2
@@ -19,7 +19,7 @@
 static unsigned char time0Flag = 0;
 static unsigned int countTime = 0;
 static unsigned int count10Ms = 0;
-unsigned char currentLevel = 2;
+unsigned char currentLevel = 3;
 //风扇状态
 unsigned char FAN_STATUS = FAN_STATUS_NONE;
 //检测风扇次数
@@ -65,7 +65,7 @@ void Init_PWM() {
 void setFanLevel(char level) {
 	if(level == 0)
 	{
-		currentLevel = 2;
+		currentLevel = 3;
 	}
     unsigned int levelWidth = (PR2 + 1) / MAX_FAN_LEVEL;
     char tempLevel = currentLevel + level;
@@ -76,11 +76,27 @@ void setFanLevel(char level) {
     if (tempLevel < MIN_FAN_LEVEL) {
         tempLevel = MIN_FAN_LEVEL;
     }
+	
     
     if (FAN_STATUS == FAN_STATUS_ON) {
 		currentLevel = tempLevel;
+		switch(currentLevel)
+		{
+			case 1:
+			CCPR1L = 1;
+			break;
+			case 2:
+			CCPR1L = 2;
+			break;
+			case 3:
+			CCPR1L = 3;
+			break;
+			case 4:
+			CCPR1L = 5;
+			break;
+		}
     //设置占宽比
-		CCPR1L = levelWidth * currentLevel;
+		//CCPR1L = levelWidth * currentLevel;
         setLedOn(currentLevel);
     }
 
@@ -102,7 +118,7 @@ void closeFan() {
 
 //检测风扇是否连接
 void checkFan() {
-
+	resetbit(TRISA, 1);
     setbit(PORTA, 1);
     //PC2设置为输出脚
     resetbit(TRISC, 2);
@@ -188,12 +204,12 @@ void scanKeys() {
     sacnKeyInput(&key2);
     sacnKeyInput(&key3);
     countTime++;
-    count10Ms++;
+   
 }
 
 //检测按键状态并处理
 void checkKeys() {
-    if (key_read(&key1) != key_no) {
+    if (key_driver(&key1) == key_click) {
         //检测到按键了，检测风扇是否存在
 
         if (FAN_STATUS == FAN_STATUS_ON) {
@@ -208,14 +224,14 @@ void checkKeys() {
         checkFan();
     }
 
-
-    if (key_read(&key2) != key_no) {
+	unsigned char key2Status = key_driver(&key2);
+    if (key2Status == key_click) {
         //加档
         setFanLevel(1);
         return;
     }
-
-    if (key_read(&key3) != key_no) {
+	unsigned char key3Status = key_driver(&key3);
+    if (key3Status == key_click) {
         //减档
         setFanLevel(-1);
         return;
@@ -227,15 +243,16 @@ void checkKeys() {
 void main(void) {
     Init_Config();
     while (1) {
-        //1毫秒检测一次
+        //0.1毫秒检测一次
         if (time0Flag) {
             asm("clrwdt");
             time0Flag = 0;
-            scanKeys();
+			scanKeys();
+            count10Ms++;
         }
 
         //10毫秒检测一次
-        if (count10Ms == 10) {
+        if (count10Ms == 100) {		
             checkKeys();
             count10Ms = 0;
             //检测USB状态
@@ -245,6 +262,7 @@ void main(void) {
         if (countTime == 1000) {
             countTime = 0;
         }
+		
     }
 
 }
