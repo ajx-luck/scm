@@ -1,0 +1,1 @@
+ adc.d  adc.p1:  C:/SCMCU\ WorkSpace/uf166fan/adc.c C:/SCMCU\ WorkSpace/uf166fan/adc.h

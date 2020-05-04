@@ -812,90 +812,291 @@ Version 3.2 HI-TECH Software Intermediate Code
 [; ;sc.h: 184: extern unsigned char __resetbits;
 [; ;sc.h: 185: extern __bit __powerdown;
 [; ;sc.h: 186: extern __bit __timeout;
-[; ;init.h: 5: void Init_System();
-[; ;init.h: 6: void Init_GPIO();
-[; ;init.h: 7: void Init_Interupt();
-"3 C:\SCMCU WorkSpace\uf166fan\init.c
-[v _Init_System `(v ~T0 @X0 1 ef ]
+"3 C:\SCMCU WorkSpace\uf166fan\adc.h
+[v _adresult `Vui ~T0 @X0 1 e ]
+[; ;adc.h: 3: volatile unsigned int adresult;
+[; ;adc.h: 4: unsigned char readVrefADC();
+[; ;adc.h: 5: void ADC_Sample(unsigned char adch);
+[; ;adc.h: 6: void DelayXms(unsigned char x);
+"11 C:\SCMCU WorkSpace\uf166fan\adc.c
+[v _ADC_Sample `(v ~T0 @X0 1 ef1`uc ]
+"12
 {
-[; ;init.c: 3: void Init_System() {
-[e :U _Init_System ]
+[; ;adc.c: 11: void ADC_Sample(unsigned char adch)
+[; ;adc.c: 12: {
+[e :U _ADC_Sample ]
+"11
+[v _adch `uc ~T0 @X0 1 r1 ]
+"12
 [f ]
-[; ;init.c: 4: asm("nop");
-"4
+"13
+[v F498 `ul ~T0 @X0 1 s adsum ]
+[i F498
+-> -> -> 0 `i `l `ul
+]
+"14
+[v F499 `ui ~T0 @X0 1 s admin ]
+[i F499
+-> -> 0 `i `ui
+]
+[v F500 `ui ~T0 @X0 1 s admax ]
+[i F500
+-> -> 0 `i `ui
+]
+"15
+[v F501 `uc ~T0 @X0 1 s adtimes ]
+[i F501
+-> -> 0 `i `uc
+]
+"16
+[v _ad_temp `Vui ~T0 @X0 1 a ]
+[; ;adc.c: 13: static unsigned long adsum = 0;
+[; ;adc.c: 14: static unsigned int admin = 0,admax = 0;
+[; ;adc.c: 15: static unsigned char adtimes = 0;
+[; ;adc.c: 16: volatile unsigned int ad_temp;
+[; ;adc.c: 17: ADCON1 = 0;
+"17
+[e = _ADCON1 -> -> 0 `i `uc ]
+[; ;adc.c: 18: ADCON0 = 0X41 | (adch << 2);
+"18
+[e = _ADCON0 -> | -> 65 `i << -> _adch `i -> 2 `i `uc ]
+[; ;adc.c: 19: asm("nop");
+"19
 [; <" nop ;# ">
-[; ;init.c: 5: asm("clrwdt");
-"5
-[; <" clrwdt ;# ">
-[; ;init.c: 6: INTCON = 0;
-"6
-[e = _INTCON -> -> 0 `i `uc ]
-[; ;init.c: 7: OSCCON = 0X71;
-"7
-[e = _OSCCON -> -> 113 `i `uc ]
-[; ;init.c: 8: OPTION_REG = 0x00;
-"8
-[e = _OPTION_REG -> -> 0 `i `uc ]
-[; ;init.c: 10: }
-"10
+[; ;adc.c: 20: asm("nop");
+"20
+[; <" nop ;# ">
+[; ;adc.c: 21: GODONE = 1;
+"21
+[e = _GODONE -> -> 1 `i `b ]
+"23
+[v _i `uc ~T0 @X0 1 a ]
+[; ;adc.c: 23: unsigned char i = 0;
+[e = _i -> -> 0 `i `uc ]
+[; ;adc.c: 24: while(GODONE)
+"24
+[e $U 2  ]
+[e :U 3 ]
+[; ;adc.c: 25: {
+"25
+{
+[; ;adc.c: 26: if(0 == (--i))
+"26
+[e $ ! == -> 0 `i -> =- _i -> -> 1 `i `uc `i 5  ]
+[; ;adc.c: 27: return;
+"27
+[e $UE 1  ]
+[e :U 5 ]
+"28
+}
+[e :U 2 ]
+"24
+[e $ _GODONE 3  ]
+[e :U 4 ]
+[; ;adc.c: 28: }
+[; ;adc.c: 30: ad_temp=(ADRESH<<4)+(ADRESL>>4);
+"30
+[e = _ad_temp -> + << -> _ADRESH `i -> 4 `i >> -> _ADRESL `i -> 4 `i `ui ]
+[; ;adc.c: 32: if(0 == admax)
+"32
+[e $ ! == -> -> 0 `i `ui F500 6  ]
+[; ;adc.c: 33: {
+"33
+{
+[; ;adc.c: 34: admax = ad_temp;
+"34
+[e = F500 _ad_temp ]
+[; ;adc.c: 35: admin = ad_temp;
+"35
+[e = F499 _ad_temp ]
+"36
+}
+[; ;adc.c: 36: }
+[e $U 7  ]
+"37
+[e :U 6 ]
+[; ;adc.c: 37: else if(ad_temp > admax)
+[e $ ! > _ad_temp F500 8  ]
+[; ;adc.c: 38: admax = ad_temp;
+"38
+[e = F500 _ad_temp ]
+[e $U 9  ]
+"39
+[e :U 8 ]
+[; ;adc.c: 39: else if(ad_temp < admin)
+[e $ ! < _ad_temp F499 10  ]
+[; ;adc.c: 40: admin = ad_temp;
+"40
+[e = F499 _ad_temp ]
+[e :U 10 ]
+"42
+[e :U 9 ]
+[e :U 7 ]
+[; ;adc.c: 42: adsum += ad_temp;
+[e =+ F498 -> _ad_temp `ul ]
+[; ;adc.c: 43: if(++adtimes >= 10)
+"43
+[e $ ! >= -> =+ F501 -> -> 1 `i `uc `i -> 10 `i 11  ]
+[; ;adc.c: 44: {
+"44
+{
+[; ;adc.c: 45: adsum -= admax;
+"45
+[e =- F498 -> F500 `ul ]
+[; ;adc.c: 46: adsum -= admin;
+"46
+[e =- F498 -> F499 `ul ]
+[; ;adc.c: 48: adresult = adsum >> 3;
+"48
+[e = _adresult -> >> F498 -> 3 `i `ui ]
+[; ;adc.c: 50: adsum = 0;
+"50
+[e = F498 -> -> -> 0 `i `l `ul ]
+[; ;adc.c: 51: admin = 0;
+"51
+[e = F499 -> -> 0 `i `ui ]
+[; ;adc.c: 52: admax = 0;
+"52
+[e = F500 -> -> 0 `i `ui ]
+[; ;adc.c: 53: adtimes = 0;
+"53
+[e = F501 -> -> 0 `i `uc ]
+"54
+}
+[e :U 11 ]
+[; ;adc.c: 54: }
+[; ;adc.c: 55: }
+"55
 [e :UE 1 ]
 }
-"13
-[v _Init_GPIO `(v ~T0 @X0 1 ef ]
+"59
+[v _ADC_Result `(uc ~T0 @X0 1 ef1`uc ]
+"60
 {
-[; ;init.c: 13: void Init_GPIO() {
-[e :U _Init_GPIO ]
+[; ;adc.c: 59: unsigned char ADC_Result(unsigned char adch)
+[; ;adc.c: 60: {
+[e :U _ADC_Result ]
+"59
+[v _adch `uc ~T0 @X0 1 r1 ]
+"60
 [f ]
-[; ;init.c: 14: TRISA = 0;
-"14
-[e = _TRISA -> -> 0 `i `uc ]
-[; ;init.c: 15: TRISB = 0;
-"15
-[e = _TRISB -> -> 0 `i `uc ]
-[; ;init.c: 16: TRISC = 0;
-"16
-[e = _TRISC -> -> 0 `i `uc ]
-[; ;init.c: 17: WPUA = 0xFF;
-"17
-[e = _WPUA -> -> 255 `i `uc ]
-[; ;init.c: 18: WPUB = 0xFF;
-"18
-[e = _WPUB -> -> 255 `i `uc ]
-[; ;init.c: 19: WPUC = 0xFF;
-"19
-[e = _WPUC -> -> 255 `i `uc ]
-[; ;init.c: 20: PORTA = 0xFF;
-"20
-[e = _PORTA -> -> 255 `i `uc ]
-[; ;init.c: 21: PORTB = 0xFF;
-"21
-[e = _PORTB -> -> 255 `i `uc ]
-[; ;init.c: 22: PORTC = 0xFF;
-"22
-[e = _PORTC -> -> 255 `i `uc ]
-[; ;init.c: 23: IOCB = 0x00;
-"23
-[e = _IOCB -> -> 0 `i `uc ]
-[; ;init.c: 25: }
-"25
-[e :UE 2 ]
+[; ;adc.c: 61: ADCON1 = 0;
+"61
+[e = _ADCON1 -> -> 0 `i `uc ]
+[; ;adc.c: 62: ADCON0 = 0X41 | (adch << 2);
+"62
+[e = _ADCON0 -> | -> 65 `i << -> _adch `i -> 2 `i `uc ]
+[; ;adc.c: 63: asm("nop");
+"63
+[; <" nop ;# ">
+[; ;adc.c: 64: asm("nop");
+"64
+[; <" nop ;# ">
+[; ;adc.c: 65: GODONE = 1;
+"65
+[e = _GODONE -> -> 1 `i `b ]
+"67
+[v _i `uc ~T0 @X0 1 a ]
+[; ;adc.c: 67: unsigned char i = 0;
+[e = _i -> -> 0 `i `uc ]
+[; ;adc.c: 68: while(GODONE)
+"68
+[e $U 13  ]
+[e :U 14 ]
+[; ;adc.c: 69: {
+"69
+{
+[; ;adc.c: 70: if(0 == (--i))
+"70
+[e $ ! == -> 0 `i -> =- _i -> -> 1 `i `uc `i 16  ]
+[; ;adc.c: 71: return 0;
+"71
+[e ) -> -> 0 `i `uc ]
+[e $UE 12  ]
+[e :U 16 ]
+"72
 }
-"27
-[v _Init_Interupt `(v ~T0 @X0 1 ef ]
+[e :U 13 ]
+"68
+[e $ _GODONE 14  ]
+[e :U 15 ]
+[; ;adc.c: 72: }
+[; ;adc.c: 73: return ADRESH;
+"73
+[e ) _ADRESH ]
+[e $UE 12  ]
+[; ;adc.c: 74: }
+"74
+[e :UE 12 ]
+}
+"82
+[v _DelayXms `(v ~T0 @X0 1 ef1`uc ]
+"83
 {
-[; ;init.c: 27: void Init_Interupt() {
-[e :U _Init_Interupt ]
+[; ;adc.c: 82: void DelayXms(unsigned char x)
+[; ;adc.c: 83: {
+[e :U _DelayXms ]
+"82
+[v _x `uc ~T0 @X0 1 r1 ]
+"83
 [f ]
-[; ;init.c: 28: OPTION_REG = 0x00;
-"28
-[e = _OPTION_REG -> -> 0 `i `uc ]
-[; ;init.c: 29: TMR0 = 0;
-"29
-[e = _TMR0 -> -> 0 `i `uc ]
-[; ;init.c: 30: INTCON = 0xE0;
-"30
-[e = _INTCON -> -> 224 `i `uc ]
-[; ;init.c: 32: }
-"32
-[e :UE 3 ]
+"84
+[v _i `uc ~T0 @X0 1 a ]
+[v _j `uc ~T0 @X0 1 a ]
+[; ;adc.c: 84: unsigned char i,j;
+[; ;adc.c: 85: for(i=x;i>0;i--)
+"85
+{
+[e = _i _x ]
+[e $ > -> _i `i -> 0 `i 18  ]
+[e $U 19  ]
+"86
+[e :U 18 ]
+[; ;adc.c: 86: for(j=153;j>0;j--);
+{
+[e = _j -> -> 153 `i `uc ]
+[e $ > -> _j `i -> 0 `i 21  ]
+[e $U 22  ]
+[e :U 21 ]
+[e -- _j -> -> 1 `i `uc ]
+[e $ > -> _j `i -> 0 `i 21  ]
+[e :U 22 ]
+}
+"85
+[e -- _i -> -> 1 `i `uc ]
+[e $ > -> _i `i -> 0 `i 18  ]
+[e :U 19 ]
+"86
+}
+[; ;adc.c: 87: }
+"87
+[e :UE 17 ]
+}
+"90
+[v _readVrefADC `(uc ~T0 @X0 1 ef ]
+"91
+{
+[; ;adc.c: 90: unsigned char readVrefADC()
+[; ;adc.c: 91: {
+[e :U _readVrefADC ]
+[f ]
+[; ;adc.c: 92: DelayXms(1);
+"92
+[e ( _DelayXms (1 -> -> 1 `i `uc ]
+[; ;adc.c: 93: ADC_Sample(15);
+"93
+[e ( _ADC_Sample (1 -> -> 15 `i `uc ]
+"94
+[v _result `uc ~T0 @X0 1 a ]
+[; ;adc.c: 94: unsigned char result;
+[; ;adc.c: 96: result = ADC_Result(15);
+"96
+[e = _result ( _ADC_Result (1 -> -> 15 `i `uc ]
+[; ;adc.c: 97: return result;
+"97
+[e ) _result ]
+[e $UE 24  ]
+[; ;adc.c: 98: }
+"98
+[e :UE 24 ]
 }

@@ -1,5 +1,5 @@
 
-# 1 "C:\SCMCU WorkSpace\uf166fan\init.c"
+# 1 "C:\SCMCU WorkSpace\uf166fan\adc.c"
 
 # 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
@@ -404,39 +404,93 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 5 "C:\SCMCU WorkSpace\uf166fan\init.h"
-void Init_System();
-void Init_GPIO();
-void Init_Interupt();
+# 3 "C:\SCMCU WorkSpace\uf166fan\adc.h"
+volatile unsigned int adresult;
+unsigned char readVrefADC();
+void ADC_Sample(unsigned char adch);
+void DelayXms(unsigned char x);
 
-# 3 "C:\SCMCU WorkSpace\uf166fan\init.c"
-void Init_System() {
+# 11 "C:\SCMCU WorkSpace\uf166fan\adc.c"
+void ADC_Sample(unsigned char adch)
+{
+static unsigned long adsum = 0;
+static unsigned int admin = 0,admax = 0;
+static unsigned char adtimes = 0;
+volatile unsigned int ad_temp;
+ADCON1 = 0;
+ADCON0 = 0X41 | (adch << 2);
 asm("nop");
-asm("clrwdt");
-INTCON = 0;
-OSCCON = 0X71;
-OPTION_REG = 0x00;
+asm("nop");
+GODONE = 1;
 
+unsigned char i = 0;
+while(GODONE)
+{
+if(0 == (--i))
+return;
+}
+
+ad_temp=(ADRESH<<4)+(ADRESL>>4);
+
+if(0 == admax)
+{
+admax = ad_temp;
+admin = ad_temp;
+}
+else if(ad_temp > admax)
+admax = ad_temp;
+else if(ad_temp < admin)
+admin = ad_temp;
+
+adsum += ad_temp;
+if(++adtimes >= 10)
+{
+adsum -= admax;
+adsum -= admin;
+
+adresult = adsum >> 3;
+
+adsum = 0;
+admin = 0;
+admax = 0;
+adtimes = 0;
+}
 }
 
 
-void Init_GPIO() {
-TRISA = 0;
-TRISB = 0;
-TRISC = 0;
-WPUA = 0xFF;
-WPUB = 0xFF;
-WPUC = 0xFF;
-PORTA = 0xFF;
-PORTB = 0xFF;
-PORTC = 0xFF;
-IOCB = 0x00;
 
+unsigned char ADC_Result(unsigned char adch)
+{
+ADCON1 = 0;
+ADCON0 = 0X41 | (adch << 2);
+asm("nop");
+asm("nop");
+GODONE = 1;
+
+unsigned char i = 0;
+while(GODONE)
+{
+if(0 == (--i))
+return 0;
+}
+return ADRESH;
 }
 
-void Init_Interupt() {
-OPTION_REG = 0x00;
-TMR0 = 0;
-INTCON = 0xE0;
+# 82
+void DelayXms(unsigned char x)
+{
+unsigned char i,j;
+for(i=x;i>0;i--)
+for(j=153;j>0;j--);
+}
 
+
+unsigned char readVrefADC()
+{
+DelayXms(1);
+ADC_Sample(15);
+unsigned char result;
+
+result = ADC_Result(15);
+return result;
 }

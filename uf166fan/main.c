@@ -1,5 +1,6 @@
 #include "scankey.h"
 #include "init.h"
+#include "adc.h"
 
 #define MAX_FAN_LEVEL 4
 #define MIN_FAN_LEVEL 1
@@ -257,6 +258,8 @@ void main(void) {
             count10Ms = 0;
             //¼ì²âUSB×´Ì¬
             checkUsbStatus();
+			//¼ì²âÄÚ²¿µçÑ¹
+			readVrefADC();
         }
 
         if (countTime == 1000) {

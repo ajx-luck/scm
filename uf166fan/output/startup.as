@@ -8,7 +8,7 @@
 	; Compiler options:
 	;
 	; -ouf166fan.cof -muf166fan.map --summary=default,-psect,-class \
-	; --fill=0xFFFF --output=intel main.p1 scankey.p1 init.p1 \
+	; --fill=0xFFFF --output=intel main.p1 scankey.p1 init.p1 adc.p1 \
 	; --chip=SC8P1711C -P --runtime=default, \
 	; --opt=-local,-asmfile,+asm,-speed,+space,-debug -E+cmscerr.err \
 	; -D__DEBUG=1 -g --asmlist --warn=-9 --stack=compiled:auto:auto:auto \
