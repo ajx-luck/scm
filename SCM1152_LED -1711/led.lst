@@ -1,0 +1,225 @@
+---- C:\SCMCU WorkSpace\SCM1152_LED -1711\led.c ----------------------------------------------------------------------
+1:                #include<sc.h>
+2:                #define setbit(x, y)  x|=(1<<y)
+3:                #define resetbit(x, y)  x&=~(1<<y)
+4:                
+5:                
+6:                unsigned char timeoutFlag;
+7:                unsigned char timeout1MSFlag;
+8:                
+9:                void Init_System()
+  005F    0000    NOP
+  0060    0064    CLRWDT
+10:               {
+11:               	asm("nop");
+12:               	asm("clrwdt");
+13:               	INTCON = 0;					//系统初始化
+  0061    018B    CLR	0xB
+14:               	OSCCON = 0X71;				//配置振荡为8M,开 WDT
+  0062    3071    LDIA	0x71
+  0063    1683    SETB	0x3,5
+  0064    1303    CLRB	0x3,6
+  0065    008F    LD	0xF,A
+15:                   OPTION_REG = 0x00;        //Timer0使用内部时钟Focs/4，预分频比为1:2
+  0066    0181    CLR	0x1
+16:                   TMR0 = 0;                //赋予初始值
+  0067    1283    CLRB	0x3,5
+  0068    0181    CLR	0x1
+17:                   INTCON = 0xE0;            //允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
+  0069    30E0    LDIA	0xE0
+  006A    008B    LD	0xB,A
+18:               	
+19:               
+20:               	TRISB = 0;	
+  006B    1683    SETB	0x3,5
+  006C    0186    CLR	0x6
+21:               	WPUB = 0xFF;
+  006D    30FF    LDIA	0xFF
+  006E    0095    LD	0x15,A
+22:               	PORTB = 0xFF;
+  006F    1283    CLRB	0x3,5
+  0070    0086    LD	0x6,A
+23:               	IOCB = 0x00;
+  0071    1683    SETB	0x3,5
+  0072    0196    CLR	0x16
+  0073    0008    RET
+24:               }
+25:               
+26:               void main(void)
+27:               {
+28:               	Init_System();
+  000F    205F    CALL	0x5F
+29:               	unsigned int count = 0;
+  0010    01F2    CLR	0x72
+  0011    01F3    CLR	0x73
+30:               	while(1)
+31:               	{
+32:               		
+33:               		if(timeoutFlag)
+  0012    0875    LD	A,0x75
+  0013    1903    SZB	0x3,2
+  0014    2812    JP	0x12
+34:               		{
+35:               			timeoutFlag = 0;
+  0015    01F5    CLR	0x75
+  0016    0064    CLRWDT
+36:               			
+37:               			asm("clrwdt");
+38:               			
+39:               			if(count == 500)
+  0017    30F4    LDIA	0xF4
+  0018    0672    XORA	0x72
+  0019    1D03    SNZB	0x3,2
+  001A    283A    JP	0x3A
+  001B    0373    DECA	0x73
+  001C    1D03    SNZB	0x3,2
+  001D    283A    JP	0x3A
+40:               			{
+41:               					count = 0;
+  001E    01F2    CLR	0x72
+  001F    01F3    CLR	0x73
+  0020    283A    JP	0x3A
+42:               			}
+43:               				
+44:               			
+45:               			switch(count)
+46:               			{
+47:               				case 0:
+48:               				resetbit(PORTB, 4);
+  0021    1283    CLRB	0x3,5
+  0022    1303    CLRB	0x3,6
+  0023    1206    CLRB	0x6,4
+49:               				setbit(PORTB, 2);
+  0024    1506    SETB	0x6,2
+50:               				break;
+  0025    2855    JP	0x55
+51:               				case 100:
+52:               				resetbit(PORTB, 3);
+  0026    1283    CLRB	0x3,5
+  0027    1303    CLRB	0x3,6
+  0028    1186    CLRB	0x6,3
+53:               				setbit(PORTB, 1);
+  0029    1486    SETB	0x6,1
+54:               				break;
+  002A    2855    JP	0x55
+55:               				case 200:
+56:               				resetbit(PORTB, 2);
+  002B    1283    CLRB	0x3,5
+  002C    1303    CLRB	0x3,6
+  002D    1106    CLRB	0x6,2
+57:               				setbit(PORTB, 5);
+  002E    1686    SETB	0x6,5
+58:               				break;
+  002F    2855    JP	0x55
+59:               				case 300:
+60:               				resetbit(PORTB, 1);
+  0030    1283    CLRB	0x3,5
+  0031    1303    CLRB	0x3,6
+  0032    1086    CLRB	0x6,1
+61:               				setbit(PORTB, 4);
+  0033    1606    SETB	0x6,4
+62:               				break;
+  0034    2855    JP	0x55
+63:               				case 400:
+64:               				resetbit(PORTB, 5);
+  0035    1283    CLRB	0x3,5
+  0036    1303    CLRB	0x3,6
+  0037    1286    CLRB	0x6,5
+65:               				setbit(PORTB, 3);
+  0038    1586    SETB	0x6,3
+66:               				break;
+  0039    2855    JP	0x55
+  003A    0873    LD	A,0x73
+  003B    3A00    XORIA	0x0
+  003C    1903    SZB	0x3,2
+  003D    2842    JP	0x42
+  003E    3A01    XORIA	0x1
+  003F    1903    SZB	0x3,2
+  0040    284D    JP	0x4D
+  0041    2855    JP	0x55
+  0042    0872    LD	A,0x72
+  0043    3A00    XORIA	0x0
+  0044    1903    SZB	0x3,2
+  0045    2821    JP	0x21
+  0046    3A64    XORIA	0x64
+  0047    1903    SZB	0x3,2
+  0048    2826    JP	0x26
+  0049    3AAC    XORIA	0xAC
+  004A    1903    SZB	0x3,2
+  004B    282B    JP	0x2B
+  004C    2855    JP	0x55
+  004D    0872    LD	A,0x72
+  004E    3A2C    XORIA	0x2C
+  004F    1903    SZB	0x3,2
+  0050    2830    JP	0x30
+  0051    3ABC    XORIA	0xBC
+  0052    1903    SZB	0x3,2
+  0053    2835    JP	0x35
+  0054    2855    JP	0x55
+67:               			}
+68:               			if(timeout1MSFlag == 10)
+  0055    300A    LDIA	0xA
+  0056    0674    XORA	0x74
+  0057    1D03    SNZB	0x3,2
+  0058    285D    JP	0x5D
+69:               			{
+70:               				timeout1MSFlag =0;
+  0059    01F4    CLR	0x74
+71:               				count++;
+  005A    0AF2    INCR	0x72
+  005B    1903    SZB	0x3,2
+  005C    0AF3    INCR	0x73
+72:               			}
+73:               			
+74:               			timeout1MSFlag++;
+  005D    0AF4    INCR	0x74
+  005E    2812    JP	0x12
+75:               		}
+76:               	}
+77:               }
+78:               
+79:               void interrupt Timer0_Isr() {
+80:                   if (T0IF) {
+  0074    1D0B    SNZB	0xB,2
+  0075    287D    JP	0x7D
+81:                       //---------------------------------------
+82:                       TMR0 += 155;        //重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+  0076    309B    LDIA	0x9B
+  0077    1283    CLRB	0x3,5
+  0078    1303    CLRB	0x3,6
+  0079    0781    ADDR	0x1
+83:                       //---------------------------------------
+84:               
+85:                       T0IF = 0;            //清中断标志位	
+  007A    110B    CLRB	0xB,2
+86:                       timeoutFlag = 1;
+  007B    01F5    CLR	0x75
+  007C    0AF5    INCR	0x75
+  007D    0871    LD	A,0x71
+  007E    008A    LD	0xA,A
+  007F    0E70    SWAPA	0x70
+  0080    0083    LD	0x3,A
+  0081    0EFE    SWAPR	0x7E
+  0082    0E7E    SWAPA	0x7E
+  0083    0009    RETI
+87:               
+88:                   }
+89:               
+90:               }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    01F4    CLR	0x74
+  000C    01F5    CLR	0x75
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00FE    LD	0x7E,A
+  0005    0E03    SWAPA	0x3
+  0006    00F0    LD	0x70,A
+  0007    080A    LD	A,0xA
+  0008    00F1    LD	0x71,A
+  0009    2874    JP	0x74
+---- common_function ------------------------------------------------------------------
+  000D    0183    CLR	0x3
+  000E    280F    JP	0xF

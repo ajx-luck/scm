@@ -1,0 +1,546 @@
+---- C:\SCMCU WorkSpace\LED_COLOR_PWM1_PWM2\led.c ----------------------------------------------------------------------
+1:                #include <sc.h>
+2:                
+3:                #define getbit(x, y)   ((x) >> (y)&1)
+4:                #define setbit(x, y)  x|=(1<<y)
+5:                #define resetbit(x, y)  x&=~(1<<y)
+6:                #define reversebit(x, y)  x^=(1<<y)
+7:                
+8:                #define u16_t unsigned int
+9:                #define u8_t unsigned char
+10:               
+11:               u16_t count1,count2,count3;
+12:               u8_t FirstFlag = 0;
+13:               u8_t timeoutFlag = 0;
+14:               u16_t width1,width2;
+15:               u8_t timeout1MSFlag = 0;
+16:               
+17:               void Init_System()
+  0116    0000    NOP
+  0117    0064    CLRWDT
+18:               {
+19:               	asm("nop");
+20:               	asm("clrwdt");
+21:               	INTCON = 0;					//系统初始化
+  0118    0189    CLR	0x9
+22:               	OSCCON = 0X71;				//配置振荡为8M,开 WDT
+  0119    3071    LDIA	0x71
+  011A    0088    LD	0x8,A
+23:               	WPUB = 0xFF;
+  011B    30FF    LDIA	0xFF
+  011C    008D    LD	0xD,A
+24:               	OPTION_REG = 0xD0;		//Timer0使用内部时钟Focs/4，预分频比为1:2
+  011D    30D0    LDIA	0xD0
+  011E    0087    LD	0x7,A
+25:               	TMR0 = 0;				//赋予初始值
+  011F    0181    CLR	0x1
+26:               	TMR0PRD = 100;
+  0120    3064    LDIA	0x64
+  0121    008F    LD	0xF,A
+27:               	
+28:               
+29:               	TRISB = 0B00111001;	
+  0122    3039    LDIA	0x39
+  0123    0086    LD	0x6,A
+30:               	PORTB = 0B00111001;
+  0124    0085    LD	0x5,A
+31:               	IOCB = 0xFF;
+  0125    30FF    LDIA	0xFF
+  0126    008E    LD	0xE,A
+32:               	
+33:               	//设置PWM周期
+34:               	PWMCK0 = 1;
+  0127    1612    SETB	0x12,4
+35:               	PWMCK1 = 0;
+  0128    1292    CLRB	0x12,5
+36:               	PWMPRD8 = 0;
+  0129    1312    CLRB	0x12,6
+37:               	PWMPRD9 = 1;
+  012A    1792    SETB	0x12,7
+38:               	PWM_PRD = 13;
+  012B    300D    LDIA	0xD
+  012C    0094    LD	0x14,A
+39:               	
+40:               	count1=count2=count3=0;
+41:               	width1=width2=0;
+  012D    01A0    CLR	0x20
+  012E    01A1    CLR	0x21
+  012F    01A2    CLR	0x22
+  0130    01A3    CLR	0x23
+  0131    01C9    CLR	0x49
+  0132    01CA    CLR	0x4A
+42:               	FirstFlag = 1;
+  0133    01A7    CLR	0x27
+  0134    0AA7    INCR	0x27
+  0135    0008    RET
+43:               }
+44:               
+45:               
+46:               void setPWM1(u16_t width)
+47:               {
+48:               	//选择PWM1
+49:               	PWMS0 = 1;
+  00F6    1412    SETB	0x12,0
+50:               	PWMS1 = 0;
+  00F7    1092    CLRB	0x12,1
+51:               	PWMS2 = 0;
+  00F8    1112    CLRB	0x12,2
+52:               	PWMPRD9 = 0;
+  00F9    1392    CLRB	0x12,7
+53:               	if(width > 255)
+  00FA    3001    LDIA	0x1
+  00FB    0226    SUBA	0x26
+  00FC    3000    LDIA	0x0
+  00FD    1903    SZB	0x3,2
+  00FE    0225    SUBA	0x25
+  00FF    1C03    SNZB	0x3,0
+  0100    2912    JP	0x112
+54:               	{
+55:               		PWMPRD8 = width/255;
+  0101    30FF    LDIA	0xFF
+  0102    00C2    LD	0x42,A
+  0103    01C3    CLR	0x43
+  0104    0826    LD	A,0x26
+  0105    00C5    LD	0x45,A
+  0106    0825    LD	A,0x25
+  0107    00C4    LD	0x44,A
+  0108    2084    CALL	0x84
+  0109    1C42    SNZB	0x42,0
+  010A    290D    JP	0x10D
+  010B    1712    SETB	0x12,6
+  010C    290E    JP	0x10E
+  010D    1312    CLRB	0x12,6
+56:               		PWM_PRD = width-255;
+  010E    0825    LD	A,0x25
+  010F    3E01    ADDIA	0x1
+  0110    0094    LD	0x14,A
+57:               	}else
+  0111    0008    RET
+58:               	{
+59:               		PWMPRD8 = 0;
+  0112    1312    CLRB	0x12,6
+60:               		PWM_PRD = width;
+  0113    0825    LD	A,0x25
+  0114    0094    LD	0x14,A
+  0115    0008    RET
+61:               	}
+62:               }
+63:               
+64:               void setPWM2(u16_t width)
+65:               {
+66:               	//选择PWM2
+67:               	PWMS0 = 0;
+  00D6    1012    CLRB	0x12,0
+68:               	PWMS1 = 1;
+  00D7    1492    SETB	0x12,1
+69:               	PWMS2 = 0;
+  00D8    1112    CLRB	0x12,2
+70:               	PWMPRD9 = 0;
+  00D9    1392    CLRB	0x12,7
+71:               	if(width > 255)
+  00DA    3001    LDIA	0x1
+  00DB    0226    SUBA	0x26
+  00DC    3000    LDIA	0x0
+  00DD    1903    SZB	0x3,2
+  00DE    0225    SUBA	0x25
+  00DF    1C03    SNZB	0x3,0
+  00E0    28F2    JP	0xF2
+72:               	{
+73:               		PWMPRD8 = width/255;
+  00E1    30FF    LDIA	0xFF
+  00E2    00C2    LD	0x42,A
+  00E3    01C3    CLR	0x43
+  00E4    0826    LD	A,0x26
+  00E5    00C5    LD	0x45,A
+  00E6    0825    LD	A,0x25
+  00E7    00C4    LD	0x44,A
+  00E8    2084    CALL	0x84
+  00E9    1C42    SNZB	0x42,0
+  00EA    28ED    JP	0xED
+  00EB    1712    SETB	0x12,6
+  00EC    28EE    JP	0xEE
+  00ED    1312    CLRB	0x12,6
+74:               		PWM_PRD = width-255;
+  00EE    0825    LD	A,0x25
+  00EF    3E01    ADDIA	0x1
+  00F0    0094    LD	0x14,A
+75:               	}else
+  00F1    0008    RET
+76:               	{
+77:               		PWMPRD8 = 0;
+  00F2    1312    CLRB	0x12,6
+78:               		PWM_PRD = width;
+  00F3    0825    LD	A,0x25
+  00F4    0094    LD	0x14,A
+  00F5    0008    RET
+79:               	}
+80:               }
+81:               
+82:               //设置count计数
+83:               void resetTimeCount()
+84:               {
+85:               	if(count2 == 1350)
+  00AE    3046    LDIA	0x46
+  00AF    0622    XORA	0x22
+  00B0    3005    LDIA	0x5
+  00B1    1903    SZB	0x3,2
+  00B2    0623    XORA	0x23
+  00B3    1903    SZB	0x3,2
+86:               	{
+87:               		FirstFlag = 0;
+  00B4    01A7    CLR	0x27
+88:               	}
+89:               	
+90:               	if(count1 == 950)
+  00B5    30B6    LDIA	0xB6
+  00B6    0649    XORA	0x49
+  00B7    3003    LDIA	0x3
+  00B8    1903    SZB	0x3,2
+  00B9    064A    XORA	0x4A
+  00BA    1D03    SNZB	0x3,2
+  00BB    28BE    JP	0xBE
+91:               	{
+92:               		count1 = 0;
+  00BC    01C9    CLR	0x49
+  00BD    01CA    CLR	0x4A
+93:               	}
+94:               	if(FirstFlag == 0 && count2 == 950)
+  00BE    0827    LD	A,0x27
+  00BF    1D03    SNZB	0x3,2
+  00C0    28CA    JP	0xCA
+  00C1    30B6    LDIA	0xB6
+  00C2    0622    XORA	0x22
+  00C3    3003    LDIA	0x3
+  00C4    1903    SZB	0x3,2
+  00C5    0623    XORA	0x23
+  00C6    1D03    SNZB	0x3,2
+  00C7    28CA    JP	0xCA
+95:               	{
+96:               		count2 = 0;
+  00C8    01A2    CLR	0x22
+  00C9    01A3    CLR	0x23
+97:               	}
+98:               	if(timeout1MSFlag == 100)
+  00CA    3064    LDIA	0x64
+  00CB    064B    XORA	0x4B
+  00CC    1D03    SNZB	0x3,2
+  00CD    0008    RET
+99:               	{
+100:              		timeout1MSFlag = 0;
+  00CE    01CB    CLR	0x4B
+101:              		count1++;
+  00CF    0AC9    INCR	0x49
+  00D0    1903    SZB	0x3,2
+  00D1    0ACA    INCR	0x4A
+102:              		count2++;
+  00D2    0AA2    INCR	0x22
+  00D3    1903    SZB	0x3,2
+  00D4    0AA3    INCR	0x23
+  00D5    0008    RET
+103:              	}
+104:              }
+105:              
+106:              
+107:              
+108:              void main()
+109:              {
+110:              	Init_System();
+  0015    2116    CALL	0x116
+111:              	INTCON = 0xE0;			//允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
+  0016    30E0    LDIA	0xE0
+  0017    0089    LD	0x9,A
+112:              	while(1)
+113:              	{
+114:              		if(timeoutFlag)
+  0018    0824    LD	A,0x24
+  0019    1903    SZB	0x3,2
+  001A    2818    JP	0x18
+115:              		{
+116:              			timeoutFlag = 0;
+  001B    01A4    CLR	0x24
+  001C    0064    CLRWDT
+117:              			asm("clrwdt");		
+118:              					
+119:              			resetTimeCount();
+  001D    20AE    CALL	0xAE
+120:              			
+121:              			if(timeout1MSFlag == 0)
+  001E    084B    LD	A,0x4B
+  001F    1D03    SNZB	0x3,2
+  0020    2882    JP	0x82
+122:              			{
+123:              				//PWM1设置
+124:              				if(count1 <275)
+  0021    3001    LDIA	0x1
+  0022    024A    SUBA	0x4A
+  0023    3013    LDIA	0x13
+  0024    1903    SZB	0x3,2
+  0025    0249    SUBA	0x49
+  0026    1803    SZB	0x3,0
+  0027    282D    JP	0x2D
+125:              				{
+126:              					setPWM1(count1);
+  0028    084A    LD	A,0x4A
+  0029    00A6    LD	0x26,A
+  002A    0849    LD	A,0x49
+  002B    00A5    LD	0x25,A
+  002C    20F6    CALL	0xF6
+127:              				}
+128:              				
+129:              				if(count1 >=275 && count1<=550)
+  002D    3001    LDIA	0x1
+  002E    024A    SUBA	0x4A
+  002F    3013    LDIA	0x13
+  0030    1903    SZB	0x3,2
+  0031    0249    SUBA	0x49
+  0032    1C03    SNZB	0x3,0
+  0033    2846    JP	0x46
+  0034    3002    LDIA	0x2
+  0035    024A    SUBA	0x4A
+  0036    3027    LDIA	0x27
+  0037    1903    SZB	0x3,2
+  0038    0249    SUBA	0x49
+  0039    1803    SZB	0x3,0
+  003A    2846    JP	0x46
+130:              				{
+131:              					setPWM1(550 - count1);
+  003B    3026    LDIA	0x26
+  003C    00A5    LD	0x25,A
+  003D    3002    LDIA	0x2
+  003E    00A6    LD	0x26,A
+  003F    0849    LD	A,0x49
+  0040    02A5    SUBR	0x25
+  0041    084A    LD	A,0x4A
+  0042    1C03    SNZB	0x3,0
+  0043    03A6    DECR	0x26
+  0044    02A6    SUBR	0x26
+  0045    20F6    CALL	0xF6
+132:              				}
+133:              				
+134:              				//PWM2设置
+135:              				if(FirstFlag)
+  0046    0827    LD	A,0x27
+  0047    1903    SZB	0x3,2
+  0048    2859    JP	0x59
+136:              				{
+137:              					if(count2 >=450)
+  0049    3001    LDIA	0x1
+  004A    0223    SUBA	0x23
+  004B    30C2    LDIA	0xC2
+  004C    1903    SZB	0x3,2
+  004D    0222    SUBA	0x22
+  004E    1C03    SNZB	0x3,0
+  004F    285D    JP	0x5D
+138:              					{
+139:              						count3 = count2-450;
+  0050    0822    LD	A,0x22
+  0051    3E3E    ADDIA	0x3E
+  0052    00A0    LD	0x20,A
+  0053    0823    LD	A,0x23
+  0054    1803    SZB	0x3,0
+  0055    3E01    ADDIA	0x1
+  0056    3EFE    ADDIA	0xFE
+  0057    00A1    LD	0x21,A
+  0058    285D    JP	0x5D
+140:              					}
+141:              				}else
+142:              				{
+143:              					count3 = count2;
+  0059    0823    LD	A,0x23
+  005A    00A1    LD	0x21,A
+  005B    0822    LD	A,0x22
+  005C    00A0    LD	0x20,A
+144:              				}
+145:              				
+146:              				if(count3 <275)
+  005D    3001    LDIA	0x1
+  005E    0221    SUBA	0x21
+  005F    3013    LDIA	0x13
+  0060    1903    SZB	0x3,2
+  0061    0220    SUBA	0x20
+  0062    1803    SZB	0x3,0
+  0063    2869    JP	0x69
+147:              				{
+148:              					setPWM2(count3);
+  0064    0821    LD	A,0x21
+  0065    00A6    LD	0x26,A
+  0066    0820    LD	A,0x20
+  0067    00A5    LD	0x25,A
+  0068    20D6    CALL	0xD6
+149:              				}
+150:              				
+151:              				if(count3 >=275 && count3<=550)
+  0069    3001    LDIA	0x1
+  006A    0221    SUBA	0x21
+  006B    3013    LDIA	0x13
+  006C    1903    SZB	0x3,2
+  006D    0220    SUBA	0x20
+  006E    1C03    SNZB	0x3,0
+  006F    2882    JP	0x82
+  0070    3002    LDIA	0x2
+  0071    0221    SUBA	0x21
+  0072    3027    LDIA	0x27
+  0073    1903    SZB	0x3,2
+  0074    0220    SUBA	0x20
+  0075    1803    SZB	0x3,0
+  0076    2882    JP	0x82
+152:              				{
+153:              					setPWM2(550 - count3);
+  0077    3026    LDIA	0x26
+  0078    00A5    LD	0x25,A
+  0079    3002    LDIA	0x2
+  007A    00A6    LD	0x26,A
+  007B    0820    LD	A,0x20
+  007C    02A5    SUBR	0x25
+  007D    0821    LD	A,0x21
+  007E    1C03    SNZB	0x3,0
+  007F    03A6    DECR	0x26
+  0080    02A6    SUBR	0x26
+  0081    20D6    CALL	0xD6
+154:              				}
+155:              				
+156:              			}
+157:              			
+158:              			
+159:              			
+160:              			timeout1MSFlag++;
+  0082    0ACB    INCR	0x4B
+  0083    2818    JP	0x18
+161:              			
+162:              		}
+163:              	}
+164:              }
+165:              
+166:              
+167:              
+168:              
+169:              
+170:              
+171:              /***********************************************
+172:              函数名称：Timer0_Isr
+173:              函数功能：中断服务
+174:              入口参数：无
+175:              出口参数：无
+176:              备注：
+177:              ***********************************************/
+178:              void interrupt Timer0_Isr()
+179:              {
+180:              	if(T0IF)
+  0136    1D09    SNZB	0x9,2
+  0137    293B    JP	0x13B
+181:              	{
+182:              	//---------------------------------------
+183:              	//	TMR0 += 50;		//重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+184:              	//---------------------------------------
+185:              			
+186:              		T0IF = 0;			//清中断标志位	
+  0138    1109    CLRB	0x9,2
+187:              		timeoutFlag = 1;
+  0139    01A4    CLR	0x24
+  013A    0AA4    INCR	0x24
+  013B    0841    LD	A,0x41
+  013C    008A    LD	0xA,A
+  013D    0E40    SWAPA	0x40
+  013E    0083    LD	0x3,A
+  013F    0ECE    SWAPR	0x4E
+  0140    0E4E    SWAPA	0x4E
+  0141    0009    RETI
+188:              	}
+189:              }
+---- C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\lwdiv.c ----------------------------------------------------------------------
+1:                // word unsigned division
+2:                
+3:                unsigned int
+4:                #ifdef __PICC__
+5:                #warning TODO: update cgpic and this file to use the other prototype
+6:                __lwdiv(unsigned int divisor, unsigned int dividend)
+  0084    01C6    CLR	0x46
+  0085    01C7    CLR	0x47
+  0086    0842    LD	A,0x42
+  0087    0443    ORA	0x43
+  0088    1903    SZB	0x3,2
+  0089    28A9    JP	0xA9
+  008A    01C8    CLR	0x48
+  008B    0AC8    INCR	0x48
+  008C    1BC3    SZB	0x43,7
+  008D    2892    JP	0x92
+  008E    1003    CLRB	0x3,0
+  008F    0DC2    RLCR	0x42
+  0090    0DC3    RLCR	0x43
+  0091    288B    JP	0x8B
+  0092    1003    CLRB	0x3,0
+  0093    0DC6    RLCR	0x46
+  0094    0DC7    RLCR	0x47
+  0095    0843    LD	A,0x43
+  0096    0245    SUBA	0x45
+  0097    1D03    SNZB	0x3,2
+  0098    289B    JP	0x9B
+  0099    0842    LD	A,0x42
+  009A    0244    SUBA	0x44
+  009B    1C03    SNZB	0x3,0
+  009C    28A5    JP	0xA5
+  009D    0842    LD	A,0x42
+  009E    02C4    SUBR	0x44
+  009F    0843    LD	A,0x43
+  00A0    1C03    SNZB	0x3,0
+  00A1    03C5    DECR	0x45
+  00A2    02C5    SUBR	0x45
+  00A3    1446    SETB	0x46,0
+  00A4    1003    CLRB	0x3,0
+  00A5    0CC3    RRCR	0x43
+  00A6    0CC2    RRCR	0x42
+  00A7    0BC8    SZDECR	0x48
+  00A8    2892    JP	0x92
+  00A9    0847    LD	A,0x47
+  00AA    00C3    LD	0x43,A
+  00AB    0846    LD	A,0x46
+  00AC    00C2    LD	0x42,A
+  00AD    0008    RET
+7:                #else
+8:                __lwdiv(unsigned int dividend, unsigned int divisor)
+9:                #endif
+10:               {
+11:               	unsigned int	quotient;
+12:               	unsigned char	counter;
+13:               
+14:               	quotient = 0;
+15:               	if(divisor != 0) {
+16:               		counter = 1;
+17:               		while((divisor & 0x8000) == 0) {
+18:               			divisor <<= 1;
+19:               			counter++;
+20:               		}
+21:               		do {
+22:               			quotient <<= 1;
+23:               			if(divisor <= dividend) {
+24:               				dividend -= divisor;
+25:               				quotient |= 1;
+26:               			}
+27:               			divisor >>= 1;
+28:               		} while(--counter != 0);
+29:               	}
+30:               	return quotient;
+31:               }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    01C9    CLR	0x49
+  000C    01CA    CLR	0x4A
+  000D    01CB    CLR	0x4B
+  000E    01A0    CLR	0x20
+  000F    01A1    CLR	0x21
+  0010    01A2    CLR	0x22
+  0011    01A3    CLR	0x23
+  0012    01A4    CLR	0x24
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00CE    LD	0x4E,A
+  0005    0E03    SWAPA	0x3
+  0006    00C0    LD	0x40,A
+  0007    080A    LD	A,0xA
+  0008    00C1    LD	0x41,A
+  0009    2936    JP	0x136
+---- common_function ------------------------------------------------------------------
+  0013    0183    CLR	0x3
+  0014    2815    JP	0x15

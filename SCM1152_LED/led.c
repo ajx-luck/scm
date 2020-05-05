@@ -28,6 +28,7 @@ void main(void)
 {
 	Init_System();
 	unsigned int count = 0;
+	unsigned char timeout1MSFlag = 0;
 	while(1)
 	{
 		
@@ -62,8 +63,15 @@ void main(void)
 				case 400:
 				resetbit(PORTB, 0);
 				setbit(PORTB, 3);
+				break;
 			}
-			count++;
+			if(timeout1MSFlag == 10)
+			{
+				timeout1MSFlag =0;
+				count++;
+			}
+			
+			timeout1MSFlag++;
 			
 		}
 	}

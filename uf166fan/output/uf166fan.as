@@ -744,16 +744,16 @@ l3450:
 l3452:	
 ;main.c: 260: checkUsbStatus();
 	fcall	_checkUsbStatus
-	line	261
+	line	262
 	
 l3454:	
-;main.c: 261: readVrefADC();
+;main.c: 262: readVrefADC();
 	fcall	_readVrefADC
-	line	264
+	line	265
 	
 l3456:	
-;main.c: 262: }
-;main.c: 264: if (countTime == 1000) {
+;main.c: 263: }
+;main.c: 265: if (countTime == 1000) {
 		movlw	232
 	xorwf	((_countTime)),w
 	movlw	3
@@ -765,17 +765,17 @@ l3456:
 u1391:
 	goto	l3436
 u1390:
-	line	265
+	line	266
 	
 l3458:	
-;main.c: 265: countTime = 0;
+;main.c: 266: countTime = 0;
 	clrf	(_countTime)
 	clrf	(_countTime+1)
 	goto	l3436
 	global	start
 	ljmp	start
 	opt stack 0
-	line	270
+	line	271
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -3159,7 +3159,7 @@ GLOBAL	__end_of_setLedOn
 
 ;; *************** function _Init_Config *****************
 ;; Defined at:
-;;		line 272 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 273 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3191,12 +3191,12 @@ GLOBAL	__end_of_setLedOn
 ;; This function uses a non-reentrant model
 ;;
 psect	text15,local,class=CODE,delta=2,merge=1,group=0
-	line	272
+	line	273
 global __ptext15
 __ptext15:	;psect for function _Init_Config
 psect	text15
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	272
+	line	273
 	global	__size_of_Init_Config
 	__size_of_Init_Config	equ	__end_of_Init_Config-_Init_Config
 	
@@ -3204,93 +3204,93 @@ _Init_Config:
 ;incstack = 0
 	opt	stack 3
 ; Regs used in _Init_Config: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	274
+	line	275
 	
 l3076:	
-;main.c: 274: Init_System();
+;main.c: 275: Init_System();
 	fcall	_Init_System
-	line	275
-;main.c: 275: Init_GPIO();
-	fcall	_Init_GPIO
 	line	276
-;main.c: 276: Init_Interupt();
-	fcall	_Init_Interupt
+;main.c: 276: Init_GPIO();
+	fcall	_Init_GPIO
 	line	277
-;main.c: 277: Init_PWM();
+;main.c: 277: Init_Interupt();
+	fcall	_Init_Interupt
+	line	278
+;main.c: 278: Init_PWM();
 	fcall	_Init_PWM
-	line	279
-	
-l3078:	
-;main.c: 279: IOCB = 0x04;
-	movlw	low(04h)
-	movwf	(150)^080h	;volatile
 	line	280
 	
+l3078:	
+;main.c: 280: IOCB = 0x04;
+	movlw	low(04h)
+	movwf	(150)^080h	;volatile
+	line	281
+	
 l3080:	
-;main.c: 280: TMR0 = 155;
+;main.c: 281: TMR0 = 155;
 	movlw	low(09Bh)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(1)	;volatile
-	line	281
+	line	282
 	
 l3082:	
-;main.c: 281: TO = 0;
+;main.c: 282: TO = 0;
 	bcf	(28/8),(28)&7	;volatile
-	line	284
+	line	285
 	
 l3084:	
-;main.c: 284: key1.key_index = 5;
+;main.c: 285: key1.key_index = 5;
 	movlw	low(05h)
 	movwf	0+(_key1)+06h
-	line	286
+	line	287
 	
 l3086:	
-;main.c: 286: key2.key_index = 4;
+;main.c: 287: key2.key_index = 4;
 	movlw	low(04h)
 	movwf	0+(_key2)+06h
-	line	288
-	
-l3088:	
-;main.c: 288: key3.key_index = 3;
-	movlw	low(03h)
-	movwf	0+(_key3)+06h
 	line	289
 	
-l3090:	
-;main.c: 289: resetKey(&key1);
-	movlw	(low(_key1|((0x0)<<8)))&0ffh
-	fcall	_resetKey
+l3088:	
+;main.c: 289: key3.key_index = 3;
+	movlw	low(03h)
+	movwf	0+(_key3)+06h
 	line	290
 	
-l3092:	
-;main.c: 290: resetKey(&key2);
-	movlw	(low(_key2|((0x0)<<8)))&0ffh
+l3090:	
+;main.c: 290: resetKey(&key1);
+	movlw	(low(_key1|((0x0)<<8)))&0ffh
 	fcall	_resetKey
 	line	291
 	
+l3092:	
+;main.c: 291: resetKey(&key2);
+	movlw	(low(_key2|((0x0)<<8)))&0ffh
+	fcall	_resetKey
+	line	292
+	
 l3094:	
-;main.c: 291: resetKey(&key3);
+;main.c: 292: resetKey(&key3);
 	movlw	(low(_key3|((0x0)<<8)))&0ffh
 	fcall	_resetKey
-	line	293
+	line	294
 	
 l3096:	
-;main.c: 293: TRISA = 0;
+;main.c: 294: TRISA = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	clrf	(133)^080h	;volatile
-	line	294
-	
-l3098:	
-;main.c: 294: TRISB = 0x7E;
-	movlw	low(07Eh)
-	movwf	(134)^080h	;volatile
 	line	295
 	
-l3100:	
-;main.c: 295: TRISC = 0;
-	clrf	(135)^080h	;volatile
+l3098:	
+;main.c: 295: TRISB = 0x7E;
+	movlw	low(07Eh)
+	movwf	(134)^080h	;volatile
 	line	296
+	
+l3100:	
+;main.c: 296: TRISC = 0;
+	clrf	(135)^080h	;volatile
+	line	297
 	
 l645:	
 	return
@@ -3731,7 +3731,7 @@ GLOBAL	__end_of_Init_GPIO
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 342 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 343 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3760,12 +3760,12 @@ GLOBAL	__end_of_Init_GPIO
 ;;
 psect	text21,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	342
+	line	343
 global __ptext21
 __ptext21:	;psect for function _Timer0_Isr
 psect	text21
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	342
+	line	343
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
 	
@@ -3789,57 +3789,57 @@ interrupt_function:
 	movwf	(??_Timer0_Isr+2)
 	ljmp	_Timer0_Isr
 psect	text21
-	line	343
+	line	344
 	
 i1l3158:	
-;main.c: 343: if (T0IF) {
+;main.c: 344: if (T0IF) {
 	btfss	(90/8),(90)&7	;volatile
 	goto	u99_21
 	goto	u99_20
 u99_21:
 	goto	i1l3166
 u99_20:
-	line	345
+	line	346
 	
 i1l3160:	
-;main.c: 345: TMR0 += 155;
+;main.c: 346: TMR0 += 155;
 	movlw	low(09Bh)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	addwf	(1),f	;volatile
-	line	348
-	
-i1l3162:	
-;main.c: 348: T0IF = 0;
-	bcf	(90/8),(90)&7	;volatile
 	line	349
 	
+i1l3162:	
+;main.c: 349: T0IF = 0;
+	bcf	(90/8),(90)&7	;volatile
+	line	350
+	
 i1l3164:	
-;main.c: 349: time0Flag = 1;
+;main.c: 350: time0Flag = 1;
 	clrf	(_time0Flag)
 	incf	(_time0Flag),f
-	line	353
+	line	354
 	
 i1l3166:	
-;main.c: 351: }
-;main.c: 353: if (RBIF) {
+;main.c: 352: }
+;main.c: 354: if (RBIF) {
 	btfss	(88/8),(88)&7	;volatile
 	goto	u100_21
 	goto	u100_20
 u100_21:
 	goto	i1l655
 u100_20:
-	line	354
-	
-i1l3168:	
-;main.c: 354: RBIF = 0;
-	bcf	(88/8),(88)&7	;volatile
 	line	355
 	
+i1l3168:	
+;main.c: 355: RBIF = 0;
+	bcf	(88/8),(88)&7	;volatile
+	line	356
+	
 i1l3170:	
-;main.c: 355: Init_Config();
+;main.c: 356: Init_Config();
 	fcall	i1_Init_Config
-	line	357
+	line	358
 	
 i1l655:	
 	movf	(??_Timer0_Isr+2),w
@@ -3859,7 +3859,7 @@ GLOBAL	__end_of_Timer0_Isr
 
 ;; *************** function i1_Init_Config *****************
 ;; Defined at:
-;;		line 272 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 273 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3891,12 +3891,12 @@ GLOBAL	__end_of_Timer0_Isr
 ;; This function uses a non-reentrant model
 ;;
 psect	text22,local,class=CODE,delta=2,merge=1,group=0
-	line	272
+	line	273
 global __ptext22
 __ptext22:	;psect for function i1_Init_Config
 psect	text22
 	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
-	line	272
+	line	273
 	global	__size_ofi1_Init_Config
 	__size_ofi1_Init_Config	equ	__end_ofi1_Init_Config-i1_Init_Config
 	
@@ -3904,93 +3904,93 @@ i1_Init_Config:
 ;incstack = 0
 	opt	stack 1
 ; Regs used in i1_Init_Config: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	274
+	line	275
 	
 i1l3106:	
-;main.c: 274: Init_System();
+;main.c: 275: Init_System();
 	fcall	i1_Init_System
-	line	275
-;main.c: 275: Init_GPIO();
-	fcall	i1_Init_GPIO
 	line	276
-;main.c: 276: Init_Interupt();
-	fcall	i1_Init_Interupt
+;main.c: 276: Init_GPIO();
+	fcall	i1_Init_GPIO
 	line	277
-;main.c: 277: Init_PWM();
+;main.c: 277: Init_Interupt();
+	fcall	i1_Init_Interupt
+	line	278
+;main.c: 278: Init_PWM();
 	fcall	i1_Init_PWM
-	line	279
-	
-i1l3108:	
-;main.c: 279: IOCB = 0x04;
-	movlw	low(04h)
-	movwf	(150)^080h	;volatile
 	line	280
 	
+i1l3108:	
+;main.c: 280: IOCB = 0x04;
+	movlw	low(04h)
+	movwf	(150)^080h	;volatile
+	line	281
+	
 i1l3110:	
-;main.c: 280: TMR0 = 155;
+;main.c: 281: TMR0 = 155;
 	movlw	low(09Bh)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(1)	;volatile
-	line	281
+	line	282
 	
 i1l3112:	
-;main.c: 281: TO = 0;
+;main.c: 282: TO = 0;
 	bcf	(28/8),(28)&7	;volatile
-	line	284
+	line	285
 	
 i1l3114:	
-;main.c: 284: key1.key_index = 5;
+;main.c: 285: key1.key_index = 5;
 	movlw	low(05h)
 	movwf	0+(_key1)+06h
-	line	286
+	line	287
 	
 i1l3116:	
-;main.c: 286: key2.key_index = 4;
+;main.c: 287: key2.key_index = 4;
 	movlw	low(04h)
 	movwf	0+(_key2)+06h
-	line	288
-	
-i1l3118:	
-;main.c: 288: key3.key_index = 3;
-	movlw	low(03h)
-	movwf	0+(_key3)+06h
 	line	289
 	
-i1l3120:	
-;main.c: 289: resetKey(&key1);
-	movlw	(low(_key1|((0x0)<<8)))&0ffh
-	fcall	i1_resetKey
+i1l3118:	
+;main.c: 289: key3.key_index = 3;
+	movlw	low(03h)
+	movwf	0+(_key3)+06h
 	line	290
 	
-i1l3122:	
-;main.c: 290: resetKey(&key2);
-	movlw	(low(_key2|((0x0)<<8)))&0ffh
+i1l3120:	
+;main.c: 290: resetKey(&key1);
+	movlw	(low(_key1|((0x0)<<8)))&0ffh
 	fcall	i1_resetKey
 	line	291
 	
+i1l3122:	
+;main.c: 291: resetKey(&key2);
+	movlw	(low(_key2|((0x0)<<8)))&0ffh
+	fcall	i1_resetKey
+	line	292
+	
 i1l3124:	
-;main.c: 291: resetKey(&key3);
+;main.c: 292: resetKey(&key3);
 	movlw	(low(_key3|((0x0)<<8)))&0ffh
 	fcall	i1_resetKey
-	line	293
+	line	294
 	
 i1l3126:	
-;main.c: 293: TRISA = 0;
+;main.c: 294: TRISA = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	clrf	(133)^080h	;volatile
-	line	294
-	
-i1l3128:	
-;main.c: 294: TRISB = 0x7E;
-	movlw	low(07Eh)
-	movwf	(134)^080h	;volatile
 	line	295
 	
-i1l3130:	
-;main.c: 295: TRISC = 0;
-	clrf	(135)^080h	;volatile
+i1l3128:	
+;main.c: 295: TRISB = 0x7E;
+	movlw	low(07Eh)
+	movwf	(134)^080h	;volatile
 	line	296
+	
+i1l3130:	
+;main.c: 296: TRISC = 0;
+	clrf	(135)^080h	;volatile
+	line	297
 	
 i1l645:	
 	return

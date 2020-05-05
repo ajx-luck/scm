@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/SCMCU\ WorkSpace/n9_fan_no_led/main.c C:/SCMCU\ WorkSpace/n9_fan_no_led/init.h C:/SCMCU\ WorkSpace/n9_fan_no_led/scankey.h C:/SCMCU\ WorkSpace/n9_fan_no_led/adc.h

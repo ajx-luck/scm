@@ -1,0 +1,1 @@
+ delay.d  delay.p1:  C:/SCMCU\ WorkSpace/SCM1152_LED\ -1711/delay.c C:/SCMCU\ WorkSpace/SCM1152_LED\ -1711/delay.h
