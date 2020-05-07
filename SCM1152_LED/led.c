@@ -4,6 +4,8 @@
 
 
 unsigned char timeoutFlag;
+unsigned int minuteFlag = 0;
+unsigned char hourCount = 0;
 
 void Init_System()
 {
@@ -39,8 +41,34 @@ void main(void)
 			if(count == 500)
 			{
 					count = 0;
+					minuteFlag++;
 			}
-				
+			//一个小时
+			if(minuteFlag == 7200)
+			{
+				minuteFlag = 0;
+				hourCount++;
+			}
+			
+			if(hourCount == 24)
+			{
+				hourCount = 0;
+			}
+			
+			if(timeout1MSFlag == 10)
+			{
+				timeout1MSFlag =0;
+				count++;
+			}
+			
+			timeout1MSFlag++;
+			
+			//超过6个小时，停止闪烁
+			if(hourCount > 5)
+			{
+				PORTB = 0xFF;
+				break;
+			}
 			
 			switch(count)
 			{
@@ -65,13 +93,7 @@ void main(void)
 				setbit(PORTB, 3);
 				break;
 			}
-			if(timeout1MSFlag == 10)
-			{
-				timeout1MSFlag =0;
-				count++;
-			}
 			
-			timeout1MSFlag++;
 			
 		}
 	}
