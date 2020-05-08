@@ -1,1 +1,1 @@
- led.d  led.p1:  C:/SCMCU\ WorkSpace/SCM1152_LED/led.c
+ led.d  led.p1:  E:/project/project0508/scm/SCM1152_LED/led.c

@@ -43,7 +43,7 @@ void main(void)
 					count = 0;
 					minuteFlag++;
 			}
-			//一个小时
+			//一个小时,0.5s*7200
 			if(minuteFlag == 7200)
 			{
 				minuteFlag = 0;
@@ -67,7 +67,7 @@ void main(void)
 			if(hourCount > 5)
 			{
 				PORTB = 0xFF;
-				break;
+				continue;
 			}
 			
 			switch(count)

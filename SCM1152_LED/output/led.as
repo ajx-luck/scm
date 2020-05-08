@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8P1152A
-opt include "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc8p1152a.cgen.inc"
+opt include "E:\cms\SCMCU_IDE_V2.00.07\data\include\sc8p1152a.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -35,6 +35,8 @@ skipnz	macro
 	FNCALL	intlevel1,_Timer0_Isr
 	global	intlevel1
 	FNROOT	intlevel1
+	global	_minuteFlag
+	global	_hourCount
 	global	_timeoutFlag
 	global	_TMR0PRD
 psect	text0,local,class=CODE,delta=2,merge=1
@@ -73,6 +75,12 @@ __initialization:
 psect	bssCOMMON,class=COMMON,space=1,noexec
 global __pbssCOMMON
 __pbssCOMMON:
+_minuteFlag:
+       ds      2
+
+_hourCount:
+       ds      1
+
 _timeoutFlag:
        ds      1
 
@@ -81,6 +89,9 @@ _timeoutFlag:
 ; Clear objects allocated to COMMON
 psect cinit,class=CODE,delta=2,merge=1
 	clrf	((__pbssCOMMON)+0)&07Fh
+	clrf	((__pbssCOMMON)+1)&07Fh
+	clrf	((__pbssCOMMON)+2)&07Fh
+	clrf	((__pbssCOMMON)+3)&07Fh
 psect cinit,class=CODE,delta=2,merge=1
 global end_of_initialization,__end_of__initialization
 
@@ -111,13 +122,13 @@ main@count:	; 2 bytes @ 0x3
 ;!    Strings     0
 ;!    Constant    0
 ;!    Data        0
-;!    BSS         1
+;!    BSS         4
 ;!    Persistent  0
 ;!    Stack       0
 ;!
 ;!Auto Spaces:
 ;!    Space          Size  Autos    Used
-;!    COMMON           14      5       6
+;!    COMMON           14      5       9
 ;!    BANK0            32      0       0
 
 ;!
@@ -183,20 +194,20 @@ main@count:	; 2 bytes @ 0x3
 ;!BITCOMMON            E      0       0       0        0.0%
 ;!NULL                 0      0       0       0        0.0%
 ;!CODE                 0      0       0       0        0.0%
-;!COMMON               E      5       6       1       42.9%
+;!COMMON               E      5       9       1       64.3%
 ;!BITSFR0              0      0       0       1        0.0%
 ;!SFR0                 0      0       0       1        0.0%
 ;!STACK                0      0       0       2        0.0%
 ;!BANK0               20      0       0       3        0.0%
-;!ABS                  0      0       6       4        0.0%
+;!ABS                  0      0       9       4        0.0%
 ;!BITBANK0            20      0       0       5        0.0%
-;!DATA                 0      0       6       6        0.0%
+;!DATA                 0      0       9       6        0.0%
 
 	global	_main
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 27 in file "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
+;;		line 29 in file "E:\project\project0508\scm\SCM1152_LED\led.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -224,13 +235,13 @@ main@count:	; 2 bytes @ 0x3
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
-	line	27
+	file	"E:\project\project0508\scm\SCM1152_LED\led.c"
+	line	29
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
-	line	27
+	file	"E:\project\project0508\scm\SCM1152_LED\led.c"
+	line	29
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
@@ -238,48 +249,48 @@ _main:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _main: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	29
-	
-l703:	
-;led.c: 29: Init_System();
-	fcall	_Init_System
-	line	30
-	
-l705:	
-;led.c: 30: unsigned int count = 0;
-	clrf	(main@count)
-	clrf	(main@count+1)
 	line	31
 	
-l707:	
-;led.c: 31: unsigned char timeout1MSFlag = 0;
-	clrf	(main@timeout1MSFlag)
-	line	35
+l710:	
+;led.c: 31: Init_System();
+	fcall	_Init_System
+	line	32
 	
-l709:	
-;led.c: 33: {
-;led.c: 35: if(timeoutFlag)
+l712:	
+;led.c: 32: unsigned int count = 0;
+	clrf	(main@count)
+	clrf	(main@count+1)
+	line	33
+	
+l714:	
+;led.c: 33: unsigned char timeout1MSFlag = 0;
+	clrf	(main@timeout1MSFlag)
+	line	37
+	
+l716:	
+;led.c: 35: {
+;led.c: 37: if(timeoutFlag)
 	movf	((_timeoutFlag)),w
 	btfsc	status,2
 	goto	u11
 	goto	u10
 u11:
-	goto	l709
+	goto	l716
 u10:
-	line	37
-	
-l711:	
-;led.c: 36: {
-;led.c: 37: timeoutFlag = 0;
-	clrf	(_timeoutFlag)
-	line	38
-# 38 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
-clrwdt ;# 
-psect	maintext
 	line	39
 	
-l713:	
-;led.c: 39: if(count == 500)
+l718:	
+;led.c: 38: {
+;led.c: 39: timeoutFlag = 0;
+	clrf	(_timeoutFlag)
+	line	40
+# 40 "E:\project\project0508\scm\SCM1152_LED\led.c"
+clrwdt ;# 
+psect	maintext
+	line	41
+	
+l720:	
+;led.c: 41: if(count == 500)
 		movlw	244
 	xorwf	((main@count)),w
 	skipz
@@ -289,85 +300,190 @@ l713:
 	goto	u21
 	goto	u20
 u21:
-	goto	l719
+	goto	l726
 u20:
-	line	41
+	line	43
 	
-l715:	
-;led.c: 40: {
-;led.c: 41: count = 0;
+l722:	
+;led.c: 42: {
+;led.c: 43: count = 0;
 	clrf	(main@count)
 	clrf	(main@count+1)
-	goto	l719
+	line	44
+	
+l724:	
+;led.c: 44: minuteFlag++;
+	incf	(_minuteFlag),f
+	skipnz
+	incf	(_minuteFlag+1),f
 	line	47
-;led.c: 46: {
-;led.c: 47: case 0:
 	
-l292:	
-	line	48
-;led.c: 48: PORTB&=~(1<<4);
-	bcf	(5)+(4/8),(4)&7	;volatile
+l726:	
+;led.c: 45: }
+;led.c: 47: if(minuteFlag == 3)
+		movlw	3
+	xorwf	((_minuteFlag)),w
+iorwf	((_minuteFlag+1)),w
+	btfss	status,2
+	goto	u31
+	goto	u30
+u31:
+	goto	l732
+u30:
 	line	49
-;led.c: 49: PORTB|=(1<<2);
-	bsf	(5)+(2/8),(2)&7	;volatile
+	
+l728:	
+;led.c: 48: {
+;led.c: 49: minuteFlag = 0;
+	clrf	(_minuteFlag)
+	clrf	(_minuteFlag+1)
 	line	50
-;led.c: 50: break;
-	goto	l721
-	line	51
-;led.c: 51: case 100:
 	
-l294:	
-	line	52
-;led.c: 52: PORTB&=~(1<<3);
-	bcf	(5)+(3/8),(3)&7	;volatile
+l730:	
+;led.c: 50: hourCount++;
+	incf	(_hourCount),f
 	line	53
-;led.c: 53: PORTB|=(1<<1);
-	bsf	(5)+(1/8),(1)&7	;volatile
-	line	54
-;led.c: 54: break;
-	goto	l721
+	
+l732:	
+;led.c: 51: }
+;led.c: 53: if(hourCount == 24)
+		movlw	24
+	xorwf	((_hourCount)),w
+	btfss	status,2
+	goto	u41
+	goto	u40
+u41:
+	goto	l736
+u40:
 	line	55
-;led.c: 55: case 200:
 	
-l295:	
-	line	56
-;led.c: 56: PORTB&=~(1<<2);
-	bcf	(5)+(2/8),(2)&7	;volatile
-	line	57
-;led.c: 57: PORTB|=(1<<0);
-	bsf	(5)+(0/8),(0)&7	;volatile
+l734:	
+;led.c: 54: {
+;led.c: 55: hourCount = 0;
+	clrf	(_hourCount)
 	line	58
-;led.c: 58: break;
-	goto	l721
-	line	59
-;led.c: 59: case 300:
 	
-l296:	
+l736:	
+;led.c: 56: }
+;led.c: 58: if(timeout1MSFlag == 10)
+		movlw	10
+	xorwf	((main@timeout1MSFlag)),w
+	btfss	status,2
+	goto	u51
+	goto	u50
+u51:
+	goto	l742
+u50:
 	line	60
-;led.c: 60: PORTB&=~(1<<1);
-	bcf	(5)+(1/8),(1)&7	;volatile
+	
+l738:	
+;led.c: 59: {
+;led.c: 60: timeout1MSFlag =0;
+	clrf	(main@timeout1MSFlag)
 	line	61
-;led.c: 61: PORTB|=(1<<4);
-	bsf	(5)+(4/8),(4)&7	;volatile
-	line	62
-;led.c: 62: break;
-	goto	l721
-	line	63
-;led.c: 63: case 400:
 	
-l297:	
+l740:	
+;led.c: 61: count++;
+	incf	(main@count),f
+	skipnz
+	incf	(main@count+1),f
 	line	64
-;led.c: 64: PORTB&=~(1<<0);
-	bcf	(5)+(0/8),(0)&7	;volatile
-	line	65
-;led.c: 65: PORTB|=(1<<3);
-	bsf	(5)+(3/8),(3)&7	;volatile
-	line	66
-;led.c: 66: break;
-	goto	l721
-	line	45
 	
-l719:	
+l742:	
+;led.c: 62: }
+;led.c: 64: timeout1MSFlag++;
+	incf	(main@timeout1MSFlag),f
+	line	67
+	
+l744:	
+;led.c: 67: if(hourCount > 5)
+	movlw	low(06h)
+	subwf	(_hourCount),w
+	skipc
+	goto	u61
+	goto	u60
+u61:
+	goto	l750
+u60:
+	line	69
+	
+l746:	
+;led.c: 68: {
+;led.c: 69: PORTB = 0xFF;
+	movlw	low(0FFh)
+	movwf	(5)	;volatile
+	line	70
+;led.c: 70: continue;
+	goto	l716
+	line	75
+;led.c: 74: {
+;led.c: 75: case 0:
+	
+l301:	
+	line	76
+;led.c: 76: PORTB&=~(1<<4);
+	bcf	(5)+(4/8),(4)&7	;volatile
+	line	77
+;led.c: 77: PORTB|=(1<<2);
+	bsf	(5)+(2/8),(2)&7	;volatile
+	line	78
+;led.c: 78: break;
+	goto	l716
+	line	79
+;led.c: 79: case 100:
+	
+l303:	
+	line	80
+;led.c: 80: PORTB&=~(1<<3);
+	bcf	(5)+(3/8),(3)&7	;volatile
+	line	81
+;led.c: 81: PORTB|=(1<<1);
+	bsf	(5)+(1/8),(1)&7	;volatile
+	line	82
+;led.c: 82: break;
+	goto	l716
+	line	83
+;led.c: 83: case 200:
+	
+l304:	
+	line	84
+;led.c: 84: PORTB&=~(1<<2);
+	bcf	(5)+(2/8),(2)&7	;volatile
+	line	85
+;led.c: 85: PORTB|=(1<<0);
+	bsf	(5)+(0/8),(0)&7	;volatile
+	line	86
+;led.c: 86: break;
+	goto	l716
+	line	87
+;led.c: 87: case 300:
+	
+l305:	
+	line	88
+;led.c: 88: PORTB&=~(1<<1);
+	bcf	(5)+(1/8),(1)&7	;volatile
+	line	89
+;led.c: 89: PORTB|=(1<<4);
+	bsf	(5)+(4/8),(4)&7	;volatile
+	line	90
+;led.c: 90: break;
+	goto	l716
+	line	91
+;led.c: 91: case 400:
+	
+l306:	
+	line	92
+;led.c: 92: PORTB&=~(1<<0);
+	bcf	(5)+(0/8),(0)&7	;volatile
+	line	93
+;led.c: 93: PORTB|=(1<<3);
+	bsf	(5)+(3/8),(3)&7	;volatile
+	line	94
+;led.c: 94: break;
+	goto	l716
+	line	73
+	
+l750:	
 	; Switch on 2 bytes has been partitioned into a top level switch of size 1, and 2 sub-switches
 ; Switch size 1, requested type "space"
 ; Number of cases is 2, Range of values is 0 to 1
@@ -383,14 +499,14 @@ l719:
 	opt asmopt_off
 	xorlw	0^0	; case 0
 	skipnz
-	goto	l801
+	goto	l824
 	xorlw	1^0	; case 1
 	skipnz
-	goto	l803
-	goto	l721
+	goto	l826
+	goto	l716
 	opt asmopt_pop
 	
-l801:	
+l824:	
 ; Switch size 1, requested type "space"
 ; Number of cases is 3, Range of values is 0 to 200
 ; switch strategies available:
@@ -405,17 +521,17 @@ l801:
 	opt asmopt_off
 	xorlw	0^0	; case 0
 	skipnz
-	goto	l292
+	goto	l301
 	xorlw	100^0	; case 100
 	skipnz
-	goto	l294
+	goto	l303
 	xorlw	200^100	; case 200
 	skipnz
-	goto	l295
-	goto	l721
+	goto	l304
+	goto	l716
 	opt asmopt_pop
 	
-l803:	
+l826:	
 ; Switch size 1, requested type "space"
 ; Number of cases is 2, Range of values is 44 to 144
 ; switch strategies available:
@@ -430,49 +546,17 @@ l803:
 	opt asmopt_off
 	xorlw	44^0	; case 44
 	skipnz
-	goto	l296
+	goto	l305
 	xorlw	144^44	; case 144
 	skipnz
-	goto	l297
-	goto	l721
+	goto	l306
+	goto	l716
 	opt asmopt_pop
 
-	line	68
-	
-l721:	
-;led.c: 68: if(timeout1MSFlag == 10)
-		movlw	10
-	xorwf	((main@timeout1MSFlag)),w
-	btfss	status,2
-	goto	u31
-	goto	u30
-u31:
-	goto	l727
-u30:
-	line	70
-	
-l723:	
-;led.c: 69: {
-;led.c: 70: timeout1MSFlag =0;
-	clrf	(main@timeout1MSFlag)
-	line	71
-	
-l725:	
-;led.c: 71: count++;
-	incf	(main@count),f
-	skipnz
-	incf	(main@count+1),f
-	line	74
-	
-l727:	
-;led.c: 72: }
-;led.c: 74: timeout1MSFlag++;
-	incf	(main@timeout1MSFlag),f
-	goto	l709
 	global	start
 	ljmp	start
 	opt stack 0
-	line	78
+	line	100
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -480,7 +564,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _Init_System *****************
 ;; Defined at:
-;;		line 8 in file "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
+;;		line 10 in file "E:\project\project0508\scm\SCM1152_LED\led.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -508,12 +592,12 @@ GLOBAL	__end_of_main
 ;; This function uses a non-reentrant model
 ;;
 psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	8
+	line	10
 global __ptext1
 __ptext1:	;psect for function _Init_System
 psect	text1
-	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
-	line	8
+	file	"E:\project\project0508\scm\SCM1152_LED\led.c"
+	line	10
 	global	__size_of_Init_System
 	__size_of_Init_System	equ	__end_of_Init_System-_Init_System
 	
@@ -521,74 +605,74 @@ _Init_System:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _Init_System: [wreg+status,2]
-	line	10
-	
-l683:	
-# 10 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
-nop ;# 
-	line	11
-# 11 "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
-clrwdt ;# 
-psect	text1
 	line	12
 	
-l685:	
-;led.c: 12: INTCON = 0;
-	clrf	(9)	;volatile
+l690:	
+# 12 "E:\project\project0508\scm\SCM1152_LED\led.c"
+nop ;# 
 	line	13
-	
-l687:	
-;led.c: 13: OSCCON = 0X71;
-	movlw	low(071h)
-	movwf	(8)	;volatile
+# 13 "E:\project\project0508\scm\SCM1152_LED\led.c"
+clrwdt ;# 
+psect	text1
 	line	14
 	
-l689:	
-;led.c: 14: OPTION_REG = 0x00;
-	clrf	(7)	;volatile
+l692:	
+;led.c: 14: INTCON = 0;
+	clrf	(9)	;volatile
 	line	15
 	
-l691:	
-;led.c: 15: TMR0 = 0;
-	clrf	(1)	;volatile
+l694:	
+;led.c: 15: OSCCON = 0X71;
+	movlw	low(071h)
+	movwf	(8)	;volatile
 	line	16
 	
-l693:	
-;led.c: 16: INTCON = 0xE0;
-	movlw	low(0E0h)
-	movwf	(9)	;volatile
+l696:	
+;led.c: 16: OPTION_REG = 0x00;
+	clrf	(7)	;volatile
 	line	17
 	
-l695:	
-;led.c: 17: TMR0PRD = 100;
+l698:	
+;led.c: 17: TMR0 = 0;
+	clrf	(1)	;volatile
+	line	18
+	
+l700:	
+;led.c: 18: INTCON = 0xE0;
+	movlw	low(0E0h)
+	movwf	(9)	;volatile
+	line	19
+	
+l702:	
+;led.c: 19: TMR0PRD = 100;
 	movlw	low(064h)
 	movwf	(15)	;volatile
-	line	20
-	
-l697:	
-;led.c: 20: TRISB = 0;
-	clrf	(6)	;volatile
-	line	21
-;led.c: 21: WPUB = 0xFF;
-	movlw	low(0FFh)
-	movwf	(13)	;volatile
 	line	22
 	
-l699:	
-;led.c: 22: PDCONB = 0;
-	clrf	(11)	;volatile
+l704:	
+;led.c: 22: TRISB = 0;
+	clrf	(6)	;volatile
 	line	23
-	
-l701:	
-;led.c: 23: PORTB = 0xFF;
+;led.c: 23: WPUB = 0xFF;
 	movlw	low(0FFh)
-	movwf	(5)	;volatile
+	movwf	(13)	;volatile
 	line	24
-;led.c: 24: IOCB = 0x00;
-	clrf	(14)	;volatile
+	
+l706:	
+;led.c: 24: PDCONB = 0;
+	clrf	(11)	;volatile
 	line	25
 	
-l283:	
+l708:	
+;led.c: 25: PORTB = 0xFF;
+	movlw	low(0FFh)
+	movwf	(5)	;volatile
+	line	26
+;led.c: 26: IOCB = 0x00;
+	clrf	(14)	;volatile
+	line	27
+	
+l287:	
 	return
 	opt stack 0
 GLOBAL	__end_of_Init_System
@@ -598,7 +682,7 @@ GLOBAL	__end_of_Init_System
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 87 in file "C:\SCMCU WorkSpace\SCM1152_LED\led.c"
+;;		line 109 in file "E:\project\project0508\scm\SCM1152_LED\led.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -625,12 +709,12 @@ GLOBAL	__end_of_Init_System
 ;; This function uses a non-reentrant model
 ;;
 psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	line	87
+	line	109
 global __ptext2
 __ptext2:	;psect for function _Timer0_Isr
 psect	text2
-	file	"C:\SCMCU WorkSpace\SCM1152_LED\led.c"
-	line	87
+	file	"E:\project\project0508\scm\SCM1152_LED\led.c"
+	line	109
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
 	
@@ -652,29 +736,29 @@ interrupt_function:
 	movwf	(??_Timer0_Isr+1)
 	ljmp	_Timer0_Isr
 psect	text2
-	line	89
+	line	111
 	
-i1l737:	
-;led.c: 89: if(T0IF)
+i1l760:	
+;led.c: 111: if(T0IF)
 	btfss	(74/8),(74)&7	;volatile
-	goto	u4_21
-	goto	u4_20
-u4_21:
-	goto	i1l307
-u4_20:
-	line	95
+	goto	u7_21
+	goto	u7_20
+u7_21:
+	goto	i1l314
+u7_20:
+	line	117
 	
-i1l739:	
-;led.c: 90: {
-;led.c: 95: T0IF = 0;
+i1l762:	
+;led.c: 112: {
+;led.c: 117: T0IF = 0;
 	bcf	(74/8),(74)&7	;volatile
-	line	96
-;led.c: 96: timeoutFlag = 1;
+	line	118
+;led.c: 118: timeoutFlag = 1;
 	clrf	(_timeoutFlag)
 	incf	(_timeoutFlag),f
-	line	98
+	line	120
 	
-i1l307:	
+i1l314:	
 	movf	(??_Timer0_Isr+1),w
 	movwf	pclath
 	swapf	(??_Timer0_Isr+0)^0FFFFFF80h,w
