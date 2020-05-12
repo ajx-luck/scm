@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8P1711C
-opt include "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc8p1711c.cgen.inc"
+opt include "E:\cms\SCMCU_IDE_V2.00.07\data\include\sc8p1711c.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -69,7 +69,7 @@ skipnz	macro
 psect	idataCOMMON,class=CODE,space=0,delta=2,noexec
 global __pidataCOMMON
 __pidataCOMMON:
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	25
 
 ;initializer for _FAN_STATUS
@@ -162,13 +162,13 @@ _time0Flag:
 psect	dataCOMMON,class=COMMON,space=1,noexec
 global __pdataCOMMON
 __pdataCOMMON:
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	25
 _FAN_STATUS:
        ds      1
 
 psect	dataCOMMON
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	23
 _currentLevel:
        ds      1
@@ -628,7 +628,7 @@ checkKeys@key3Status:	; 1 bytes @ 0xA
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 244 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 244 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -659,12 +659,12 @@ checkKeys@key3Status:	; 1 bytes @ 0xA
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	244
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	244
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
@@ -692,7 +692,7 @@ u1370:
 	line	249
 	
 l3438:	
-# 249 "C:\SCMCU WorkSpace\uf166fan\main.c"
+# 249 "E:\project\project0508\scm\uf166fan\main.c"
 clrwdt ;# 
 psect	maintext
 	line	250
@@ -783,7 +783,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _scanKeys *****************
 ;; Defined at:
-;;		line 202 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 202 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -815,7 +815,7 @@ psect	text1,local,class=CODE,delta=2,merge=1,group=0
 global __ptext1
 __ptext1:	;psect for function _scanKeys
 psect	text1
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	202
 	global	__size_of_scanKeys
 	__size_of_scanKeys	equ	__end_of_scanKeys-_scanKeys
@@ -873,7 +873,7 @@ GLOBAL	__end_of_scanKeys
 
 ;; *************** function _sacnKeyInput *****************
 ;; Defined at:
-;;		line 3 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;;		line 3 in file "E:\project\project0508\scm\uf166fan\scankey.c"
 ;; Parameters:    Size  Location     Type
 ;;  key             1    wreg     PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
@@ -903,12 +903,12 @@ GLOBAL	__end_of_scanKeys
 ;; This function uses a non-reentrant model
 ;;
 psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	3
 global __ptext2
 __ptext2:	;psect for function _sacnKeyInput
 psect	text2
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	3
 	global	__size_of_sacnKeyInput
 	__size_of_sacnKeyInput	equ	__end_of_sacnKeyInput-_sacnKeyInput
@@ -965,7 +965,7 @@ GLOBAL	__end_of_sacnKeyInput
 
 ;; *************** function _readVrefADC *****************
 ;; Defined at:
-;;		line 90 in file "C:\SCMCU WorkSpace\uf166fan\adc.c"
+;;		line 90 in file "E:\project\project0508\scm\uf166fan\adc.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -995,12 +995,12 @@ GLOBAL	__end_of_sacnKeyInput
 ;; This function uses a non-reentrant model
 ;;
 psect	text3,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\adc.c"
+	file	"E:\project\project0508\scm\uf166fan\adc.c"
 	line	90
 global __ptext3
 __ptext3:	;psect for function _readVrefADC
 psect	text3
-	file	"C:\SCMCU WorkSpace\uf166fan\adc.c"
+	file	"E:\project\project0508\scm\uf166fan\adc.c"
 	line	90
 	global	__size_of_readVrefADC
 	__size_of_readVrefADC	equ	__end_of_readVrefADC-_readVrefADC
@@ -1034,7 +1034,7 @@ GLOBAL	__end_of_readVrefADC
 
 ;; *************** function _DelayXms *****************
 ;; Defined at:
-;;		line 82 in file "C:\SCMCU WorkSpace\uf166fan\adc.c"
+;;		line 82 in file "E:\project\project0508\scm\uf166fan\adc.c"
 ;; Parameters:    Size  Location     Type
 ;;  x               1    wreg     unsigned char 
 ;; Auto vars:     Size  Location     Type
@@ -1068,7 +1068,7 @@ psect	text4,local,class=CODE,delta=2,merge=1,group=0
 global __ptext4
 __ptext4:	;psect for function _DelayXms
 psect	text4
-	file	"C:\SCMCU WorkSpace\uf166fan\adc.c"
+	file	"E:\project\project0508\scm\uf166fan\adc.c"
 	line	82
 	global	__size_of_DelayXms
 	__size_of_DelayXms	equ	__end_of_DelayXms-_DelayXms
@@ -1131,7 +1131,7 @@ GLOBAL	__end_of_DelayXms
 
 ;; *************** function _ADC_Sample *****************
 ;; Defined at:
-;;		line 11 in file "C:\SCMCU WorkSpace\uf166fan\adc.c"
+;;		line 11 in file "E:\project\project0508\scm\uf166fan\adc.c"
 ;; Parameters:    Size  Location     Type
 ;;  adch            1    wreg     unsigned char 
 ;; Auto vars:     Size  Location     Type
@@ -1165,7 +1165,7 @@ psect	text5,local,class=CODE,delta=2,merge=1,group=0
 global __ptext5
 __ptext5:	;psect for function _ADC_Sample
 psect	text5
-	file	"C:\SCMCU WorkSpace\uf166fan\adc.c"
+	file	"E:\project\project0508\scm\uf166fan\adc.c"
 	line	11
 	global	__size_of_ADC_Sample
 	__size_of_ADC_Sample	equ	__end_of_ADC_Sample-_ADC_Sample
@@ -1205,10 +1205,10 @@ u1165:
 	iorlw	041h
 	movwf	(31)	;volatile
 	line	19
-# 19 "C:\SCMCU WorkSpace\uf166fan\adc.c"
+# 19 "E:\project\project0508\scm\uf166fan\adc.c"
 nop ;# 
 	line	20
-# 20 "C:\SCMCU WorkSpace\uf166fan\adc.c"
+# 20 "E:\project\project0508\scm\uf166fan\adc.c"
 nop ;# 
 psect	text5
 	line	21
@@ -1542,7 +1542,7 @@ GLOBAL	__end_of_ADC_Sample
 
 ;; *************** function _ADC_Result *****************
 ;; Defined at:
-;;		line 59 in file "C:\SCMCU WorkSpace\uf166fan\adc.c"
+;;		line 59 in file "E:\project\project0508\scm\uf166fan\adc.c"
 ;; Parameters:    Size  Location     Type
 ;;  adch            1    wreg     unsigned char 
 ;; Auto vars:     Size  Location     Type
@@ -1575,7 +1575,7 @@ psect	text6,local,class=CODE,delta=2,merge=1,group=0
 global __ptext6
 __ptext6:	;psect for function _ADC_Result
 psect	text6
-	file	"C:\SCMCU WorkSpace\uf166fan\adc.c"
+	file	"E:\project\project0508\scm\uf166fan\adc.c"
 	line	59
 	global	__size_of_ADC_Result
 	__size_of_ADC_Result	equ	__end_of_ADC_Result-_ADC_Result
@@ -1611,10 +1611,10 @@ u1275:
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(31)	;volatile
 	line	63
-# 63 "C:\SCMCU WorkSpace\uf166fan\adc.c"
+# 63 "E:\project\project0508\scm\uf166fan\adc.c"
 nop ;# 
 	line	64
-# 64 "C:\SCMCU WorkSpace\uf166fan\adc.c"
+# 64 "E:\project\project0508\scm\uf166fan\adc.c"
 nop ;# 
 psect	text6
 	line	65
@@ -1677,7 +1677,7 @@ GLOBAL	__end_of_ADC_Result
 
 ;; *************** function _checkUsbStatus *****************
 ;; Defined at:
-;;		line 37 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 37 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1705,12 +1705,12 @@ GLOBAL	__end_of_ADC_Result
 ;; This function uses a non-reentrant model
 ;;
 psect	text7,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	37
 global __ptext7
 __ptext7:	;psect for function _checkUsbStatus
 psect	text7
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	37
 	global	__size_of_checkUsbStatus
 	__size_of_checkUsbStatus	equ	__end_of_checkUsbStatus-_checkUsbStatus
@@ -1795,7 +1795,7 @@ GLOBAL	__end_of_checkUsbStatus
 
 ;; *************** function _checkKeys *****************
 ;; Defined at:
-;;		line 212 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 212 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1831,7 +1831,7 @@ psect	text8,local,class=CODE,delta=2,merge=1,group=0
 global __ptext8
 __ptext8:	;psect for function _checkKeys
 psect	text8
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	212
 	global	__size_of_checkKeys
 	__size_of_checkKeys	equ	__end_of_checkKeys-_checkKeys
@@ -1967,7 +1967,7 @@ GLOBAL	__end_of_checkKeys
 
 ;; *************** function _key_driver *****************
 ;; Defined at:
-;;		line 9 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;;		line 9 in file "E:\project\project0508\scm\uf166fan\scankey.c"
 ;; Parameters:    Size  Location     Type
 ;;  key             1    wreg     PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
@@ -1999,12 +1999,12 @@ GLOBAL	__end_of_checkKeys
 ;; This function uses a non-reentrant model
 ;;
 psect	text9,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	9
 global __ptext9
 __ptext9:	;psect for function _key_driver
 psect	text9
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	9
 	global	__size_of_key_driver
 	__size_of_key_driver	equ	__end_of_key_driver-_key_driver
@@ -2218,7 +2218,7 @@ GLOBAL	__end_of_key_driver
 
 ;; *************** function _checkFan *****************
 ;; Defined at:
-;;		line 121 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 121 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2247,12 +2247,12 @@ GLOBAL	__end_of_key_driver
 ;; This function uses a non-reentrant model
 ;;
 psect	text10,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	121
 global __ptext10
 __ptext10:	;psect for function _checkFan
 psect	text10
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	121
 	global	__size_of_checkFan
 	__size_of_checkFan	equ	__end_of_checkFan-_checkFan
@@ -2379,7 +2379,7 @@ GLOBAL	__end_of_checkFan
 
 ;; *************** function _setFanLevel *****************
 ;; Defined at:
-;;		line 66 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 66 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;  level           1    wreg     unsigned char 
 ;; Auto vars:     Size  Location     Type
@@ -2415,7 +2415,7 @@ psect	text11,local,class=CODE,delta=2,merge=1,group=0
 global __ptext11
 __ptext11:	;psect for function _setFanLevel
 psect	text11
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	66
 	global	__size_of_setFanLevel
 	__size_of_setFanLevel	equ	__end_of_setFanLevel-_setFanLevel
@@ -2609,7 +2609,7 @@ GLOBAL	__end_of_setFanLevel
 
 ;; *************** function ___awdiv *****************
 ;; Defined at:
-;;		line 6 in file "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
+;;		line 6 in file "E:\cms\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
 ;; Parameters:    Size  Location     Type
 ;;  divisor         2    0[BANK0 ] int 
 ;;  dividend        2    2[BANK0 ] int 
@@ -2640,12 +2640,12 @@ GLOBAL	__end_of_setFanLevel
 ;; This function uses a non-reentrant model
 ;;
 psect	text12,local,class=CODE,delta=2,merge=1,group=1
-	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
+	file	"E:\cms\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
 	line	6
 global __ptext12
 __ptext12:	;psect for function ___awdiv
 psect	text12
-	file	"C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
+	file	"E:\cms\SCMCU_IDE_V2.00.07\data\sources\common\awdiv.c"
 	line	6
 	global	__size_of___awdiv
 	__size_of___awdiv	equ	__end_of___awdiv-___awdiv
@@ -2829,7 +2829,7 @@ GLOBAL	__end_of___awdiv
 
 ;; *************** function _closeFan *****************
 ;; Defined at:
-;;		line 107 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 107 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2859,12 +2859,12 @@ GLOBAL	__end_of___awdiv
 ;; This function uses a non-reentrant model
 ;;
 psect	text13,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	107
 global __ptext13
 __ptext13:	;psect for function _closeFan
 psect	text13
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	107
 	global	__size_of_closeFan
 	__size_of_closeFan	equ	__end_of_closeFan-_closeFan
@@ -2926,7 +2926,7 @@ GLOBAL	__end_of_closeFan
 
 ;; *************** function _setLedOn *****************
 ;; Defined at:
-;;		line 152 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 152 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;  ledIndex        1    wreg     unsigned char 
 ;; Auto vars:     Size  Location     Type
@@ -2959,7 +2959,7 @@ psect	text14,local,class=CODE,delta=2,merge=1,group=0
 global __ptext14
 __ptext14:	;psect for function _setLedOn
 psect	text14
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	152
 	global	__size_of_setLedOn
 	__size_of_setLedOn	equ	__end_of_setLedOn-_setLedOn
@@ -3159,7 +3159,7 @@ GLOBAL	__end_of_setLedOn
 
 ;; *************** function _Init_Config *****************
 ;; Defined at:
-;;		line 273 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 273 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3195,7 +3195,7 @@ psect	text15,local,class=CODE,delta=2,merge=1,group=0
 global __ptext15
 __ptext15:	;psect for function _Init_Config
 psect	text15
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	273
 	global	__size_of_Init_Config
 	__size_of_Init_Config	equ	__end_of_Init_Config-_Init_Config
@@ -3302,7 +3302,7 @@ GLOBAL	__end_of_Init_Config
 
 ;; *************** function _resetKey *****************
 ;; Defined at:
-;;		line 100 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;;		line 100 in file "E:\project\project0508\scm\uf166fan\scankey.c"
 ;; Parameters:    Size  Location     Type
 ;;  key             1    wreg     PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
@@ -3332,12 +3332,12 @@ GLOBAL	__end_of_Init_Config
 ;; This function uses a non-reentrant model
 ;;
 psect	text16,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	100
 global __ptext16
 __ptext16:	;psect for function _resetKey
 psect	text16
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	100
 	global	__size_of_resetKey
 	__size_of_resetKey	equ	__end_of_resetKey-_resetKey
@@ -3379,7 +3379,7 @@ GLOBAL	__end_of_resetKey
 
 ;; *************** function _Init_System *****************
 ;; Defined at:
-;;		line 3 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 3 in file "E:\project\project0508\scm\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3407,12 +3407,12 @@ GLOBAL	__end_of_resetKey
 ;; This function uses a non-reentrant model
 ;;
 psect	text17,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	3
 global __ptext17
 __ptext17:	;psect for function _Init_System
 psect	text17
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	3
 	global	__size_of_Init_System
 	__size_of_Init_System	equ	__end_of_Init_System-_Init_System
@@ -3424,10 +3424,10 @@ _Init_System:
 	line	4
 	
 l2882:	
-# 4 "C:\SCMCU WorkSpace\uf166fan\init.c"
+# 4 "E:\project\project0508\scm\uf166fan\init.c"
 nop ;# 
 	line	5
-# 5 "C:\SCMCU WorkSpace\uf166fan\init.c"
+# 5 "E:\project\project0508\scm\uf166fan\init.c"
 clrwdt ;# 
 psect	text17
 	line	6
@@ -3460,7 +3460,7 @@ GLOBAL	__end_of_Init_System
 
 ;; *************** function _Init_PWM *****************
 ;; Defined at:
-;;		line 52 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 52 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3489,12 +3489,12 @@ GLOBAL	__end_of_Init_System
 ;; This function uses a non-reentrant model
 ;;
 psect	text18,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	52
 global __ptext18
 __ptext18:	;psect for function _Init_PWM
 psect	text18
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	52
 	global	__size_of_Init_PWM
 	__size_of_Init_PWM	equ	__end_of_Init_PWM-_Init_PWM
@@ -3553,7 +3553,7 @@ GLOBAL	__end_of_Init_PWM
 
 ;; *************** function _Init_Interupt *****************
 ;; Defined at:
-;;		line 27 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 27 in file "E:\project\project0508\scm\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3581,12 +3581,12 @@ GLOBAL	__end_of_Init_PWM
 ;; This function uses a non-reentrant model
 ;;
 psect	text19,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	27
 global __ptext19
 __ptext19:	;psect for function _Init_Interupt
 psect	text19
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	27
 	global	__size_of_Init_Interupt
 	__size_of_Init_Interupt	equ	__end_of_Init_Interupt-_Init_Interupt
@@ -3622,7 +3622,7 @@ GLOBAL	__end_of_Init_Interupt
 
 ;; *************** function _Init_GPIO *****************
 ;; Defined at:
-;;		line 13 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 13 in file "E:\project\project0508\scm\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3654,7 +3654,7 @@ psect	text20,local,class=CODE,delta=2,merge=1,group=0
 global __ptext20
 __ptext20:	;psect for function _Init_GPIO
 psect	text20
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	13
 	global	__size_of_Init_GPIO
 	__size_of_Init_GPIO	equ	__end_of_Init_GPIO-_Init_GPIO
@@ -3731,7 +3731,7 @@ GLOBAL	__end_of_Init_GPIO
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 343 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 343 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3759,12 +3759,12 @@ GLOBAL	__end_of_Init_GPIO
 ;; This function uses a non-reentrant model
 ;;
 psect	text21,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	343
 global __ptext21
 __ptext21:	;psect for function _Timer0_Isr
 psect	text21
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	343
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
@@ -3859,7 +3859,7 @@ GLOBAL	__end_of_Timer0_Isr
 
 ;; *************** function i1_Init_Config *****************
 ;; Defined at:
-;;		line 273 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 273 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3895,7 +3895,7 @@ psect	text22,local,class=CODE,delta=2,merge=1,group=0
 global __ptext22
 __ptext22:	;psect for function i1_Init_Config
 psect	text22
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	273
 	global	__size_ofi1_Init_Config
 	__size_ofi1_Init_Config	equ	__end_ofi1_Init_Config-i1_Init_Config
@@ -4002,7 +4002,7 @@ GLOBAL	__end_ofi1_Init_Config
 
 ;; *************** function i1_resetKey *****************
 ;; Defined at:
-;;		line 100 in file "C:\SCMCU WorkSpace\uf166fan\scankey.c"
+;;		line 100 in file "E:\project\project0508\scm\uf166fan\scankey.c"
 ;; Parameters:    Size  Location     Type
 ;;  key             1    wreg     PTR struct Keys
 ;;		 -> key3(7), key2(7), key1(7), 
@@ -4031,12 +4031,12 @@ GLOBAL	__end_ofi1_Init_Config
 ;; This function uses a non-reentrant model
 ;;
 psect	text23,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	100
 global __ptext23
 __ptext23:	;psect for function i1_resetKey
 psect	text23
-	file	"C:\SCMCU WorkSpace\uf166fan\scankey.c"
+	file	"E:\project\project0508\scm\uf166fan\scankey.c"
 	line	100
 	global	__size_ofi1_resetKey
 	__size_ofi1_resetKey	equ	__end_ofi1_resetKey-i1_resetKey
@@ -4078,7 +4078,7 @@ GLOBAL	__end_ofi1_resetKey
 
 ;; *************** function i1_Init_System *****************
 ;; Defined at:
-;;		line 3 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 3 in file "E:\project\project0508\scm\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -4105,12 +4105,12 @@ GLOBAL	__end_ofi1_resetKey
 ;; This function uses a non-reentrant model
 ;;
 psect	text24,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	3
 global __ptext24
 __ptext24:	;psect for function i1_Init_System
 psect	text24
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	3
 	global	__size_ofi1_Init_System
 	__size_ofi1_Init_System	equ	__end_ofi1_Init_System-i1_Init_System
@@ -4122,10 +4122,10 @@ i1_Init_System:
 	line	4
 	
 i1l2998:	
-# 4 "C:\SCMCU WorkSpace\uf166fan\init.c"
+# 4 "E:\project\project0508\scm\uf166fan\init.c"
 nop ;# 
 	line	5
-# 5 "C:\SCMCU WorkSpace\uf166fan\init.c"
+# 5 "E:\project\project0508\scm\uf166fan\init.c"
 clrwdt ;# 
 psect	text24
 	line	6
@@ -4158,7 +4158,7 @@ GLOBAL	__end_ofi1_Init_System
 
 ;; *************** function i1_Init_PWM *****************
 ;; Defined at:
-;;		line 52 in file "C:\SCMCU WorkSpace\uf166fan\main.c"
+;;		line 52 in file "E:\project\project0508\scm\uf166fan\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -4185,12 +4185,12 @@ GLOBAL	__end_ofi1_Init_System
 ;; This function uses a non-reentrant model
 ;;
 psect	text25,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	52
 global __ptext25
 __ptext25:	;psect for function i1_Init_PWM
 psect	text25
-	file	"C:\SCMCU WorkSpace\uf166fan\main.c"
+	file	"E:\project\project0508\scm\uf166fan\main.c"
 	line	52
 	global	__size_ofi1_Init_PWM
 	__size_ofi1_Init_PWM	equ	__end_ofi1_Init_PWM-i1_Init_PWM
@@ -4247,7 +4247,7 @@ GLOBAL	__end_ofi1_Init_PWM
 
 ;; *************** function i1_Init_Interupt *****************
 ;; Defined at:
-;;		line 27 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 27 in file "E:\project\project0508\scm\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -4274,12 +4274,12 @@ GLOBAL	__end_ofi1_Init_PWM
 ;; This function uses a non-reentrant model
 ;;
 psect	text26,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	27
 global __ptext26
 __ptext26:	;psect for function i1_Init_Interupt
 psect	text26
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	27
 	global	__size_ofi1_Init_Interupt
 	__size_ofi1_Init_Interupt	equ	__end_ofi1_Init_Interupt-i1_Init_Interupt
@@ -4315,7 +4315,7 @@ GLOBAL	__end_ofi1_Init_Interupt
 
 ;; *************** function i1_Init_GPIO *****************
 ;; Defined at:
-;;		line 13 in file "C:\SCMCU WorkSpace\uf166fan\init.c"
+;;		line 13 in file "E:\project\project0508\scm\uf166fan\init.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -4346,7 +4346,7 @@ psect	text27,local,class=CODE,delta=2,merge=1,group=0
 global __ptext27
 __ptext27:	;psect for function i1_Init_GPIO
 psect	text27
-	file	"C:\SCMCU WorkSpace\uf166fan\init.c"
+	file	"E:\project\project0508\scm\uf166fan\init.c"
 	line	13
 	global	__size_ofi1_Init_GPIO
 	__size_ofi1_Init_GPIO	equ	__end_ofi1_Init_GPIO-i1_Init_GPIO

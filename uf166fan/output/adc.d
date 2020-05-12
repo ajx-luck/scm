@@ -1,1 +1,1 @@
- adc.d  adc.p1:  C:/SCMCU\ WorkSpace/uf166fan/adc.c C:/SCMCU\ WorkSpace/uf166fan/adc.h
+ adc.d  adc.p1:  E:/project/project0508/scm/uf166fan/adc.c E:/project/project0508/scm/uf166fan/adc.h

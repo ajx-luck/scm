@@ -43,7 +43,7 @@ void main(void)
 					count = 0;
 					minuteFlag++;
 			}
-			//一个小时,0.5s*7200
+			//一个小时
 			if(minuteFlag == 7200)
 			{
 				minuteFlag = 0;

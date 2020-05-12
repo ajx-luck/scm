@@ -1,1 +1,1 @@
- main.d  main.p1:  C:/SCMCU\ WorkSpace/uf166fan/main.c C:/SCMCU\ WorkSpace/uf166fan/init.h C:/SCMCU\ WorkSpace/uf166fan/adc.h C:/SCMCU\ WorkSpace/uf166fan/scankey.h
+ main.d  main.p1:  E:/project/project0508/scm/uf166fan/main.c E:/project/project0508/scm/uf166fan/init.h E:/project/project0508/scm/uf166fan/scankey.h E:/project/project0508/scm/uf166fan/adc.h

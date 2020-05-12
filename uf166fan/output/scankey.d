@@ -1,1 +1,1 @@
- scankey.d  scankey.p1:  C:/SCMCU\ WorkSpace/uf166fan/scankey.c C:/SCMCU\ WorkSpace/uf166fan/scankey.h
+ scankey.d  scankey.p1:  E:/project/project0508/scm/uf166fan/scankey.c E:/project/project0508/scm/uf166fan/scankey.h

@@ -320,10 +320,12 @@ l724:
 	
 l726:	
 ;led.c: 45: }
-;led.c: 47: if(minuteFlag == 3)
-		movlw	3
+;led.c: 47: if(minuteFlag == 7200)
+		movlw	32
 	xorwf	((_minuteFlag)),w
-iorwf	((_minuteFlag+1)),w
+	movlw	28
+	skipnz
+	xorwf	((_minuteFlag+1)),w
 	btfss	status,2
 	goto	u31
 	goto	u30
