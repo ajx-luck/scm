@@ -1,1 +1,1 @@
- adc.d  adc.p1:  C:/SCMCU\ WorkSpace/n9_fan_no_led/adc.c C:/SCMCU\ WorkSpace/n9_fan_no_led/adc.h
+ adc.d  adc.p1:  E:/project/project0508/scm/n9_fan_no_led/adc.c E:/project/project0508/scm/n9_fan_no_led/adc.h

@@ -17,9 +17,9 @@
 static unsigned char time0Flag = 0;
 static unsigned int countTime = 0;
 static unsigned int count10Ms = 0;
-unsigned char currentLevel = 1;
+unsigned char currentLevel = 3;
 //风扇状态
-unsigned char FAN_STATUS = FAN_STATUS_NONE;
+unsigned char FAN_STATUS = FAN_STATUS_ON;
 //检测风扇次数
 unsigned int fan_check_time = 0;
 //按键结构体
@@ -122,29 +122,28 @@ void closeFan() {
 //检测风扇是否连接
 void checkFan() {
 	resetbit(TRISA, 1);
-    setbit(PORTA, 1);
+    resetbit(PORTA, 1);
     //PC2设置为输出脚
     resetbit(TRISC, 2);
 	setbit(PORTA, 2);
     T2CON = 0X04; //启动定时器2，溢出后启动PWM
 
     //EN IN输出高电位，D1点亮，检测FAN DET，FAN DET为低电位则风扇正常工作，高电位则未连接
-    if (getbit(PORTB, 6) == 0) {
-        FAN_STATUS = FAN_STATUS_ON;
-    } else {
-        FAN_STATUS = FAN_STATUS_NONE;
-    }
+  //  if (getbit(PORTB, 6) == 0) {
+   //     FAN_STATUS = FAN_STATUS_ON;
+   // } else {
+    //    FAN_STATUS = FAN_STATUS_NONE;
+   // }
 	
-	setFanLevel(0);
-
+	
     //没有检测到风扇
-    if (FAN_STATUS == FAN_STATUS_NONE) {
-        fan_check_time++;
-        if (fan_check_time == 3000) {
-            closeFan();
-            return;
-        }
-    }
+    //if (FAN_STATUS == FAN_STATUS_NONE) {
+    //    fan_check_time++;
+    //    if (fan_check_time == 3000) {
+     //       closeFan();
+      //      return;
+     //   }
+    //}
 
 
 }
@@ -170,7 +169,8 @@ void checkKeys() {
             setFanLevel(1);
             
         } else {
-            FAN_STATUS = FAN_STATUS_NONE;
+            FAN_STATUS = FAN_STATUS_ON;
+			setFanLevel(0);
             checkFan();
         }
         return;
@@ -183,6 +183,7 @@ void checkKeys() {
 
 
 void main(void) {
+	Sleep_Mode();
     Init_Config();
     while (1) {
         //0.1毫秒检测一次
@@ -247,22 +248,25 @@ void Sleep_Mode() {
     PORTB = 0B00000000;
 
     PORTB = 0;
-    WPUB = 0B00100000;         //RB3 上拉
+    WPUB = 0B00100000;         //RB5 上拉
 
-    IOCB = 0B00100000;            //允许RB3的IO口电平变化中断
+    IOCB = 0B00100000;            //允许RB5的IO口电平变化中断
     RBIE = 1;                    //允许PORTB电平变化中断
     GIE = 1;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
 
     ADCON0 = 0;                    //关闭所有模块
 
     OSCCON = 0X70;                //配置振荡为16M,关闭WDT
-
-    PORTB;                        //读PORTB值并锁存			
+	
+    PORTB;                        //读PORTB值并锁存	
+			
     asm("clrwdt");
 
     asm("sleep");                //进入休眠模式
 
     asm("nop");
+	
+	
 
 
 }

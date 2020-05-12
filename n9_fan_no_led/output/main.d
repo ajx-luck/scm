@@ -1,1 +1,1 @@
- main.d  main.p1:  C:/SCMCU\ WorkSpace/n9_fan_no_led/main.c C:/SCMCU\ WorkSpace/n9_fan_no_led/init.h C:/SCMCU\ WorkSpace/n9_fan_no_led/scankey.h C:/SCMCU\ WorkSpace/n9_fan_no_led/adc.h
+ main.d  main.p1:  E:/project/project0508/scm/n9_fan_no_led/main.c E:/project/project0508/scm/n9_fan_no_led/init.h E:/project/project0508/scm/n9_fan_no_led/scankey.h E:/project/project0508/scm/n9_fan_no_led/adc.h

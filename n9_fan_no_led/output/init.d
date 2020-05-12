@@ -1,1 +1,1 @@
- init.d  init.p1:  C:/SCMCU\ WorkSpace/n9_fan_no_led/init.c C:/SCMCU\ WorkSpace/n9_fan_no_led/init.h
+ init.d  init.p1:  E:/project/project0508/scm/n9_fan_no_led/init.c E:/project/project0508/scm/n9_fan_no_led/init.h

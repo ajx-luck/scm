@@ -242,6 +242,7 @@ void checkKeys() {
 
 
 void main(void) {
+	Sleep_Mode();
     Init_Config();
     while (1) {
         //0.1∫¡√ÎºÏ≤‚“ª¥Œ

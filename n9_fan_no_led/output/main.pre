@@ -1,7 +1,7 @@
 
-# 1 "C:\SCMCU WorkSpace\n9_fan_no_led\main.c"
+# 1 "E:\project\project0508\scm\n9_fan_no_led\main.c"
 
-# 18 "C:\SCMCU WorkSpace\n9_fan_no_led\scankey.h"
+# 18 "E:\project\project0508\scm\n9_fan_no_led\scankey.h"
 struct Keys {
 unsigned char key_timer_cnt1;
 unsigned char key_state_buffer1;
@@ -25,17 +25,17 @@ void sacnKeyInput(struct Keys *key);
 
 void resetKey(struct Keys *key);
 
-# 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
+# 26 "E:\cms\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
 
 extern double __fpnormalize(double);
 
 
-# 13 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
+# 13 "E:\cms\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
 #pragma intrinsic(__builtin_software_breakpoint)
 extern void __builtin_software_breakpoint(void);
 
-# 11 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\SC8P1713C.h"
+# 11 "E:\cms\SCMCU_IDE_V2.00.07\data\include\SC8P1713C.h"
 volatile unsigned char INDF @ 0x000;
 volatile unsigned char TMR0 @ 0x001;
 volatile unsigned char PCL @ 0x002;
@@ -411,7 +411,7 @@ volatile bit ANS12 @ ((unsigned)&ANSELH*8)+4;
 volatile bit ANS13 @ ((unsigned)&ANSELH*8)+5;
 
 
-# 27 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc.h"
+# 27 "E:\cms\SCMCU_IDE_V2.00.07\data\include\sc.h"
 #pragma intrinsic(__nop)
 extern void __nop(void);
 
@@ -428,24 +428,24 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 5 "C:\SCMCU WorkSpace\n9_fan_no_led\init.h"
+# 5 "E:\project\project0508\scm\n9_fan_no_led\init.h"
 void Init_System();
 void Init_GPIO();
 void Init_Interupt();
 
-# 3 "C:\SCMCU WorkSpace\n9_fan_no_led\adc.h"
+# 3 "E:\project\project0508\scm\n9_fan_no_led\adc.h"
 volatile unsigned int adresult;
 unsigned int readVrefADC();
 void ADC_Sample(unsigned char adch);
 void DelayXms(unsigned char x);
 
-# 17 "C:\SCMCU WorkSpace\n9_fan_no_led\main.c"
+# 17 "E:\project\project0508\scm\n9_fan_no_led\main.c"
 static unsigned char time0Flag = 0;
 static unsigned int countTime = 0;
 static unsigned int count10Ms = 0;
-unsigned char currentLevel = 1;
+unsigned char currentLevel = 3;
 
-unsigned char FAN_STATUS = 2;
+unsigned char FAN_STATUS = 1;
 
 unsigned int fan_check_time = 0;
 
@@ -459,7 +459,7 @@ void Sleep_Mode();
 
 void checkUsbStatus() {
 
-if(FAN_STATUS == 1 && currentLevel != 1)
+if(FAN_STATUS == 1)
 {
 PORTA|=(1<<0);
 PORTC|=(1<<1);
@@ -548,34 +548,16 @@ FAN_STATUS = 0;
 
 void checkFan() {
 TRISA&=~(1<<1);
-PORTA|=(1<<1);
+PORTA&=~(1<<1);
 
 TRISC&=~(1<<2);
 PORTA|=(1<<2);
 T2CON = 0X04;
 
-
-if (((PORTB) >> (6)&1) == 0) {
-FAN_STATUS = 1;
-} else {
-FAN_STATUS = 2;
+# 149
 }
 
-setFanLevel(0);
-
-
-if (FAN_STATUS == 2) {
-fan_check_time++;
-if (fan_check_time == 3000) {
-closeFan();
-return;
-}
-}
-
-
-}
-
-# 156
+# 155
 void scanKeys() {
 key1.key_addr_result = PORTB;
 sacnKeyInput(&key1);
@@ -593,7 +575,8 @@ if (FAN_STATUS == 1) {
 setFanLevel(1);
 
 } else {
-FAN_STATUS = 2;
+FAN_STATUS = 1;
+setFanLevel(0);
 checkFan();
 }
 return;
@@ -606,6 +589,7 @@ checkFan();
 
 
 void main(void) {
+Sleep_Mode();
 Init_Config();
 while (1) {
 
@@ -681,6 +665,7 @@ ADCON0 = 0;
 OSCCON = 0X70;
 
 PORTB;
+
 asm("clrwdt");
 
 asm("sleep");
@@ -688,9 +673,11 @@ asm("sleep");
 asm("nop");
 
 
+
+
 }
 
-# 278
+# 282
 void interrupt Timer0_Isr() {
 if (T0IF) {
 

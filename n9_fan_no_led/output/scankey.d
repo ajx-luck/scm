@@ -1,1 +1,1 @@
- scankey.d  scankey.p1:  C:/SCMCU\ WorkSpace/n9_fan_no_led/scankey.c C:/SCMCU\ WorkSpace/n9_fan_no_led/scankey.h
+ scankey.d  scankey.p1:  E:/project/project0508/scm/n9_fan_no_led/scankey.c E:/project/project0508/scm/n9_fan_no_led/scankey.h
