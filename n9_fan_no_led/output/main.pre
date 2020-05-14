@@ -443,7 +443,9 @@ void DelayXms(unsigned char x);
 static unsigned char time0Flag = 0;
 static unsigned int countTime = 0;
 static unsigned int count10Ms = 0;
-unsigned char currentLevel = 3;
+unsigned char currentLevel = 1;
+
+unsigned char lowVTime = 0;
 
 unsigned char FAN_STATUS = 1;
 
@@ -465,7 +467,9 @@ PORTA|=(1<<0);
 PORTC|=(1<<1);
 return;
 }
+
 if (((PORTB) >> (2)&1) == 1) {
+lowVTime = 0;
 if (((PORTB) >> (1)&1) == 1) {
 
 PORTC&=~(1<<1);
@@ -479,6 +483,17 @@ PORTC|=(1<<1);
 
 PORTA|=(1<<0);
 PORTC|=(1<<1);
+
+
+if((adresult/8) > 0x63 && countTime == 100)
+{
+if(lowVTime < 10)
+{
+lowVTime++;
+
+PORTA^=(1<<0);
+}
+}
 }
 }
 
@@ -499,7 +514,7 @@ TRISC&=~(1<<2);
 void setFanLevel(char level) {
 if(level == 0)
 {
-currentLevel = 3;
+currentLevel = 2;
 }
 unsigned int levelWidth = (PR2 + 1) / 4;
 char tempLevel = currentLevel + level;
@@ -535,13 +550,13 @@ break;
 
 void closeFan() {
 Init_PWM();
-currentLevel = 2;
+currentLevel = 1;
 PORTA|=(1<<0);
 
 TRISC|=(1<<2);
 fan_check_time = 0;
 FAN_STATUS = 0;
-
+Sleep_Mode();
 }
 
 
@@ -554,10 +569,10 @@ TRISC&=~(1<<2);
 PORTA|=(1<<2);
 T2CON = 0X04;
 
-# 149
+# 164
 }
 
-# 155
+# 170
 void scanKeys() {
 key1.key_addr_result = PORTB;
 sacnKeyInput(&key1);
@@ -589,7 +604,7 @@ checkFan();
 
 
 void main(void) {
-Sleep_Mode();
+
 Init_Config();
 while (1) {
 
@@ -610,7 +625,7 @@ checkUsbStatus();
 readVrefADC();
 }
 
-if (countTime == 1000) {
+if (countTime == 101) {
 countTime = 0;
 }
 
@@ -656,7 +671,7 @@ PORTB = 0B00000000;
 PORTB = 0;
 WPUB = 0B00100000;
 
-IOCB = 0B00100000;
+IOCB = 0B00100100;
 RBIE = 1;
 GIE = 1;
 
@@ -677,7 +692,7 @@ asm("nop");
 
 }
 
-# 282
+# 297
 void interrupt Timer0_Isr() {
 if (T0IF) {
 

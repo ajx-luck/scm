@@ -17,7 +17,9 @@
 static unsigned char time0Flag = 0;
 static unsigned int countTime = 0;
 static unsigned int count10Ms = 0;
-unsigned char currentLevel = 3;
+unsigned char currentLevel = 1;
+//低电压检测次数
+unsigned char lowVTime = 0;
 //风扇状态
 unsigned char FAN_STATUS = FAN_STATUS_ON;
 //检测风扇次数
@@ -32,27 +34,44 @@ void Init_Config();
 void Sleep_Mode();
 
 void checkUsbStatus() {
-	//工作时不亮灯
+	//工作指示灯
     if(FAN_STATUS == FAN_STATUS_ON)
 	{
 		setbit(PORTA, 0);
-		setbit(PORTC, 1);
-		return;
+		resetbit(PORTC, 1);
 	}
+	//USB连接了
 	if (getbit(PORTB, 2) == 1) {
+		//重置低电压检测
+		lowVTime = 0;
         if (getbit(PORTB, 1) == 1) {
             //充满了，PC1常亮,A0关闭
             resetbit(PORTC, 1);
 			setbit(PORTA, 0);
         } else if (countTime == 100) {
-            //充电中，一直闪，C1关闭		
+            //充电中，红灯一直闪，		
             reversebit(PORTA, 0);
-			setbit(PORTC, 1);
+			//setbit(PORTC, 1);
         }
     } else {
-        //usb断开充电灯熄灭,PA0 = 1
+        //usb断开充电红灯灯熄灭,PA0 = 1
         setbit(PORTA, 0);
 		setbit(PORTC, 1);
+		
+		//检测内部电压值,电压低于3.1V
+		if((adresult/8) > 0x63 && countTime == 100)
+		{
+			if(lowVTime < 10)
+			{
+				lowVTime++;
+				//闪红灯，
+				reversebit(PORTA, 0);
+			}else
+			{
+				//关闭风扇
+				closeFan();
+			}
+		}
     }
 }
 
@@ -73,7 +92,7 @@ void Init_PWM() {
 void setFanLevel(char level) {
 	if(level == 0)
 	{
-		currentLevel = 3;
+		currentLevel = 2;
 	}
     unsigned int levelWidth = (PR2 + 1) / MAX_FAN_LEVEL;
     char tempLevel = currentLevel + level;
@@ -109,13 +128,15 @@ void setFanLevel(char level) {
 //关闭风扇
 void closeFan() {
     Init_PWM();
-    currentLevel = 2;
+    currentLevel = 1;
     setbit(PORTA, 0);
     //PWM输出脚设置为输入，关闭PWM
     setbit(TRISC, 2);
     fan_check_time = 0;
     FAN_STATUS = FAN_STATUS_OFF;
-    //Sleep_Mode();
+	//重置低电压检测
+	lowVTime = 0;
+    Sleep_Mode();
 }
 
 
@@ -183,7 +204,7 @@ void checkKeys() {
 
 
 void main(void) {
-	Sleep_Mode();
+	//Sleep_Mode();
     Init_Config();
     while (1) {
         //0.1毫秒检测一次
@@ -204,7 +225,7 @@ void main(void) {
 			readVrefADC();
         }
 
-        if (countTime == 1000) {
+        if (countTime == 101) {
             countTime = 0;
         }
 		
@@ -250,7 +271,7 @@ void Sleep_Mode() {
     PORTB = 0;
     WPUB = 0B00100000;         //RB5 上拉
 
-    IOCB = 0B00100000;            //允许RB5的IO口电平变化中断
+    IOCB = 0B00100100;            //允许RB5 RB2的IO口电平变化中断
     RBIE = 1;                    //允许PORTB电平变化中断
     GIE = 1;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
 

@@ -8,7 +8,7 @@
 	; Compiler options:
 	;
 	; -on9fan.cof -mn9fan.map --summary=default,-psect,-class --fill=0xFFFF \
-	; --output=intel init.p1 main.p1 adc.p1 scankey.p1 --chip=SC8P1713S -P \
+	; --output=intel init.p1 main.p1 adc.p1 scankey.p1 --chip=SC8P1711C -P \
 	; --runtime=default, --opt=-local,-asmfile,+asm,-speed,+space,-debug \
 	; -E+cmscerr.err -D__DEBUG=1 -g --asmlist --warn=-9 \
 	; --stack=compiled:auto:auto:auto --addrqual=request --mode=pro \
@@ -17,7 +17,7 @@
 	;
 
 
-	processor	SC8P1713S
+	processor	SC8P1711C
 
 	global	_main,start,reset_vec
 	fnroot	_main

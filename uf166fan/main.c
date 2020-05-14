@@ -25,6 +25,9 @@ unsigned char currentLevel = 3;
 unsigned char FAN_STATUS = FAN_STATUS_NONE;
 //检测风扇次数
 unsigned int fan_check_time = 0;
+//低电压检测次数
+unsigned char lowVTime = 0;
+unsigned char count300ms = 0;
 //按键结构体
 struct Keys key1, key2, key3;
 //显示风扇挡位
@@ -33,19 +36,38 @@ void setLedOn(unsigned char ledIndex);
 void Init_Config();
 //睡眠模式
 void Sleep_Mode();
+//关闭风扇
+void closeFan();
 
 void checkUsbStatus() {
     if (getbit(PORTB, 2) == 1) {
         if (getbit(PORTB, 1) == 1) {
             //充满了，Led常亮
             resetbit(PORTA, 0);
-        } else if (countTime == 1000) {
+        } else if (countTime == 0) {
             //充电中，一直闪		
             reversebit(PORTA, 0);
         }
     } else {
         //usb断开充电灯熄灭,PA0 = 1
         setbit(PORTA, 0);
+		if((adresult/8) > 0x63 && count300ms == 0)
+		{
+			if(lowVTime < 20)
+			{
+				lowVTime++;
+				//闪红灯，
+				reversebit(PORTA, 0);
+			}else
+			{
+				//关闭风扇
+				closeFan();
+			}
+		}
+		if((adresult/8) < 0x63)
+		{
+			lowVTime = 0;
+		}
     }
 }
 
@@ -113,7 +135,7 @@ void closeFan() {
     setbit(TRISC, 2);
     fan_check_time = 0;
     FAN_STATUS = FAN_STATUS_OFF;
-    //Sleep_Mode();
+    Sleep_Mode();
 }
 
 
@@ -254,7 +276,8 @@ void main(void) {
         }
 
         //10毫秒检测一次
-        if (count10Ms == 100) {		
+        if (count10Ms == 100) {	
+			count300ms++;	
             checkKeys();
             count10Ms = 0;
             //检测USB状态
@@ -262,8 +285,13 @@ void main(void) {
 			//检测内部电压
 			readVrefADC();
         }
-
-        if (countTime == 1000) {
+		//300ms
+		if(count300ms == 30)
+		{
+			count300ms = 0;
+		}
+		//1s钟
+        if (countTime == 100) {
             countTime = 0;
         }
 		
@@ -295,6 +323,7 @@ void Init_Config() {
     TRISA = 0;
     TRISB = 0x7E;//1-6脚输入
     TRISC = 0;
+	lowVTime = 0;
 }
 
 
@@ -307,13 +336,13 @@ void Sleep_Mode() {
     PORTA = 0B00000000;
     WPUA = 0B00000000;
 
-    TRISB = 0B00100000;
+    TRISB = 0B00100100;
     PORTB = 0B00000000;
 
     PORTB = 0;
     WPUB = 0B00100000;         //RB3 上拉
 
-    IOCB = 0B00100000;            //允许RB3的IO口电平变化中断
+    IOCB = 0B00100100;            //允许RB3的IO口电平变化中断
     RBIE = 1;                    //允许PORTB电平变化中断
     GIE = 1;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
 
