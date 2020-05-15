@@ -44,7 +44,7 @@ void checkUsbStatus() {
         if (getbit(PORTB, 1) == 1) {
             //充满了，Led常亮
             resetbit(PORTA, 0);
-        } else if (countTime == 0) {
+        } else if (countTime == 50) {
             //充电中，一直闪		
             reversebit(PORTA, 0);
         }
@@ -135,7 +135,10 @@ void closeFan() {
     setbit(TRISC, 2);
     fan_check_time = 0;
     FAN_STATUS = FAN_STATUS_OFF;
-    Sleep_Mode();
+	//usb充电未连接，进入睡眠模式
+    if (getbit(PORTB, 2) == 0) {
+		Sleep_Mode();
+	}
 }
 
 
@@ -226,7 +229,6 @@ void scanKeys() {
     sacnKeyInput(&key1);
     sacnKeyInput(&key2);
     sacnKeyInput(&key3);
-    countTime++;
    
 }
 
@@ -264,7 +266,10 @@ void checkKeys() {
 
 
 void main(void) {
-	Sleep_Mode();
+	if (getbit(PORTB, 2) == 0) {
+		Sleep_Mode();
+	}
+	
     Init_Config();
     while (1) {
         //0.1毫秒检测一次
@@ -277,6 +282,7 @@ void main(void) {
 
         //10毫秒检测一次
         if (count10Ms == 100) {	
+			countTime++;
 			count300ms++;	
             checkKeys();
             count10Ms = 0;

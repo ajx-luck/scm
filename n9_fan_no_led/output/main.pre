@@ -463,21 +463,21 @@ void checkUsbStatus() {
 
 if(FAN_STATUS == 1)
 {
-PORTA|=(1<<0);
-PORTC|=(1<<1);
-return;
+
+PORTC&=~(1<<1);
 }
 
 if (((PORTB) >> (2)&1) == 1) {
+
 lowVTime = 0;
 if (((PORTB) >> (1)&1) == 1) {
 
 PORTC&=~(1<<1);
 PORTA|=(1<<0);
-} else if (countTime == 100) {
+} else if (countTime == 10) {
 
 PORTA^=(1<<0);
-PORTC|=(1<<1);
+
 }
 } else {
 
@@ -492,6 +492,10 @@ if(lowVTime < 10)
 lowVTime++;
 
 PORTA^=(1<<0);
+}else
+{
+
+closeFan();
 }
 }
 }
@@ -556,7 +560,12 @@ PORTA|=(1<<0);
 TRISC|=(1<<2);
 fan_check_time = 0;
 FAN_STATUS = 0;
+
+lowVTime = 0;
+if (((PORTB) >> (2)&1) == 0) {
 Sleep_Mode();
+}
+
 }
 
 
@@ -569,14 +578,14 @@ TRISC&=~(1<<2);
 PORTA|=(1<<2);
 T2CON = 0X04;
 
-# 164
+# 173
 }
 
-# 170
+# 179
 void scanKeys() {
 key1.key_addr_result = PORTB;
 sacnKeyInput(&key1);
-countTime++;
+
 
 }
 
@@ -604,6 +613,9 @@ checkFan();
 
 
 void main(void) {
+if (((PORTB) >> (2)&1) == 0) {
+Sleep_Mode();
+}
 
 Init_Config();
 while (1) {
@@ -617,6 +629,7 @@ count10Ms++;
 
 
 if (count10Ms == 100) {
+countTime++;
 checkKeys();
 count10Ms = 0;
 
@@ -692,7 +705,7 @@ asm("nop");
 
 }
 
-# 297
+# 310
 void interrupt Timer0_Isr() {
 if (T0IF) {
 

@@ -37,7 +37,7 @@ void checkUsbStatus() {
 	//工作指示灯
     if(FAN_STATUS == FAN_STATUS_ON)
 	{
-		setbit(PORTA, 0);
+		//setbit(PORTA, 0);
 		resetbit(PORTC, 1);
 	}
 	//USB连接了
@@ -48,7 +48,7 @@ void checkUsbStatus() {
             //充满了，PC1常亮,A0关闭
             resetbit(PORTC, 1);
 			setbit(PORTA, 0);
-        } else if (countTime == 100) {
+        } else if (countTime == 10) {
             //充电中，红灯一直闪，		
             reversebit(PORTA, 0);
 			//setbit(PORTC, 1);
@@ -136,7 +136,10 @@ void closeFan() {
     FAN_STATUS = FAN_STATUS_OFF;
 	//重置低电压检测
 	lowVTime = 0;
-    Sleep_Mode();
+	if (getbit(PORTB, 2) == 0) {
+		Sleep_Mode();
+	}
+    
 }
 
 
@@ -176,7 +179,7 @@ void checkFan() {
 void scanKeys() {
     key1.key_addr_result = PORTB;
     sacnKeyInput(&key1);
-    countTime++;
+    
    
 }
 
@@ -204,7 +207,10 @@ void checkKeys() {
 
 
 void main(void) {
-	//Sleep_Mode();
+	if (getbit(PORTB, 2) == 0) {
+		Sleep_Mode();
+	}
+	
     Init_Config();
     while (1) {
         //0.1毫秒检测一次
@@ -216,7 +222,8 @@ void main(void) {
         }
 
         //10毫秒检测一次
-        if (count10Ms == 100) {		
+        if (count10Ms == 100) {	
+			countTime++;	
             checkKeys();
             count10Ms = 0;
             //检测USB状态
