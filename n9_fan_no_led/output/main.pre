@@ -446,8 +446,9 @@ static unsigned int count10Ms = 0;
 unsigned char currentLevel = 1;
 
 unsigned char lowVTime = 0;
+unsigned char count500ms = 0;
 
-unsigned char FAN_STATUS = 1;
+unsigned char FAN_STATUS = 0;
 
 unsigned int fan_check_time = 0;
 
@@ -461,31 +462,27 @@ void Sleep_Mode();
 
 void checkUsbStatus() {
 
-if(FAN_STATUS == 1)
-{
-
-PORTC&=~(1<<1);
-}
 
 if (((PORTB) >> (2)&1) == 1) {
 
 lowVTime = 0;
-if (((PORTB) >> (1)&1) == 1) {
+if (((PORTB) >> (1)&1) == 0) {
 
 PORTC&=~(1<<1);
 PORTA|=(1<<0);
-} else if (countTime == 10) {
+} else if (countTime < 15) {
+PORTC|=(1<<1);
 
-PORTA^=(1<<0);
-
+PORTA&=~(1<<0);
+}else{
+PORTA|=(1<<0);
 }
 } else {
 
-PORTA|=(1<<0);
 PORTC|=(1<<1);
 
 
-if((adresult/8) > 0x63 && countTime == 100)
+if((adresult/8) > 0x63 && count500ms == 10)
 {
 if(lowVTime < 10)
 {
@@ -511,11 +508,12 @@ TMR2IF = 0;
 T2CON = 0;
 
 TRISC&=~(1<<2);
-
+T2CON = 0X04;
 }
 
 
 void setFanLevel(char level) {
+Init_PWM();
 if(level == 0)
 {
 currentLevel = 2;
@@ -553,11 +551,15 @@ break;
 
 
 void closeFan() {
-Init_PWM();
+CCP1CON = 0x00;
+T2CON = 0X00;
 currentLevel = 1;
 PORTA|=(1<<0);
 
-TRISC|=(1<<2);
+TRISC&=~(1<<2);
+PORTC&=~(1<<2);
+TRISA&=~(1<<2);
+PORTA&=~(1<<2);
 fan_check_time = 0;
 FAN_STATUS = 0;
 
@@ -578,10 +580,10 @@ TRISC&=~(1<<2);
 PORTA|=(1<<2);
 T2CON = 0X04;
 
-# 173
+# 175
 }
 
-# 179
+# 181
 void scanKeys() {
 key1.key_addr_result = PORTB;
 sacnKeyInput(&key1);
@@ -630,6 +632,7 @@ count10Ms++;
 
 if (count10Ms == 100) {
 countTime++;
+count500ms++;
 checkKeys();
 count10Ms = 0;
 
@@ -638,7 +641,12 @@ checkUsbStatus();
 readVrefADC();
 }
 
-if (countTime == 101) {
+if(count500ms == 50)
+{
+count500ms = 0;
+}
+
+if (countTime == 50) {
 countTime = 0;
 }
 
@@ -647,7 +655,10 @@ countTime = 0;
 }
 
 void Init_Config() {
-
+if(FAN_STATUS == 1)
+{
+return;
+}
 Init_System();
 Init_GPIO();
 Init_Interupt();
@@ -666,22 +677,26 @@ resetKey(&key1);
 TRISA = 0;
 TRISB = 0x7E;
 TRISC = 0;
+Init_PWM();
 }
 
 
 void Sleep_Mode() {
+FAN_STATUS = 0;
 INTCON = 0;
 
 OPTION_REG = 0;
 
 TRISA = 0B00000000;
-PORTA = 0B00000000;
+PORTA = 0B00000001;
 WPUA = 0B00000000;
 
-TRISB = 0B00100000;
+TRISB = 0B00100100;
 PORTB = 0B00000000;
 
-PORTB = 0;
+TRISC = 0B00000000;
+PORTC = 0B00000010;
+
 WPUB = 0B00100000;
 
 IOCB = 0B00100100;
@@ -705,7 +720,7 @@ asm("nop");
 
 }
 
-# 310
+# 325
 void interrupt Timer0_Isr() {
 if (T0IF) {
 

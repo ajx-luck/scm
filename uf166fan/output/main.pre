@@ -464,12 +464,14 @@ void closeFan();
 
 void checkUsbStatus() {
 if (((PORTB) >> (2)&1) == 1) {
-if (((PORTB) >> (1)&1) == 1) {
+if (((PORTB) >> (1)&1) == 0) {
 
 PORTA&=~(1<<0);
-} else if (countTime == 50) {
+} else if (countTime < 15) {
 
-PORTA^=(1<<0);
+PORTA&=~(1<<0);
+}else{
+PORTA|=(1<<0);
 }
 } else {
 
@@ -504,11 +506,12 @@ TMR2IF = 0;
 T2CON = 0;
 
 TRISC&=~(1<<2);
-
+T2CON = 0X04;
 }
 
 
 void setFanLevel(char level) {
+Init_PWM();
 if(level == 0)
 {
 currentLevel = 3;
@@ -550,14 +553,20 @@ setLedOn(currentLevel);
 
 
 void closeFan() {
-Init_PWM();
+CCP1CON = 0x00;
+T2CON = 0X00;
+
 currentLevel = 2;
 setLedOn(5);
 PORTA|=(1<<0);
 
-TRISC|=(1<<2);
+TRISC&=~(1<<2);
+PORTC&=~(1<<2);
+TRISA&=~(1<<2);
+PORTA&=~(1<<2);
 fan_check_time = 0;
 FAN_STATUS = 0;
+
 if (((PORTB) >> (2)&1) == 0) {
 Sleep_Mode();
 }
@@ -637,9 +646,9 @@ case 5:
 TRISC|=(1<<0);
 TRISA|=(1<<7);
 TRISC|=(1<<1);
-PORTC&=~(1<<0);
-PORTA&=~(1<<7);
-PORTC&=~(1<<1);
+PORTA|=(1<<7);
+PORTC|=(1<<0);
+PORTC|=(1<<1);
 break;
 }
 }
@@ -688,11 +697,9 @@ return;
 
 
 void main(void) {
-if (((PORTB) >> (2)&1) == 0) {
-Sleep_Mode();
-}
 
 Init_Config();
+closeFan();
 while (1) {
 
 if (time0Flag) {
@@ -714,12 +721,12 @@ checkUsbStatus();
 readVrefADC();
 }
 
-if(count300ms == 30)
+if(count300ms == 10)
 {
 count300ms = 0;
 }
 
-if (countTime == 100) {
+if (countTime == 50) {
 countTime = 0;
 }
 
@@ -728,7 +735,10 @@ countTime = 0;
 }
 
 void Init_Config() {
-
+if(FAN_STATUS == 1)
+{
+return;
+}
 Init_System();
 Init_GPIO();
 Init_Interupt();
@@ -752,8 +762,8 @@ TRISA = 0;
 TRISB = 0x7E;
 TRISC = 0;
 lowVTime = 0;
+Init_PWM();
 }
-
 
 void Sleep_Mode() {
 INTCON = 0;
@@ -761,14 +771,17 @@ INTCON = 0;
 OPTION_REG = 0;
 
 TRISA = 0B00000000;
-PORTA = 0B00000000;
+PORTA = 0B01000001;
 WPUA = 0B00000000;
 
 TRISB = 0B00100100;
-PORTB = 0B00000000;
+PORTB = 0B01000000;
 
-PORTB = 0;
+TRISC = 0B00000000;
+PORTC = 0B00000011;
+setLedOn(5);
 WPUB = 0B00100000;
+
 
 IOCB = 0B00100100;
 RBIE = 1;
@@ -779,6 +792,7 @@ ADCON0 = 0;
 OSCCON = 0X70;
 
 PORTB;
+
 asm("clrwdt");
 
 asm("sleep");
@@ -786,9 +800,11 @@ asm("sleep");
 asm("nop");
 
 
+
+
 }
 
-# 376
+# 393
 void interrupt
 
 Timer0_Isr() {

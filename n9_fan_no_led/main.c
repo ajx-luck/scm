@@ -20,8 +20,9 @@ static unsigned int count10Ms = 0;
 unsigned char currentLevel = 1;
 //低电压检测次数
 unsigned char lowVTime = 0;
+unsigned char count500ms = 0;
 //风扇状态
-unsigned char FAN_STATUS = FAN_STATUS_ON;
+unsigned char FAN_STATUS = FAN_STATUS_OFF;
 //检测风扇次数
 unsigned int fan_check_time = 0;
 //按键结构体
@@ -34,32 +35,28 @@ void Init_Config();
 void Sleep_Mode();
 
 void checkUsbStatus() {
-	//工作指示灯
-    if(FAN_STATUS == FAN_STATUS_ON)
-	{
-		//setbit(PORTA, 0);
-		resetbit(PORTC, 1);
-	}
+	
 	//USB连接了
 	if (getbit(PORTB, 2) == 1) {
 		//重置低电压检测
 		lowVTime = 0;
-        if (getbit(PORTB, 1) == 1) {
+        if (getbit(PORTB, 1) == 0) {
             //充满了，PC1常亮,A0关闭
             resetbit(PORTC, 1);
 			setbit(PORTA, 0);
-        } else if (countTime == 10) {
-            //充电中，红灯一直闪，		
-            reversebit(PORTA, 0);
-			//setbit(PORTC, 1);
-        }
+        } else if (countTime < 15) {
+			setbit(PORTC, 1);
+            //充电中，红灯一直闪，	
+			resetbit(PORTA, 0);
+        }else{
+			setbit(PORTA, 0);
+		}
     } else {
         //usb断开充电红灯灯熄灭,PA0 = 1
-        setbit(PORTA, 0);
 		setbit(PORTC, 1);
 		
 		//检测内部电压值,电压低于3.1V
-		if((adresult/8) > 0x63 && countTime == 100)
+		if((adresult/8) > 0x63 && count500ms == 10)
 		{
 			if(lowVTime < 10)
 			{
@@ -85,11 +82,12 @@ void Init_PWM() {
     T2CON = 0;
     //PC2设置为输出脚
     resetbit(TRISC, 2);
-    //T2CON = 0X04 //启动定时器2，溢出后启动PWM
+    T2CON = 0X04; //启动定时器2，溢出后启动PWM
 }
 
 //设置风扇转速
 void setFanLevel(char level) {
+	Init_PWM();
 	if(level == 0)
 	{
 		currentLevel = 2;
@@ -127,11 +125,15 @@ void setFanLevel(char level) {
 
 //关闭风扇
 void closeFan() {
-    Init_PWM();
+	CCP1CON = 0x00;
+	T2CON = 0X00;
     currentLevel = 1;
     setbit(PORTA, 0);
     //PWM输出脚设置为输入，关闭PWM
-    setbit(TRISC, 2);
+    resetbit(TRISC, 2);
+	resetbit(PORTC, 2);
+	resetbit(TRISA, 2);
+	resetbit(PORTA, 2);
     fan_check_time = 0;
     FAN_STATUS = FAN_STATUS_OFF;
 	//重置低电压检测
@@ -223,7 +225,8 @@ void main(void) {
 
         //10毫秒检测一次
         if (count10Ms == 100) {	
-			countTime++;	
+			countTime++;
+			count500ms++;	
             checkKeys();
             count10Ms = 0;
             //检测USB状态
@@ -231,8 +234,13 @@ void main(void) {
 			//检测内部电压
 			readVrefADC();
         }
+		
+		if(count500ms == 50)
+		{
+			count500ms = 0;
+		}
 
-        if (countTime == 101) {
+        if (countTime == 50) {
             countTime = 0;
         }
 		
@@ -241,7 +249,10 @@ void main(void) {
 }
 
 void Init_Config() {
-
+	if(FAN_STATUS == FAN_STATUS_ON)
+	{
+		return;
+	}
     Init_System();
     Init_GPIO();
     Init_Interupt();
@@ -260,22 +271,26 @@ void Init_Config() {
     TRISA = 0;
     TRISB = 0x7E;//1-6脚输入
     TRISC = 0;
+	Init_PWM();
 }
 
 
 void Sleep_Mode() {
+	FAN_STATUS = FAN_STATUS_OFF;
     INTCON = 0;
 
     OPTION_REG = 0;
 
     TRISA = 0B00000000;        //关闭所有输出
-    PORTA = 0B00000000;
+    PORTA = 0B00000001;
     WPUA = 0B00000000;
 
-    TRISB = 0B00100000;
+    TRISB = 0B00100100;
     PORTB = 0B00000000;
 
-    PORTB = 0;
+	TRISC = 0B00000000;
+    PORTC = 0B00000010;
+   
     WPUB = 0B00100000;         //RB5 上拉
 
     IOCB = 0B00100100;            //允许RB5 RB2的IO口电平变化中断

@@ -41,13 +41,15 @@ void closeFan();
 
 void checkUsbStatus() {
     if (getbit(PORTB, 2) == 1) {
-        if (getbit(PORTB, 1) == 1) {
+        if (getbit(PORTB, 1) == 0) {
             //充满了，Led常亮
             resetbit(PORTA, 0);
-        } else if (countTime == 50) {
+        } else if (countTime < 15) {
             //充电中，一直闪		
-            reversebit(PORTA, 0);
-        }
+            resetbit(PORTA, 0);
+        }else{
+			setbit(PORTA, 0);
+		}
     } else {
         //usb断开充电灯熄灭,PA0 = 1
         setbit(PORTA, 0);
@@ -81,11 +83,12 @@ void Init_PWM() {
     T2CON = 0;
     //PC2设置为输出脚
     resetbit(TRISC, 2);
-    //T2CON = 0X04 //启动定时器2，溢出后启动PWM
+    T2CON = 0X04; //启动定时器2，溢出后启动PWM
 }
 
 //设置风扇转速
 void setFanLevel(char level) {
+	Init_PWM();
 	if(level == 0)
 	{
 		currentLevel = 3;
@@ -127,12 +130,17 @@ void setFanLevel(char level) {
 
 //关闭风扇
 void closeFan() {
-    Init_PWM();
+    CCP1CON = 0x00;
+	T2CON = 0X00;
+	
     currentLevel = 2;
     setLedOn(5);
     setbit(PORTA, 0);
     //PWM输出脚设置为输入，关闭PWM
-    setbit(TRISC, 2);
+	resetbit(TRISC, 2);
+	resetbit(PORTC, 2);
+	resetbit(TRISA, 2);
+	resetbit(PORTA, 2);
     fan_check_time = 0;
     FAN_STATUS = FAN_STATUS_OFF;
 	//usb充电未连接，进入睡眠模式
@@ -215,9 +223,9 @@ void setLedOn(unsigned char ledIndex) {
 			setbit(TRISC, 0);
 			setbit(PBTRISB, 7);
             setbit(TRISC, 1);
-			resetbit(PORTC, 0);
-			resetbit(PBPORTB, 7);
-            resetbit(PORTC, 1);
+			setbit(PBPORTB, 7);
+			setbit(PORTC, 0);
+            setbit(PORTC, 1);
             break;
     }
 }
@@ -266,11 +274,9 @@ void checkKeys() {
 
 
 void main(void) {
-	if (getbit(PORTB, 2) == 0) {
-		Sleep_Mode();
-	}
 	
     Init_Config();
+	closeFan();
     while (1) {
         //0.1毫秒检测一次
         if (time0Flag) {
@@ -292,12 +298,12 @@ void main(void) {
 			readVrefADC();
         }
 		//300ms
-		if(count300ms == 30)
+		if(count300ms == 10)
 		{
 			count300ms = 0;
 		}
 		//1s钟
-        if (countTime == 100) {
+        if (countTime == 50) {
             countTime = 0;
         }
 		
@@ -306,7 +312,10 @@ void main(void) {
 }
 
 void Init_Config() {
-
+	if(FAN_STATUS == FAN_STATUS_ON)
+	{
+		return;
+	}
     Init_System();
     Init_GPIO();
     Init_Interupt();
@@ -330,8 +339,8 @@ void Init_Config() {
     TRISB = 0x7E;//1-6脚输入
     TRISC = 0;
 	lowVTime = 0;
+	Init_PWM();
 }
-
 
 void Sleep_Mode() {
     INTCON = 0;
@@ -339,32 +348,39 @@ void Sleep_Mode() {
     OPTION_REG = 0;
 
     TRISA = 0B00000000;        //关闭所有输出
-    PORTA = 0B00000000;
+    PORTA = 0B01000001;
     WPUA = 0B00000000;
 
     TRISB = 0B00100100;
-    PORTB = 0B00000000;
+    PORTB = 0B01000000;
 
-    PORTB = 0;
-    WPUB = 0B00100000;         //RB3 上拉
+	TRISC = 0B00000000;
+    PORTC = 0B00000011;
+	setLedOn(5);
+    WPUB = 0B00100000;         //RB5 上拉
+	
 
-    IOCB = 0B00100100;            //允许RB3的IO口电平变化中断
+    IOCB = 0B00100100;            //允许RB5 RB2的IO口电平变化中断
     RBIE = 1;                    //允许PORTB电平变化中断
     GIE = 1;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
 
     ADCON0 = 0;                    //关闭所有模块
 
     OSCCON = 0X70;                //配置振荡为16M,关闭WDT
-
-    PORTB;                        //读PORTB值并锁存			
+	
+    PORTB;                        //读PORTB值并锁存	
+			
     asm("clrwdt");
 
     asm("sleep");                //进入休眠模式
 
     asm("nop");
+	
+	
 
 
 }
+
 
 
 /***********************************************

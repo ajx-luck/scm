@@ -21,658 +21,702 @@
 20:               unsigned char currentLevel = 1;
 21:               //低电压检测次数
 22:               unsigned char lowVTime = 0;
-23:               //风扇状态
-24:               unsigned char FAN_STATUS = FAN_STATUS_ON;
-25:               //检测风扇次数
-26:               unsigned int fan_check_time = 0;
-27:               //按键结构体
-28:               struct Keys key1;
-29:               //关闭风扇
-30:               void closeFan();
-31:               //初始化配置
-32:               void Init_Config();
-33:               //睡眠模式
-34:               void Sleep_Mode();
-35:               
-36:               void checkUsbStatus() {
-37:               	//工作指示灯
-38:                   if(FAN_STATUS == FAN_STATUS_ON)
-  014A    0B78    SZDECA	0x78
-  014B    294D    JP	0x14D
-39:               	{
-40:               		//setbit(PORTA, 0);
-41:               		resetbit(PORTC, 1);
-  014C    1087    CLRB	0x7,1
-42:               	}
-43:               	//USB连接了
-44:               	if (getbit(PORTB, 2) == 1) {
-  014D    0806    LD	A,0x6
-  014E    00B6    LD	0x36,A
-  014F    1003    CLRB	0x3,0
-  0150    0CB6    RRCR	0x36
-  0151    1003    CLRB	0x3,0
-  0152    0CB6    RRCR	0x36
-  0153    1C36    SNZB	0x36,0
-  0154    2969    JP	0x169
-45:               		//重置低电压检测
-46:               		lowVTime = 0;
-  0155    01F6    CLR	0x76
-47:                       if (getbit(PORTB, 1) == 1) {
-  0156    0806    LD	A,0x6
-  0157    00B6    LD	0x36,A
-  0158    1003    CLRB	0x3,0
-  0159    0CB6    RRCR	0x36
-  015A    1C36    SNZB	0x36,0
-  015B    295F    JP	0x15F
-48:                           //充满了，PC1常亮,A0关闭
-49:                           resetbit(PORTC, 1);
-  015C    1087    CLRB	0x7,1
-50:               			setbit(PORTA, 0);
-  015D    1405    SETB	0x5,0
-51:                       } else if (countTime == 10) {
-  015E    0008    RET
-  015F    300A    LDIA	0xA
-  0160    062A    XORA	0x2A
-  0161    042B    ORA	0x2B
-  0162    1D03    SNZB	0x3,2
-  0163    0008    RET
-  0164    2966    JP	0x166
-52:                           //充电中，红灯一直闪，		
-53:                           reversebit(PORTA, 0);
-  0166    3001    LDIA	0x1
-  0167    0685    XORR	0x5
-  0168    0008    RET
-54:               			//setbit(PORTC, 1);
-55:                       }
-56:                   } else {
-57:                       //usb断开充电红灯灯熄灭,PA0 = 1
-58:                       setbit(PORTA, 0);
-  0169    1405    SETB	0x5,0
-59:               		setbit(PORTC, 1);
-  016A    1487    SETB	0x7,1
-60:               		
-61:               		//检测内部电压值,电压低于3.1V
-62:               		if((adresult/8) > 0x63 && countTime == 100)
-  016B    082D    LD	A,0x2D
+23:               unsigned char count500ms = 0;
+24:               //风扇状态
+25:               unsigned char FAN_STATUS = FAN_STATUS_OFF;
+26:               //检测风扇次数
+27:               unsigned int fan_check_time = 0;
+28:               //按键结构体
+29:               struct Keys key1;
+30:               //关闭风扇
+31:               void closeFan();
+32:               //初始化配置
+33:               void Init_Config();
+34:               //睡眠模式
+35:               void Sleep_Mode();
+36:               
+37:               void checkUsbStatus() {
+38:               	
+39:               	//USB连接了
+40:               	if (getbit(PORTB, 2) == 1) {
+  014A    0806    LD	A,0x6
+  014B    00B7    LD	0x37,A
+  014C    1003    CLRB	0x3,0
+  014D    0CB7    RRCR	0x37
+  014E    1003    CLRB	0x3,0
+  014F    0CB7    RRCR	0x37
+  0150    1C37    SNZB	0x37,0
+  0151    2968    JP	0x168
+41:               		//重置低电压检测
+42:               		lowVTime = 0;
+  0152    01AF    CLR	0x2F
+43:                       if (getbit(PORTB, 1) == 0) {
+  0153    0806    LD	A,0x6
+  0154    00B7    LD	0x37,A
+  0155    1003    CLRB	0x3,0
+  0156    0CB7    RRCR	0x37
+  0157    1837    SZB	0x37,0
+  0158    295C    JP	0x15C
+44:                           //充满了，PC1常亮,A0关闭
+45:                           resetbit(PORTC, 1);
+  0159    1087    CLRB	0x7,1
+46:               			setbit(PORTA, 0);
+  015A    1405    SETB	0x5,0
+47:                       } else if (countTime < 15) {
+  015B    0008    RET
+  015C    3000    LDIA	0x0
+  015D    022B    SUBA	0x2B
+  015E    300F    LDIA	0xF
+  015F    1903    SZB	0x3,2
+  0160    022A    SUBA	0x2A
+  0161    1803    SZB	0x3,0
+  0162    2966    JP	0x166
+48:               			setbit(PORTC, 1);
+  0163    1487    SETB	0x7,1
+49:                           //充电中，红灯一直闪，	
+50:               			resetbit(PORTA, 0);
+  0164    1005    CLRB	0x5,0
+51:                       }else{
+  0165    0008    RET
+52:               			setbit(PORTA, 0);
+  0166    1405    SETB	0x5,0
+  0167    0008    RET
+53:               		}
+54:                   } else {
+55:                       //usb断开充电红灯灯熄灭,PA0 = 1
+56:               		setbit(PORTC, 1);
+  0168    1487    SETB	0x7,1
+57:               		
+58:               		//检测内部电压值,电压低于3.1V
+59:               		if((adresult/8) > 0x63 && count500ms == 10)
+  0169    082D    LD	A,0x2D
+  016A    00B8    LD	0x38,A
+  016B    082C    LD	A,0x2C
   016C    00B7    LD	0x37,A
-  016D    082C    LD	A,0x2C
-  016E    00B6    LD	0x36,A
-  016F    3000    LDIA	0x0
-  0170    1003    CLRB	0x3,0
-  0171    0CB7    RRCR	0x37
-  0172    0CB6    RRCR	0x36
-  0173    1003    CLRB	0x3,0
-  0174    0CB7    RRCR	0x37
-  0175    0CB6    RRCR	0x36
-  0176    1003    CLRB	0x3,0
-  0177    0CB7    RRCR	0x37
-  0178    0CB6    RRCR	0x36
-  0179    0237    SUBA	0x37
-  017A    3064    LDIA	0x64
-  017B    1903    SZB	0x3,2
-  017C    0236    SUBA	0x36
-  017D    1C03    SNZB	0x3,0
-  017E    0008    RET
-  017F    3064    LDIA	0x64
-  0180    062A    XORA	0x2A
-  0181    042B    ORA	0x2B
-  0182    1D03    SNZB	0x3,2
-  0183    0008    RET
-63:               		{
-64:               			if(lowVTime < 10)
-  0184    300A    LDIA	0xA
-  0185    0276    SUBA	0x76
-  0186    1C03    SNZB	0x3,0
-  0187    2965    JP	0x165
-65:               			{
-66:               				lowVTime++;
-  0165    0AF6    INCR	0x76
-67:               				//闪红灯，
-68:               				reversebit(PORTA, 0);
-69:               			}else
-70:               			{
-71:               				//关闭风扇
-72:               				closeFan();
-  0188    2A69    JP	0x269
-73:               			}
-74:               		}
-75:                   }
-76:               }
-77:               
-78:               void Init_PWM() {
-79:                   CCP1CON = 0x0F;//设置PC2为PWM模式，4,5位为占空比的低2位
-80:                   T2CON = 0; //时钟分频 1:1 PWM周期为（PR2+1）*4/8,000,000
-81:                   PR2 = 7;
-82:               
-83:                   CCPR1L = 0;//占空比高8位，低2位设置为0，结果就是 占空比 = CCPR1L*4/4*(PR2+1)
-84:                   TMR2IF = 0;
-85:                   T2CON = 0;
-86:                   //PC2设置为输出脚
-87:                   resetbit(TRISC, 2);
-  02AF    2AB0    JP	0x2B0
-  0307    2AB0    JP	0x2B0
-88:                   //T2CON = 0X04 //启动定时器2，溢出后启动PWM
-89:               }
-90:               
-91:               //设置风扇转速
-92:               void setFanLevel(char level) {
-  0189    00BE    LD	0x3E,A
-93:               	if(level == 0)
-  018A    083E    LD	A,0x3E
-  018B    1D03    SNZB	0x3,2
-  018C    298F    JP	0x18F
-94:               	{
-95:               		currentLevel = 2;
-  018D    3002    LDIA	0x2
-  018E    00F9    LD	0x79,A
-96:               	}
-97:                   unsigned int levelWidth = (PR2 + 1) / MAX_FAN_LEVEL;
-  018F    1683    SETB	0x3,5
-  0190    0812    LD	A,0x12
-  0191    1283    CLRB	0x3,5
-  0192    00B8    LD	0x38,A
-  0193    01B9    CLR	0x39
-  0194    0AB8    INCR	0x38
-  0195    1903    SZB	0x3,2
+  016D    3000    LDIA	0x0
+  016E    1003    CLRB	0x3,0
+  016F    0CB8    RRCR	0x38
+  0170    0CB7    RRCR	0x37
+  0171    1003    CLRB	0x3,0
+  0172    0CB8    RRCR	0x38
+  0173    0CB7    RRCR	0x37
+  0174    1003    CLRB	0x3,0
+  0175    0CB8    RRCR	0x38
+  0176    0CB7    RRCR	0x37
+  0177    0238    SUBA	0x38
+  0178    3064    LDIA	0x64
+  0179    1903    SZB	0x3,2
+  017A    0237    SUBA	0x37
+  017B    1C03    SNZB	0x3,0
+  017C    0008    RET
+  017D    300A    LDIA	0xA
+  017E    0677    XORA	0x77
+  017F    1D03    SNZB	0x3,2
+  0180    0008    RET
+60:               		{
+61:               			if(lowVTime < 10)
+  0181    300A    LDIA	0xA
+  0182    022F    SUBA	0x2F
+  0183    1803    SZB	0x3,0
+  0184    2989    JP	0x189
+  0185    3001    LDIA	0x1
+62:               			{
+63:               				lowVTime++;
+  0186    0AAF    INCR	0x2F
+64:               				//闪红灯，
+65:               				reversebit(PORTA, 0);
+  0187    0685    XORR	0x5
+66:               			}else
+  0188    0008    RET
+67:               			{
+68:               				//关闭风扇
+69:               				closeFan();
+  0189    2A54    JP	0x254
+70:               			}
+71:               		}
+72:                   }
+73:               }
+74:               
+75:               void Init_PWM() {
+76:                   CCP1CON = 0x0F;//设置PC2为PWM模式，4,5位为占空比的低2位
+77:                   T2CON = 0; //时钟分频 1:1 PWM周期为（PR2+1）*4/8,000,000
+78:                   PR2 = 7;
+79:               
+80:                   CCPR1L = 0;//占空比高8位，低2位设置为0，结果就是 占空比 = CCPR1L*4/4*(PR2+1)
+81:                   TMR2IF = 0;
+82:                   T2CON = 0;
+83:                   //PC2设置为输出脚
+84:                   resetbit(TRISC, 2);
+85:                   T2CON = 0X04; //启动定时器2，溢出后启动PWM
+  02A8    2AA9    JP	0x2A9
+  0329    2AA9    JP	0x2A9
+86:               }
+87:               
+88:               //设置风扇转速
+89:               void setFanLevel(char level) {
+  018A    00BF    LD	0x3F,A
+90:               	Init_PWM();
+  018B    22A8    CALL	0x2A8
+91:               	if(level == 0)
+  018C    083F    LD	A,0x3F
+  018D    1D03    SNZB	0x3,2
+  018E    2991    JP	0x191
+92:               	{
+93:               		currentLevel = 2;
+  018F    3002    LDIA	0x2
+  0190    00F9    LD	0x79,A
+94:               	}
+95:                   unsigned int levelWidth = (PR2 + 1) / MAX_FAN_LEVEL;
+  0191    1683    SETB	0x3,5
+  0192    0812    LD	A,0x12
+  0193    1283    CLRB	0x3,5
+  0194    00B9    LD	0x39,A
+  0195    01BA    CLR	0x3A
   0196    0AB9    INCR	0x39
-  0197    3004    LDIA	0x4
-  0198    00B6    LD	0x36,A
-  0199    01B7    CLR	0x37
-  019A    20C3    CALL	0xC3
-98:                   char tempLevel = currentLevel + level;
-  019B    083E    LD	A,0x3E
-  019C    0779    ADDA	0x79
-  019D    00BF    LD	0x3F,A
-99:                   if (tempLevel > MAX_FAN_LEVEL) {
-  019E    3005    LDIA	0x5
-  019F    023F    SUBA	0x3F
-  01A0    1C03    SNZB	0x3,0
-  01A1    29A4    JP	0x1A4
-100:                      tempLevel = MIN_FAN_LEVEL;
-  01A2    01BF    CLR	0x3F
-  01A3    0ABF    INCR	0x3F
-101:                  }
-102:              
-103:                  
-104:                  if (FAN_STATUS == FAN_STATUS_ON) {
-  01A4    0B78    SZDECA	0x78
-  01A5    0008    RET
-105:              		currentLevel = tempLevel;
-  01A6    083F    LD	A,0x3F
-  01A7    00F9    LD	0x79,A
-106:              		switch(currentLevel)
-  01A8    29B3    JP	0x1B3
-107:              		{
-108:              			case 1:
-109:              			closeFan();
-  01A9    2A69    JP	0x269
-110:              			break;
-111:              			case 2:
-112:              			CCPR1L = 2;
-  01AA    3002    LDIA	0x2
-  01AB    0095    LD	0x15,A
-113:              			break;
-  01AC    0008    RET
-114:              			case 3:
-115:              			CCPR1L = 3;
-  01AD    3003    LDIA	0x3
-  01AE    0095    LD	0x15,A
-116:              			break;
-  01AF    0008    RET
-117:              			case 4:
-118:              			CCPR1L = 5;
-  01B0    3005    LDIA	0x5
-  01B1    0095    LD	0x15,A
-119:              			break;
-  01B2    0008    RET
-  01B3    0879    LD	A,0x79
-  01B4    3A01    XORIA	0x1
-  01B5    1903    SZB	0x3,2
-  01B6    29A9    JP	0x1A9
-  01B7    3A03    XORIA	0x3
-  01B8    1903    SZB	0x3,2
-  01B9    29AA    JP	0x1AA
-  01BA    3A01    XORIA	0x1
-  01BB    1903    SZB	0x3,2
-  01BC    29AD    JP	0x1AD
-  01BD    3A07    XORIA	0x7
-  01BE    1903    SZB	0x3,2
-  01BF    29B0    JP	0x1B0
-  01C0    29C1    JP	0x1C1
-  01C1    0008    RET
-120:              		}
-121:                  //设置占宽比
-122:              		//CCPR1L = levelWidth * currentLevel;
-123:                    
-124:                  }
+  0197    1903    SZB	0x3,2
+  0198    0ABA    INCR	0x3A
+  0199    3004    LDIA	0x4
+  019A    00B7    LD	0x37,A
+  019B    01B8    CLR	0x38
+  019C    20C3    CALL	0xC3
+96:                   char tempLevel = currentLevel + level;
+  019D    083F    LD	A,0x3F
+  019E    0779    ADDA	0x79
+  019F    00C0    LD	0x40,A
+97:                   if (tempLevel > MAX_FAN_LEVEL) {
+  01A0    3005    LDIA	0x5
+  01A1    0240    SUBA	0x40
+  01A2    1C03    SNZB	0x3,0
+  01A3    29A6    JP	0x1A6
+98:                       tempLevel = MIN_FAN_LEVEL;
+  01A4    01C0    CLR	0x40
+  01A5    0AC0    INCR	0x40
+99:                   }
+100:              
+101:                  
+102:                  if (FAN_STATUS == FAN_STATUS_ON) {
+  01A6    0B76    SZDECA	0x76
+  01A7    0008    RET
+103:              		currentLevel = tempLevel;
+  01A8    0840    LD	A,0x40
+  01A9    00F9    LD	0x79,A
+104:              		switch(currentLevel)
+  01AA    29B5    JP	0x1B5
+105:              		{
+106:              			case 1:
+107:              			closeFan();
+  01AB    2A54    JP	0x254
+108:              			break;
+109:              			case 2:
+110:              			CCPR1L = 2;
+  01AC    3002    LDIA	0x2
+  01AD    0095    LD	0x15,A
+111:              			break;
+  01AE    0008    RET
+112:              			case 3:
+113:              			CCPR1L = 3;
+  01AF    3003    LDIA	0x3
+  01B0    0095    LD	0x15,A
+114:              			break;
+  01B1    0008    RET
+115:              			case 4:
+116:              			CCPR1L = 5;
+  01B2    3005    LDIA	0x5
+  01B3    0095    LD	0x15,A
+117:              			break;
+  01B4    0008    RET
+  01B5    0879    LD	A,0x79
+  01B6    3A01    XORIA	0x1
+  01B7    1903    SZB	0x3,2
+  01B8    29AB    JP	0x1AB
+  01B9    3A03    XORIA	0x3
+  01BA    1903    SZB	0x3,2
+  01BB    29AC    JP	0x1AC
+  01BC    3A01    XORIA	0x1
+  01BD    1903    SZB	0x3,2
+  01BE    29AF    JP	0x1AF
+  01BF    3A07    XORIA	0x7
+  01C0    1903    SZB	0x3,2
+  01C1    29B2    JP	0x1B2
+  01C2    29C3    JP	0x1C3
+  01C3    0008    RET
+118:              		}
+119:                  //设置占宽比
+120:              		//CCPR1L = levelWidth * currentLevel;
+121:                    
+122:                  }
+123:              
+124:              }
 125:              
-126:              }
-127:              
-128:              //关闭风扇
-129:              void closeFan() {
-130:                  Init_PWM();
-  0269    22AF    CALL	0x2AF
-131:                  currentLevel = 1;
-  026A    01F9    CLR	0x79
-  026B    0AF9    INCR	0x79
-132:                  setbit(PORTA, 0);
-  026C    1283    CLRB	0x3,5
-  026D    1405    SETB	0x5,0
-133:                  //PWM输出脚设置为输入，关闭PWM
-134:                  setbit(TRISC, 2);
-135:                  fan_check_time = 0;
-  026E    1683    SETB	0x3,5
-  026F    1507    SETB	0x7,2
-136:                  FAN_STATUS = FAN_STATUS_OFF;
-  0270    01F8    CLR	0x78
-137:              	//重置低电压检测
-138:              	lowVTime = 0;
-  0271    01F6    CLR	0x76
-139:              	if (getbit(PORTB, 2) == 0) {
-  0272    1283    CLRB	0x3,5
-  0273    0806    LD	A,0x6
-  0274    00F4    LD	0x74,A
-  0275    1003    CLRB	0x3,0
-  0276    0CF4    RRCR	0x74
-  0277    1003    CLRB	0x3,0
-  0278    0CF4    RRCR	0x74
-  0279    1874    SZB	0x74,0
-  027A    0008    RET
-140:              		Sleep_Mode();
-  027B    29ED    JP	0x1ED
-141:              	}
-142:                  
-143:              }
-144:              
-145:              
-146:              //检测风扇是否连接
-147:              void checkFan() {
-148:              	resetbit(TRISA, 1);
-  02CA    1683    SETB	0x3,5
-  02CB    1303    CLRB	0x3,6
-  02CC    1085    CLRB	0x5,1
-149:                  resetbit(PORTA, 1);
-  02CD    1283    CLRB	0x3,5
-  02CE    1085    CLRB	0x5,1
-150:                  //PC2设置为输出脚
-151:                  resetbit(TRISC, 2);
-  02CF    1683    SETB	0x3,5
-  02D0    1107    CLRB	0x7,2
-152:              	setbit(PORTA, 2);
-  02D1    1283    CLRB	0x3,5
-  02D2    1505    SETB	0x5,2
-153:                  T2CON = 0X04; //启动定时器2，溢出后启动PWM
-  02D3    3004    LDIA	0x4
-  02D4    0092    LD	0x12,A
-  02D5    0008    RET
-154:              
-155:                  //EN IN输出高电位，D1点亮，检测FAN DET，FAN DET为低电位则风扇正常工作，高电位则未连接
-156:                //  if (getbit(PORTB, 6) == 0) {
-157:                 //     FAN_STATUS = FAN_STATUS_ON;
-158:                 // } else {
-159:                  //    FAN_STATUS = FAN_STATUS_NONE;
-160:                 // }
-161:              	
-162:              	
-163:                  //没有检测到风扇
-164:                  //if (FAN_STATUS == FAN_STATUS_NONE) {
-165:                  //    fan_check_time++;
-166:                  //    if (fan_check_time == 3000) {
-167:                   //       closeFan();
-168:                    //      return;
-169:                   //   }
-170:                  //}
-171:              
-172:              
-173:              }
+126:              //关闭风扇
+127:              void closeFan() {
+128:              	CCP1CON = 0x00;
+  0254    0197    CLR	0x17
+129:              	T2CON = 0X00;
+  0255    0192    CLR	0x12
+130:                  currentLevel = 1;
+  0256    01F9    CLR	0x79
+  0257    0AF9    INCR	0x79
+131:                  setbit(PORTA, 0);
+  0258    1405    SETB	0x5,0
+132:                  //PWM输出脚设置为输入，关闭PWM
+133:                  resetbit(TRISC, 2);
+  0259    1683    SETB	0x3,5
+  025A    1107    CLRB	0x7,2
+134:              	resetbit(PORTC, 2);
+  025B    1283    CLRB	0x3,5
+  025C    1107    CLRB	0x7,2
+135:              	resetbit(TRISA, 2);
+  025D    1683    SETB	0x3,5
+  025E    1105    CLRB	0x5,2
+136:              	resetbit(PORTA, 2);
+137:                  fan_check_time = 0;
+  025F    1283    CLRB	0x3,5
+  0260    1105    CLRB	0x5,2
+138:                  FAN_STATUS = FAN_STATUS_OFF;
+  0261    01F6    CLR	0x76
+139:              	//重置低电压检测
+140:              	lowVTime = 0;
+  0262    01AF    CLR	0x2F
+141:              	if (getbit(PORTB, 2) == 0) {
+  0263    0806    LD	A,0x6
+  0264    00F4    LD	0x74,A
+  0265    1003    CLRB	0x3,0
+  0266    0CF4    RRCR	0x74
+  0267    1003    CLRB	0x3,0
+  0268    0CF4    RRCR	0x74
+  0269    1874    SZB	0x74,0
+  026A    0008    RET
+142:              		Sleep_Mode();
+  026B    29F5    JP	0x1F5
+143:              	}
+144:                  
+145:              }
+146:              
+147:              
+148:              //检测风扇是否连接
+149:              void checkFan() {
+150:              	resetbit(TRISA, 1);
+  02E7    1683    SETB	0x3,5
+  02E8    1303    CLRB	0x3,6
+  02E9    1085    CLRB	0x5,1
+151:                  resetbit(PORTA, 1);
+  02EA    1283    CLRB	0x3,5
+  02EB    1085    CLRB	0x5,1
+152:                  //PC2设置为输出脚
+153:                  resetbit(TRISC, 2);
+  02EC    1683    SETB	0x3,5
+  02ED    1107    CLRB	0x7,2
+154:              	setbit(PORTA, 2);
+  02EE    1283    CLRB	0x3,5
+  02EF    1505    SETB	0x5,2
+155:                  T2CON = 0X04; //启动定时器2，溢出后启动PWM
+  02F0    3004    LDIA	0x4
+  02F1    0092    LD	0x12,A
+  02F2    0008    RET
+156:              
+157:                  //EN IN输出高电位，D1点亮，检测FAN DET，FAN DET为低电位则风扇正常工作，高电位则未连接
+158:                //  if (getbit(PORTB, 6) == 0) {
+159:                 //     FAN_STATUS = FAN_STATUS_ON;
+160:                 // } else {
+161:                  //    FAN_STATUS = FAN_STATUS_NONE;
+162:                 // }
+163:              	
+164:              	
+165:                  //没有检测到风扇
+166:                  //if (FAN_STATUS == FAN_STATUS_NONE) {
+167:                  //    fan_check_time++;
+168:                  //    if (fan_check_time == 3000) {
+169:                   //       closeFan();
+170:                    //      return;
+171:                   //   }
+172:                  //}
+173:              
 174:              
-175:              
+175:              }
 176:              
 177:              
-178:              //扫描按键
-179:              void scanKeys() {
-180:                  key1.key_addr_result = PORTB;
-  02F6    1283    CLRB	0x3,5
-  02F7    1303    CLRB	0x3,6
-  02F8    0806    LD	A,0x6
-  02F9    00B4    LD	0x34,A
-181:                  sacnKeyInput(&key1);
-  02FA    302F    LDIA	0x2F
-  02FB    2A0D    JP	0x20D
-182:                  
-183:                 
-184:              }
-185:              
-186:              //检测按键状态并处理
-187:              void checkKeys() {
-188:                  if (key_driver(&key1) == key_click) {
-  0256    302F    LDIA	0x2F
-  0257    2108    CALL	0x108
-  0258    3A01    XORIA	0x1
-  0259    1D03    SNZB	0x3,2
-  025A    2A64    JP	0x264
-189:                      //检测到按键了，检测风扇是否存在
-190:              
-191:                      if (FAN_STATUS == FAN_STATUS_ON) {
-  025B    0B78    SZDECA	0x78
-  025C    2A5F    JP	0x25F
-192:              			//按一下，风扇加档
-193:                          setFanLevel(1);
-  025D    3001    LDIA	0x1
-  025E    2989    JP	0x189
-194:                          
-195:                      } else {
-  025F    3000    LDIA	0x0
-196:                          FAN_STATUS = FAN_STATUS_ON;
-  0260    01F8    CLR	0x78
-  0261    0AF8    INCR	0x78
-197:              			setFanLevel(0);
-  0262    2189    CALL	0x189
-198:                          checkFan();
-  0263    2ACA    JP	0x2CA
-  0264    3002    LDIA	0x2
-  0265    0678    XORA	0x78
-  0266    1D03    SNZB	0x3,2
-  0267    0008    RET
-  0268    2A63    JP	0x263
-199:                      }
-200:                      return;
-201:                  } else if (FAN_STATUS == FAN_STATUS_NONE) {
-202:                      checkFan();
-203:                  }
-204:              
-205:              
-206:              }
+178:              
+179:              
+180:              //扫描按键
+181:              void scanKeys() {
+182:                  key1.key_addr_result = PORTB;
+  0318    1283    CLRB	0x3,5
+  0319    1303    CLRB	0x3,6
+  031A    0806    LD	A,0x6
+  031B    00B5    LD	0x35,A
+183:                  sacnKeyInput(&key1);
+  031C    3030    LDIA	0x30
+  031D    2A1C    JP	0x21C
+184:                  
+185:                 
+186:              }
+187:              
+188:              //检测按键状态并处理
+189:              void checkKeys() {
+190:                  if (key_driver(&key1) == key_click) {
+  0282    3030    LDIA	0x30
+  0283    2108    CALL	0x108
+  0284    3A01    XORIA	0x1
+  0285    1D03    SNZB	0x3,2
+  0286    2A90    JP	0x290
+191:                      //检测到按键了，检测风扇是否存在
+192:              
+193:                      if (FAN_STATUS == FAN_STATUS_ON) {
+  0287    0B76    SZDECA	0x76
+  0288    2A8B    JP	0x28B
+194:              			//按一下，风扇加档
+195:                          setFanLevel(1);
+  0289    3001    LDIA	0x1
+  028A    298A    JP	0x18A
+196:                          
+197:                      } else {
+  028B    3000    LDIA	0x0
+198:                          FAN_STATUS = FAN_STATUS_ON;
+  028C    01F6    CLR	0x76
+  028D    0AF6    INCR	0x76
+199:              			setFanLevel(0);
+  028E    218A    CALL	0x18A
+200:                          checkFan();
+  028F    2AE7    JP	0x2E7
+  0290    3002    LDIA	0x2
+  0291    0676    XORA	0x76
+  0292    1D03    SNZB	0x3,2
+  0293    0008    RET
+  0294    2A8F    JP	0x28F
+201:                      }
+202:                      return;
+203:                  } else if (FAN_STATUS == FAN_STATUS_NONE) {
+204:                      checkFan();
+205:                  }
+206:              
 207:              
-208:              
-209:              void main(void) {
-210:              	if (getbit(PORTB, 2) == 0) {
-  01C2    0806    LD	A,0x6
-  01C3    00C0    LD	0x40,A
-  01C4    1003    CLRB	0x3,0
-  01C5    0CC0    RRCR	0x40
+208:              }
+209:              
+210:              
+211:              void main(void) {
+212:              	if (getbit(PORTB, 2) == 0) {
+  01C4    0806    LD	A,0x6
+  01C5    00C1    LD	0x41,A
   01C6    1003    CLRB	0x3,0
-  01C7    0CC0    RRCR	0x40
-  01C8    1840    SZB	0x40,0
-  01C9    29CB    JP	0x1CB
-211:              		Sleep_Mode();
-  01CA    21ED    CALL	0x1ED
-212:              	}
-213:              	
-214:                  Init_Config();
-  01CB    222A    CALL	0x22A
-215:                  while (1) {
-216:                      //0.1毫秒检测一次
-217:                      if (time0Flag) {
-  01CC    0877    LD	A,0x77
-  01CD    1903    SZB	0x3,2
-  01CE    29D5    JP	0x1D5
-  01CF    0064    CLRWDT
-218:                          asm("clrwdt");
-219:                          time0Flag = 0;
-  01D0    01F7    CLR	0x77
-220:              			scanKeys();
-  01D1    22F6    CALL	0x2F6
-221:                          count10Ms++;
-  01D2    0AA8    INCR	0x28
-  01D3    1903    SZB	0x3,2
-  01D4    0AA9    INCR	0x29
-222:                      }
-223:              
-224:                      //10毫秒检测一次
-225:                      if (count10Ms == 100) {	
-  01D5    3064    LDIA	0x64
-  01D6    1283    CLRB	0x3,5
-  01D7    0628    XORA	0x28
-  01D8    0429    ORA	0x29
-  01D9    1D03    SNZB	0x3,2
-  01DA    29E5    JP	0x1E5
-226:              			countTime++;	
-  01DB    0AAA    INCR	0x2A
-  01DC    1903    SZB	0x3,2
-  01DD    0AAB    INCR	0x2B
-227:                          checkKeys();
-  01DE    2256    CALL	0x256
-228:                          count10Ms = 0;
-  01DF    1283    CLRB	0x3,5
-  01E0    1303    CLRB	0x3,6
-  01E1    01A8    CLR	0x28
-  01E2    01A9    CLR	0x29
-229:                          //检测USB状态
-230:                          checkUsbStatus();
-  01E3    214A    CALL	0x14A
-231:              			//检测内部电压
-232:              			readVrefADC();
-  01E4    22FC    CALL	0x2FC
-233:                      }
-234:              
-235:                      if (countTime == 101) {
-  01E5    3065    LDIA	0x65
-  01E6    062A    XORA	0x2A
-  01E7    042B    ORA	0x2B
-  01E8    1D03    SNZB	0x3,2
-  01E9    29CC    JP	0x1CC
-236:                          countTime = 0;
-  01EA    01AA    CLR	0x2A
-  01EB    01AB    CLR	0x2B
-  01EC    29CC    JP	0x1CC
-237:                      }
-238:              		
-239:                  }
-240:              
-241:              }
+  01C7    0CC1    RRCR	0x41
+  01C8    1003    CLRB	0x3,0
+  01C9    0CC1    RRCR	0x41
+  01CA    1841    SZB	0x41,0
+  01CB    29CD    JP	0x1CD
+213:              		Sleep_Mode();
+  01CC    21F5    CALL	0x1F5
+214:              	}
+215:              	
+216:                  Init_Config();
+  01CD    2239    CALL	0x239
+217:                  while (1) {
+218:                      //0.1毫秒检测一次
+219:                      if (time0Flag) {
+  01CE    0878    LD	A,0x78
+  01CF    1903    SZB	0x3,2
+  01D0    29D7    JP	0x1D7
+  01D1    0064    CLRWDT
+220:                          asm("clrwdt");
+221:                          time0Flag = 0;
+  01D2    01F8    CLR	0x78
+222:              			scanKeys();
+  01D3    2318    CALL	0x318
+223:                          count10Ms++;
+  01D4    0AA8    INCR	0x28
+  01D5    1903    SZB	0x3,2
+  01D6    0AA9    INCR	0x29
+224:                      }
+225:              
+226:                      //10毫秒检测一次
+227:                      if (count10Ms == 100) {	
+  01D7    3064    LDIA	0x64
+  01D8    1283    CLRB	0x3,5
+  01D9    1303    CLRB	0x3,6
+  01DA    0628    XORA	0x28
+  01DB    0429    ORA	0x29
+  01DC    1D03    SNZB	0x3,2
+  01DD    29E9    JP	0x1E9
+228:              			countTime++;
+  01DE    0AAA    INCR	0x2A
+  01DF    1903    SZB	0x3,2
+  01E0    0AAB    INCR	0x2B
+229:              			count500ms++;	
+  01E1    0AF7    INCR	0x77
+230:                          checkKeys();
+  01E2    2282    CALL	0x282
+231:                          count10Ms = 0;
+  01E3    1283    CLRB	0x3,5
+  01E4    1303    CLRB	0x3,6
+  01E5    01A8    CLR	0x28
+  01E6    01A9    CLR	0x29
+232:                          //检测USB状态
+233:                          checkUsbStatus();
+  01E7    214A    CALL	0x14A
+234:              			//检测内部电压
+235:              			readVrefADC();
+  01E8    231E    CALL	0x31E
+236:                      }
+237:              		
+238:              		if(count500ms == 50)
+  01E9    3032    LDIA	0x32
+  01EA    0677    XORA	0x77
+  01EB    1903    SZB	0x3,2
+239:              		{
+240:              			count500ms = 0;
+  01EC    01F7    CLR	0x77
+241:              		}
 242:              
-243:              void Init_Config() {
-244:              
-245:                  Init_System();
-  022A    2304    CALL	0x304
-  02EF    22D6    CALL	0x2D6
-246:                  Init_GPIO();
-  022B    227C    CALL	0x27C
-  02F0    2309    CALL	0x309
-247:                  Init_Interupt();
-  022C    22E8    CALL	0x2E8
-  02F1    2308    CALL	0x308
-248:                  Init_PWM();
-  022D    22AF    CALL	0x2AF
-  02F2    2307    CALL	0x307
-249:                  //设置唤醒
-250:                  IOCB = 0x04;
-251:                  TMR0 = 155;
-252:                  TO = 0;
-253:              
-254:                  //K1开关
-255:                  key1.key_index = 5;
-256:                  
-257:                  resetKey(&key1);
-  022E    2231    CALL	0x231
-  022F    228F    CALL	0x28F
-  02F3    2231    CALL	0x231
-  02F4    229F    CALL	0x29F
-258:              
-259:                  //设置IO方向
-260:                  TRISA = 0;
-261:                  TRISB = 0x7E;//1-6脚输入
-262:                  TRISC = 0;
-  0230    2A3A    JP	0x23A
-  02F5    2A3A    JP	0x23A
-263:              }
+243:                      if (countTime == 50) {
+  01ED    3032    LDIA	0x32
+  01EE    062A    XORA	0x2A
+  01EF    042B    ORA	0x2B
+  01F0    1D03    SNZB	0x3,2
+  01F1    29CE    JP	0x1CE
+244:                          countTime = 0;
+  01F2    01AA    CLR	0x2A
+  01F3    01AB    CLR	0x2B
+  01F4    29CE    JP	0x1CE
+245:                      }
+246:              		
+247:                  }
+248:              
+249:              }
+250:              
+251:              void Init_Config() {
+252:              	if(FAN_STATUS == FAN_STATUS_ON)
+  0239    0B76    SZDECA	0x76
+  023A    2A3C    JP	0x23C
+  023B    0008    RET
+  02F3    0B76    SZDECA	0x76
+  02F4    2AF6    JP	0x2F6
+  02F5    0008    RET
+253:              	{
+254:              		return;
+255:              	}
+256:                  Init_System();
+  023C    2326    CALL	0x326
+  02F6    22FF    CALL	0x2FF
+257:                  Init_GPIO();
+  023D    2295    CALL	0x295
+  02F7    232B    CALL	0x32B
+258:                  Init_Interupt();
+  023E    2311    CALL	0x311
+  02F8    232A    CALL	0x32A
+259:                  Init_PWM();
+  023F    22A8    CALL	0x2A8
+  02F9    2329    CALL	0x329
+260:                  //设置唤醒
+261:                  IOCB = 0x04;
+262:                  TMR0 = 155;
+263:                  TO = 0;
 264:              
-265:              
-266:              void Sleep_Mode() {
-267:                  INTCON = 0;
-  01ED    018B    CLR	0xB
-268:              
-269:                  OPTION_REG = 0;
-  01EE    1683    SETB	0x3,5
-  01EF    0181    CLR	0x1
-270:              
-271:                  TRISA = 0B00000000;        //关闭所有输出
-  01F0    0185    CLR	0x5
-272:                  PORTA = 0B00000000;
-  01F1    1283    CLRB	0x3,5
-  01F2    0185    CLR	0x5
-273:                  WPUA = 0B00000000;
-  01F3    1683    SETB	0x3,5
-  01F4    1703    SETB	0x3,6
-  01F5    018E    CLR	0xE
-274:              
-275:                  TRISB = 0B00100000;
-  01F6    3020    LDIA	0x20
-  01F7    1303    CLRB	0x3,6
-  01F8    0086    LD	0x6,A
-276:                  PORTB = 0B00000000;
-  01F9    1283    CLRB	0x3,5
-  01FA    0186    CLR	0x6
+265:                  //K1开关
+266:                  key1.key_index = 5;
+267:                  
+268:                  resetKey(&key1);
+  0240    2244    CALL	0x244
+  0241    22BA    CALL	0x2BA
+  02FA    2244    CALL	0x244
+  02FB    22CA    CALL	0x2CA
+269:              
+270:                  //设置IO方向
+271:                  TRISA = 0;
+272:                  TRISB = 0x7E;//1-6脚输入
+273:                  TRISC = 0;
+  0242    224E    CALL	0x24E
+  02FC    224E    CALL	0x24E
+274:              	Init_PWM();
+  0243    2AA9    JP	0x2A9
+  02FD    2329    CALL	0x329
+  02FE    0008    RET
+275:              }
+276:              
 277:              
-278:                  PORTB = 0;
-  01FB    0186    CLR	0x6
-279:                  WPUB = 0B00100000;         //RB5 上拉
-  01FC    1683    SETB	0x3,5
-  01FD    0095    LD	0x15,A
-280:              
-281:                  IOCB = 0B00100100;            //允许RB5 RB2的IO口电平变化中断
-  01FE    3024    LDIA	0x24
-  01FF    0096    LD	0x16,A
-282:                  RBIE = 1;                    //允许PORTB电平变化中断
-  0200    158B    SETB	0xB,3
-283:                  GIE = 1;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
-  0201    178B    SETB	0xB,7
-284:              
-285:                  ADCON0 = 0;                    //关闭所有模块
-  0202    1283    CLRB	0x3,5
-  0203    019F    CLR	0x1F
-286:              
-287:                  OSCCON = 0X70;                //配置振荡为16M,关闭WDT
-  0204    3070    LDIA	0x70
+278:              void Sleep_Mode() {
+279:              	FAN_STATUS = FAN_STATUS_OFF;
+  01F5    01F6    CLR	0x76
+280:                  INTCON = 0;
+  01F6    018B    CLR	0xB
+281:              
+282:                  OPTION_REG = 0;
+  01F7    1683    SETB	0x3,5
+  01F8    0181    CLR	0x1
+283:              
+284:                  TRISA = 0B00000000;        //关闭所有输出
+  01F9    0185    CLR	0x5
+285:                  PORTA = 0B00000001;
+  01FA    3001    LDIA	0x1
+  01FB    1283    CLRB	0x3,5
+  01FC    0085    LD	0x5,A
+286:                  WPUA = 0B00000000;
+  01FD    1683    SETB	0x3,5
+  01FE    1703    SETB	0x3,6
+  01FF    018E    CLR	0xE
+287:              
+288:                  TRISB = 0B00100100;
+  0200    3024    LDIA	0x24
+  0201    1303    CLRB	0x3,6
+  0202    0086    LD	0x6,A
+289:                  PORTB = 0B00000000;
+  0203    1283    CLRB	0x3,5
+  0204    0186    CLR	0x6
+290:              
+291:              	TRISC = 0B00000000;
   0205    1683    SETB	0x3,5
-  0206    008F    LD	0xF,A
-288:              	
-289:                  PORTB;                        //读PORTB值并锁存	
-  0207    1283    CLRB	0x3,5
-  0208    0806    LD	A,0x6
-  0209    0064    CLRWDT
-  020A    0063    STOP
-  020B    0000    NOP
-  020C    0008    RET
-290:              			
-291:                  asm("clrwdt");
-292:              
-293:                  asm("sleep");                //进入休眠模式
-294:              
-295:                  asm("nop");
-296:              	
-297:              	
-298:              
+  0206    0187    CLR	0x7
+292:                  PORTC = 0B00000010;
+  0207    3002    LDIA	0x2
+  0208    1283    CLRB	0x3,5
+  0209    0087    LD	0x7,A
+293:                 
+294:                  WPUB = 0B00100000;         //RB5 上拉
+  020A    3020    LDIA	0x20
+  020B    1683    SETB	0x3,5
+  020C    0095    LD	0x15,A
+295:              
+296:                  IOCB = 0B00100100;            //允许RB5 RB2的IO口电平变化中断
+  020D    3024    LDIA	0x24
+  020E    0096    LD	0x16,A
+297:                  RBIE = 1;                    //允许PORTB电平变化中断
+  020F    158B    SETB	0xB,3
+298:                  GIE = 1;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
+  0210    178B    SETB	0xB,7
 299:              
-300:              }
+300:                  ADCON0 = 0;                    //关闭所有模块
+  0211    1283    CLRB	0x3,5
+  0212    019F    CLR	0x1F
 301:              
-302:              
-303:              /***********************************************
-304:              函数名称：Timer0_Isr
-305:              函数功能：中断服务
-306:              入口参数：无
-307:              出口参数：无
-308:              备注：
-309:              ***********************************************/
-310:              void interrupt Timer0_Isr() {
-311:                  if (T0IF) {
-  0240    1D0B    SNZB	0xB,2
-  0241    2A49    JP	0x249
-312:                      //---------------------------------------
-313:                      TMR0 += 155;        //重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
-  0242    309B    LDIA	0x9B
-  0243    1283    CLRB	0x3,5
-  0244    1303    CLRB	0x3,6
-  0245    0781    ADDR	0x1
-314:                      //---------------------------------------
-315:              
-316:                      T0IF = 0;            //清中断标志位	
-  0246    110B    CLRB	0xB,2
-317:                      time0Flag = 1;
-  0247    01F7    CLR	0x77
-  0248    0AF7    INCR	0x77
-318:              
-319:                  }
-320:              
-321:                  if (RBIF) {
-  0249    1C0B    SNZB	0xB,0
-  024A    2A4D    JP	0x24D
-322:                      RBIF = 0;            //清中断标志
-  024B    100B    CLRB	0xB,0
-323:                      Init_Config();
-  024C    22EF    CALL	0x2EF
-  024D    0873    LD	A,0x73
-  024E    008A    LD	0xA,A
-  024F    0872    LD	A,0x72
-  0250    0084    LD	0x4,A
-  0251    0E71    SWAPA	0x71
-  0252    0083    LD	0x3,A
-  0253    0EFE    SWAPR	0x7E
-  0254    0E7E    SWAPA	0x7E
-  0255    0009    RETI
-324:                  }
-325:              }
+302:                  OSCCON = 0X70;                //配置振荡为16M,关闭WDT
+  0213    3070    LDIA	0x70
+  0214    1683    SETB	0x3,5
+  0215    008F    LD	0xF,A
+303:              	
+304:                  PORTB;                        //读PORTB值并锁存	
+  0216    1283    CLRB	0x3,5
+  0217    0806    LD	A,0x6
+  0218    0064    CLRWDT
+  0219    0063    STOP
+  021A    0000    NOP
+  021B    0008    RET
+305:              			
+306:                  asm("clrwdt");
+307:              
+308:                  asm("sleep");                //进入休眠模式
+309:              
+310:                  asm("nop");
+311:              	
+312:              	
+313:              
+314:              
+315:              }
+316:              
+317:              
+318:              /***********************************************
+319:              函数名称：Timer0_Isr
+320:              函数功能：中断服务
+321:              入口参数：无
+322:              出口参数：无
+323:              备注：
+324:              ***********************************************/
+325:              void interrupt Timer0_Isr() {
+326:                  if (T0IF) {
+  026C    1D0B    SNZB	0xB,2
+  026D    2A75    JP	0x275
+327:                      //---------------------------------------
+328:                      TMR0 += 155;        //重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+  026E    309B    LDIA	0x9B
+  026F    1283    CLRB	0x3,5
+  0270    1303    CLRB	0x3,6
+  0271    0781    ADDR	0x1
+329:                      //---------------------------------------
+330:              
+331:                      T0IF = 0;            //清中断标志位	
+  0272    110B    CLRB	0xB,2
+332:                      time0Flag = 1;
+  0273    01F8    CLR	0x78
+  0274    0AF8    INCR	0x78
+333:              
+334:                  }
+335:              
+336:                  if (RBIF) {
+  0275    1C0B    SNZB	0xB,0
+  0276    2A79    JP	0x279
+337:                      RBIF = 0;            //清中断标志
+  0277    100B    CLRB	0xB,0
+338:                      Init_Config();
+  0278    22F3    CALL	0x2F3
+  0279    0873    LD	A,0x73
+  027A    008A    LD	0xA,A
+  027B    0872    LD	A,0x72
+  027C    0084    LD	0x4,A
+  027D    0E71    SWAPA	0x71
+  027E    0083    LD	0x3,A
+  027F    0EFE    SWAPR	0x7E
+  0280    0E7E    SWAPA	0x7E
+  0281    0009    RETI
+339:                  }
+340:              }
 ---- E:\project\project0508\scm\n9_fan_no_led\scankey.c ----------------------------------------------------------------------
 1:                #include "scankey.h"
 2:                
 3:                void sacnKeyInput(struct Keys *key) {
-  020D    00B6    LD	0x36,A
+  021C    00B7    LD	0x37,A
 4:                    key->key_input = getbit(key->key_addr_result, key->key_index);
-  020E    3E05    ADDIA	0x5
-  020F    0084    LD	0x4,A
-  0210    1383    CLRB	0x3,7
-  0211    0800    LD	A,0x0
-  0212    00F4    LD	0x74,A
-  0213    0836    LD	A,0x36
-  0214    3E06    ADDIA	0x6
-  0215    0084    LD	0x4,A
-  0216    0A00    INCA	0x0
-  0217    2A1A    JP	0x21A
-  0218    1003    CLRB	0x3,0
-  0219    0CF4    RRCR	0x74
-  021A    3EFF    ADDIA	0xFF
-  021B    1D03    SNZB	0x3,2
-  021C    2A18    JP	0x218
-  021D    0874    LD	A,0x74
-  021E    00F5    LD	0x75,A
-  021F    0836    LD	A,0x36
-  0220    3E04    ADDIA	0x4
-  0221    0084    LD	0x4,A
-  0222    0875    LD	A,0x75
-  0223    0080    LD	0x0,A
-  0224    0836    LD	A,0x36
-  0225    3E04    ADDIA	0x4
-  0226    0084    LD	0x4,A
-  0227    3001    LDIA	0x1
-  0228    0580    ANDR	0x0
-  0229    0008    RET
+  021D    3E05    ADDIA	0x5
+  021E    0084    LD	0x4,A
+  021F    1383    CLRB	0x3,7
+  0220    0800    LD	A,0x0
+  0221    00F4    LD	0x74,A
+  0222    0837    LD	A,0x37
+  0223    3E06    ADDIA	0x6
+  0224    0084    LD	0x4,A
+  0225    0A00    INCA	0x0
+  0226    2A29    JP	0x229
+  0227    1003    CLRB	0x3,0
+  0228    0CF4    RRCR	0x74
+  0229    3EFF    ADDIA	0xFF
+  022A    1D03    SNZB	0x3,2
+  022B    2A27    JP	0x227
+  022C    0874    LD	A,0x74
+  022D    00F5    LD	0x75,A
+  022E    0837    LD	A,0x37
+  022F    3E04    ADDIA	0x4
+  0230    0084    LD	0x4,A
+  0231    0875    LD	A,0x75
+  0232    0080    LD	0x0,A
+  0233    0837    LD	A,0x37
+  0234    3E04    ADDIA	0x4
+  0235    0084    LD	0x4,A
+  0236    3001    LDIA	0x1
+  0237    0580    ANDR	0x0
+  0238    0008    RET
 5:                
 6:                }
 7:                
 8:                
 9:                unsigned char key_driver(struct Keys *key) {
-  0108    00B8    LD	0x38,A
+  0108    00B9    LD	0x39,A
 10:               
 11:               
 12:                   unsigned char key_return = key_no;
-  0109    01B6    CLR	0x36
+  0109    01B7    CLR	0x37
 13:                   unsigned char key_read = key->key_input;  //read the I/O states
   010A    3E04    ADDIA	0x4
   010B    0084    LD	0x4,A
   010C    1383    CLRB	0x3,7
   010D    0800    LD	A,0x0
-  010E    00B7    LD	0x37,A
+  010E    00B8    LD	0x38,A
 14:               
 15:                   switch (key->key_state_buffer1) {
   010F    293B    JP	0x13B
 16:                       case key_state_0:
 17:                           if (key_read == 0) {
-  0110    0837    LD	A,0x37
+  0110    0838    LD	A,0x38
   0111    1D03    SNZB	0x3,2
   0112    2948    JP	0x148
 18:                               key->key_state_buffer1 = key_state_1;
-  0113    0A38    INCA	0x38
+  0113    0A39    INCA	0x39
   0114    0084    LD	0x4,A
   0115    0180    CLR	0x0
   0116    0A80    INCR	0x0
@@ -684,15 +728,15 @@
 23:               
 24:                       case key_state_1:
 25:                           if (key_read == 0) {
-  0118    0837    LD	A,0x37
+  0118    0838    LD	A,0x38
   0119    1D03    SNZB	0x3,2
   011A    2937    JP	0x137
 26:                               key->key_timer_cnt1 = 0;
-  011B    0838    LD	A,0x38
+  011B    0839    LD	A,0x39
   011C    0084    LD	0x4,A
   011D    0180    CLR	0x0
 27:                               key->key_state_buffer1 = key_state_2;
-  011E    0A38    INCA	0x38
+  011E    0A39    INCA	0x39
   011F    0084    LD	0x4,A
   0120    3002    LDIA	0x2
   0121    2933    JP	0x133
@@ -708,14 +752,14 @@
 37:               
 38:                       case key_state_2:
 39:                           if (key_read == 1) {
-  0122    0B37    SZDECA	0x37
+  0122    0B38    SZDECA	0x38
   0123    2927    JP	0x127
 40:                               key_return = key_click;  //按键抬起，产生一次click操作
-  0124    01B6    CLR	0x36
-  0125    0AB6    INCR	0x36
+  0124    01B7    CLR	0x37
+  0125    0AB7    INCR	0x37
   0126    2937    JP	0x137
 41:                               key->key_state_buffer1 = key_state_0;  //转换到按键初始状态
-  0127    0838    LD	A,0x38
+  0127    0839    LD	A,0x39
   0128    0084    LD	0x4,A
   0129    3064    LDIA	0x64
   012A    0A80    INCR	0x0
@@ -726,9 +770,9 @@
 43:                           {
 44:                               key_return = key_long;  //送回长按事件
   012E    3003    LDIA	0x3
-  012F    00B6    LD	0x36,A
+  012F    00B7    LD	0x37,A
 45:                               key->key_state_buffer1 = key_state_3;  //转换到等待按键释放状态
-  0130    0A38    INCA	0x38
+  0130    0A39    INCA	0x39
   0131    0084    LD	0x4,A
   0132    3003    LDIA	0x3
   0133    0080    LD	0x0,A
@@ -739,15 +783,15 @@
 49:               
 50:                       case key_state_3:  //等待按键释放
 51:                           if (key_read == 1)  //按键释放
-  0135    0B37    SZDECA	0x37
+  0135    0B38    SZDECA	0x38
   0136    2948    JP	0x148
 52:                           {
 53:                               key->key_state_buffer1 = key_state_0;  //切回按键初始状态
-  0137    0A38    INCA	0x38
+  0137    0A39    INCA	0x39
   0138    0084    LD	0x4,A
   0139    0180    CLR	0x0
   013A    2948    JP	0x148
-  013B    0A38    INCA	0x38
+  013B    0A39    INCA	0x39
   013C    0084    LD	0x4,A
   013D    0800    LD	A,0x0
   013E    0084    LD	0x4,A
@@ -757,7 +801,7 @@
   0142    2948    JP	0x148
   0143    3003    LDIA	0x3
   0144    008A    LD	0xA,A
-  0145    3000    LDIA	0x0
+  0145    3022    LDIA	0x22
   0146    0704    ADDA	0x4
   0147    0082    LD	0x2,A
 54:                           }
@@ -765,7 +809,7 @@
 56:                           break;
 57:                   }
 58:                   return key_return;
-  0148    0836    LD	A,0x36
+  0148    0837    LD	A,0x37
   0149    0008    RET
 59:               }
 60:               
@@ -809,39 +853,39 @@
 98:               
 99:               
 100:              void resetKey(struct Keys *key) {
-  028F    00F4    LD	0x74,A
-  029F    00F0    LD	0x70,A
+  02BA    00F4    LD	0x74,A
+  02CA    00F0    LD	0x70,A
 101:                  key->key_timer_cnt1 = key->key_timer_cnt2 = key->key_state_buffer1 = key->key_state_buffer2 = 0;
-  0290    3E03    ADDIA	0x3
-  0291    0084    LD	0x4,A
-  0292    1383    CLRB	0x3,7
-  0293    0180    CLR	0x0
-  0294    0A74    INCA	0x74
-  0295    0084    LD	0x4,A
-  0296    0180    CLR	0x0
-  0297    0874    LD	A,0x74
-  0298    3E02    ADDIA	0x2
-  0299    0084    LD	0x4,A
-  029A    0180    CLR	0x0
-  029B    0874    LD	A,0x74
-  029C    0084    LD	0x4,A
-  029D    0180    CLR	0x0
-  029E    0008    RET
-  02A0    3E03    ADDIA	0x3
-  02A1    0084    LD	0x4,A
-  02A2    1383    CLRB	0x3,7
-  02A3    0180    CLR	0x0
-  02A4    0A70    INCA	0x70
-  02A5    0084    LD	0x4,A
-  02A6    0180    CLR	0x0
-  02A7    0870    LD	A,0x70
-  02A8    3E02    ADDIA	0x2
-  02A9    0084    LD	0x4,A
-  02AA    0180    CLR	0x0
-  02AB    0870    LD	A,0x70
-  02AC    0084    LD	0x4,A
-  02AD    0180    CLR	0x0
-  02AE    0008    RET
+  02BB    3E03    ADDIA	0x3
+  02BC    0084    LD	0x4,A
+  02BD    1383    CLRB	0x3,7
+  02BE    0180    CLR	0x0
+  02BF    0A74    INCA	0x74
+  02C0    0084    LD	0x4,A
+  02C1    0180    CLR	0x0
+  02C2    0874    LD	A,0x74
+  02C3    3E02    ADDIA	0x2
+  02C4    0084    LD	0x4,A
+  02C5    0180    CLR	0x0
+  02C6    0874    LD	A,0x74
+  02C7    0084    LD	0x4,A
+  02C8    0180    CLR	0x0
+  02C9    0008    RET
+  02CB    3E03    ADDIA	0x3
+  02CC    0084    LD	0x4,A
+  02CD    1383    CLRB	0x3,7
+  02CE    0180    CLR	0x0
+  02CF    0A70    INCA	0x70
+  02D0    0084    LD	0x4,A
+  02D1    0180    CLR	0x0
+  02D2    0870    LD	A,0x70
+  02D3    3E02    ADDIA	0x2
+  02D4    0084    LD	0x4,A
+  02D5    0180    CLR	0x0
+  02D6    0870    LD	A,0x70
+  02D7    0084    LD	0x4,A
+  02D8    0180    CLR	0x0
+  02D9    0008    RET
 102:              }
 ---- E:\project\project0508\scm\n9_fan_no_led\adc.c ----------------------------------------------------------------------
 1:                #include "adc.h"
@@ -855,7 +899,7 @@
 9:                	      采样10次,取中间八次的平均值为采样结果存于adresult中
 10:               **********************************************************/
 11:               void ADC_Sample(unsigned char adch)
-  0019    00BA    LD	0x3A,A
+  0019    00BB    LD	0x3B,A
 12:               {
 13:               	static unsigned long adsum = 0;
 14:               	static unsigned int admin = 0,admax = 0;
@@ -866,16 +910,16 @@
   001B    019F    CLR	0x1F
 18:               	ADCON0 = 0X41 | (adch << 2);	//16分频
   001C    1283    CLRB	0x3,5
-  001D    083A    LD	A,0x3A
-  001E    00B6    LD	0x36,A
+  001D    083B    LD	A,0x3B
+  001E    00B7    LD	0x37,A
   001F    3001    LDIA	0x1
   0020    1003    CLRB	0x3,0
-  0021    0DB6    RLCR	0x36
+  0021    0DB7    RLCR	0x37
   0022    3EFF    ADDIA	0xFF
   0023    1003    CLRB	0x3,0
   0024    1D03    SNZB	0x3,2
   0025    2821    JP	0x21
-  0026    0D36    RLCA	0x36
+  0026    0D37    RLCA	0x37
   0027    3841    ORIA	0x41
   0028    009F    LD	0x1F,A
   0029    0000    NOP
@@ -888,13 +932,13 @@
   002D    149F    SETB	0x1F,1
 22:               
 23:               	unsigned char i = 0;
-  002E    01BB    CLR	0x3B
+  002E    01BC    CLR	0x3C
 24:               	while(GODONE)
   002F    1C9F    SNZB	0x1F,1
   0030    2834    JP	0x34
 25:               	{
 26:               		if(0 == (--i))
-  0031    0BBB    SZDECR	0x3B
+  0031    0BBC    SZDECR	0x3C
   0032    282F    JP	0x2F
   0033    0008    RET
 27:               			return;
@@ -902,24 +946,24 @@
 29:               	
 30:               	ad_temp=(ADRESH<<4)+(ADRESL>>4);	//计算12位AD值
   0034    081E    LD	A,0x1E
-  0035    00BC    LD	0x3C,A
-  0036    01BD    CLR	0x3D
-  0037    0EBC    SWAPR	0x3C
-  0038    0EBD    SWAPR	0x3D
+  0035    00BD    LD	0x3D,A
+  0036    01BE    CLR	0x3E
+  0037    0EBD    SWAPR	0x3D
+  0038    0EBE    SWAPR	0x3E
   0039    30F0    LDIA	0xF0
-  003A    05BD    ANDR	0x3D
-  003B    083C    LD	A,0x3C
+  003A    05BE    ANDR	0x3E
+  003B    083D    LD	A,0x3D
   003C    390F    ANDIA	0xF
-  003D    04BD    ORR	0x3D
+  003D    04BE    ORR	0x3E
   003E    30F0    LDIA	0xF0
-  003F    05BC    ANDR	0x3C
+  003F    05BD    ANDR	0x3D
   0040    1683    SETB	0x3,5
   0041    0E1E    SWAPA	0x1E
   0042    390F    ANDIA	0xF
   0043    1283    CLRB	0x3,5
-  0044    07BC    ADDR	0x3C
+  0044    07BD    ADDR	0x3D
   0045    1803    SZB	0x3,0
-  0046    0ABD    INCR	0x3D
+  0046    0ABE    INCR	0x3E
 31:               	
 32:               	if(0 == admax)
   0047    0824    LD	A,0x24
@@ -933,11 +977,11 @@
 35:               		admin = ad_temp;
 36:               	}
 37:               	else if(ad_temp > admax)
-  004D    083D    LD	A,0x3D
+  004D    083E    LD	A,0x3E
   004E    0225    SUBA	0x25
   004F    1D03    SNZB	0x3,2
   0050    2853    JP	0x53
-  0051    083C    LD	A,0x3C
+  0051    083D    LD	A,0x3D
   0052    0224    SUBA	0x24
   0053    1803    SZB	0x3,0
   0054    2857    JP	0x57
@@ -946,41 +990,41 @@
   0056    2863    JP	0x63
 39:               	else if(ad_temp < admin)
   0057    0827    LD	A,0x27
-  0058    023D    SUBA	0x3D
+  0058    023E    SUBA	0x3E
   0059    1D03    SNZB	0x3,2
   005A    285D    JP	0x5D
   005B    0826    LD	A,0x26
-  005C    023C    SUBA	0x3C
+  005C    023D    SUBA	0x3D
   005D    1803    SZB	0x3,0
   005E    2863    JP	0x63
 40:               		admin = ad_temp;				//AD采样最小值
-  005F    083D    LD	A,0x3D
+  005F    083E    LD	A,0x3E
   0060    00A7    LD	0x27,A
-  0061    083C    LD	A,0x3C
+  0061    083D    LD	A,0x3D
   0062    00A6    LD	0x26,A
 41:               	
 42:               	adsum += ad_temp;
-  0063    083C    LD	A,0x3C
-  0064    00B6    LD	0x36,A
-  0065    083D    LD	A,0x3D
-  0066    00B7    LD	0x37,A
-  0067    01B8    CLR	0x38
-  0068    01B9    CLR	0x39
-  0069    0836    LD	A,0x36
+  0063    083D    LD	A,0x3D
+  0064    00B7    LD	0x37,A
+  0065    083E    LD	A,0x3E
+  0066    00B8    LD	0x38,A
+  0067    01B9    CLR	0x39
+  0068    01BA    CLR	0x3A
+  0069    0837    LD	A,0x37
   006A    07A0    ADDR	0x20
-  006B    0837    LD	A,0x37
+  006B    0838    LD	A,0x38
   006C    1103    CLRB	0x3,2
   006D    1803    SZB	0x3,0
   006E    3E01    ADDIA	0x1
   006F    1D03    SNZB	0x3,2
   0070    07A1    ADDR	0x21
-  0071    0838    LD	A,0x38
+  0071    0839    LD	A,0x39
   0072    1103    CLRB	0x3,2
   0073    1803    SZB	0x3,0
   0074    3E01    ADDIA	0x1
   0075    1D03    SNZB	0x3,2
   0076    07A2    ADDR	0x22
-  0077    0839    LD	A,0x39
+  0077    083A    LD	A,0x3A
   0078    1103    CLRB	0x3,2
   0079    1803    SZB	0x3,0
   007A    3E01    ADDIA	0x1
@@ -995,42 +1039,42 @@
 44:               	{
 45:               		adsum -= admax;
   0082    0824    LD	A,0x24
-  0083    00B6    LD	0x36,A
+  0083    00B7    LD	0x37,A
   0084    0825    LD	A,0x25
   0085    20AF    CALL	0xAF
   0086    1C03    SNZB	0x3,0
-  0087    0F39    SZINCA	0x39
+  0087    0F3A    SZINCA	0x3A
   0088    02A3    SUBR	0x23
 46:               		adsum -= admin;
   0089    0826    LD	A,0x26
-  008A    00B6    LD	0x36,A
+  008A    00B7    LD	0x37,A
   008B    0827    LD	A,0x27
   008C    20AF    CALL	0xAF
   008D    1C03    SNZB	0x3,0
-  008E    0F39    SZINCA	0x39
+  008E    0F3A    SZINCA	0x3A
   008F    02A3    SUBR	0x23
 47:               		
 48:               		adresult = adsum >> 3;		//8次平均值作为最终结果
   0090    0820    LD	A,0x20
-  0091    00B6    LD	0x36,A
+  0091    00B7    LD	0x37,A
   0092    0821    LD	A,0x21
-  0093    00B7    LD	0x37,A
+  0093    00B8    LD	0x38,A
   0094    0822    LD	A,0x22
-  0095    00B8    LD	0x38,A
+  0095    00B9    LD	0x39,A
   0096    0823    LD	A,0x23
-  0097    00B9    LD	0x39,A
+  0097    00BA    LD	0x3A,A
   0098    3003    LDIA	0x3
   0099    1003    CLRB	0x3,0
-  009A    0CB9    RRCR	0x39
-  009B    0CB8    RRCR	0x38
-  009C    0CB7    RRCR	0x37
-  009D    0CB6    RRCR	0x36
+  009A    0CBA    RRCR	0x3A
+  009B    0CB9    RRCR	0x39
+  009C    0CB8    RRCR	0x38
+  009D    0CB7    RRCR	0x37
   009E    3EFF    ADDIA	0xFF
   009F    1D03    SNZB	0x3,2
   00A0    2899    JP	0x99
-  00A1    0837    LD	A,0x37
+  00A1    0838    LD	A,0x38
   00A2    00AD    LD	0x2D,A
-  00A3    0836    LD	A,0x36
+  00A3    0837    LD	A,0x37
   00A4    00AC    LD	0x2C,A
 49:               		
 50:               		adsum = 0;
@@ -1076,34 +1120,34 @@
 80:               备    注：
 81:               ***********************************************************/
 82:               void DelayXms(unsigned char x)
-  02BD    1283    CLRB	0x3,5
-  02BE    1303    CLRB	0x3,6
-  02BF    00B6    LD	0x36,A
+  02DA    1283    CLRB	0x3,5
+  02DB    1303    CLRB	0x3,6
+  02DC    00B7    LD	0x37,A
 83:               {
 84:               	unsigned char i,j;
 85:               	for(i=x;i>0;i--)
-  02C0    00B7    LD	0x37,A
-  02C1    0837    LD	A,0x37
-  02C2    1903    SZB	0x3,2
-  02C3    0008    RET
+  02DD    00B8    LD	0x38,A
+  02DE    0838    LD	A,0x38
+  02DF    1903    SZB	0x3,2
+  02E0    0008    RET
 86:               		for(j=153;j>0;j--);
-  02C4    3099    LDIA	0x99
-  02C5    00B8    LD	0x38,A
-  02C6    0BB8    SZDECR	0x38
-  02C7    2AC6    JP	0x2C6
-  02C8    03B7    DECR	0x37
-  02C9    2AC1    JP	0x2C1
+  02E1    3099    LDIA	0x99
+  02E2    00B9    LD	0x39,A
+  02E3    0BB9    SZDECR	0x39
+  02E4    2AE3    JP	0x2E3
+  02E5    03B8    DECR	0x38
+  02E6    2ADE    JP	0x2DE
 87:               }
 88:               
 89:               //读取内部电压
 90:               unsigned int readVrefADC()
 91:               {
 92:               	DelayXms(1);
-  02FC    3001    LDIA	0x1
-  02FD    22BD    CALL	0x2BD
+  031E    3001    LDIA	0x1
+  031F    22DA    CALL	0x2DA
 93:               	ADC_Sample(15);
-  02FE    300F    LDIA	0xF
-  02FF    2819    JP	0x19
+  0320    300F    LDIA	0xF
+  0321    2819    JP	0x19
 94:               	//unsigned char result;
 95:               		
 96:               	//result = ADC_Result(15);
@@ -1116,74 +1160,74 @@
 4:                #ifdef __PICC__
 5:                #warning TODO: update cgpic and this file to use the other prototype
 6:                __awdiv(signed int divisor, signed int dividend)
-  00C3    01BB    CLR	0x3B
-  00C4    1FB7    SNZB	0x37,7
+  00C3    01BC    CLR	0x3C
+  00C4    1FB8    SNZB	0x38,7
   00C5    28CD    JP	0xCD
-  00C6    09B6    COMR	0x36
-  00C7    09B7    COMR	0x37
-  00C8    0AB6    INCR	0x36
+  00C6    09B7    COMR	0x37
+  00C7    09B8    COMR	0x38
+  00C8    0AB7    INCR	0x37
   00C9    1903    SZB	0x3,2
-  00CA    0AB7    INCR	0x37
-  00CB    01BB    CLR	0x3B
-  00CC    0ABB    INCR	0x3B
-  00CD    1FB9    SNZB	0x39,7
+  00CA    0AB8    INCR	0x38
+  00CB    01BC    CLR	0x3C
+  00CC    0ABC    INCR	0x3C
+  00CD    1FBA    SNZB	0x3A,7
   00CE    28D6    JP	0xD6
-  00CF    09B8    COMR	0x38
-  00D0    09B9    COMR	0x39
-  00D1    0AB8    INCR	0x38
+  00CF    09B9    COMR	0x39
+  00D0    09BA    COMR	0x3A
+  00D1    0AB9    INCR	0x39
   00D2    1903    SZB	0x3,2
-  00D3    0AB9    INCR	0x39
+  00D3    0ABA    INCR	0x3A
   00D4    3001    LDIA	0x1
-  00D5    06BB    XORR	0x3B
-  00D6    01BC    CLR	0x3C
-  00D7    01BD    CLR	0x3D
-  00D8    0836    LD	A,0x36
-  00D9    0437    ORA	0x37
+  00D5    06BC    XORR	0x3C
+  00D6    01BD    CLR	0x3D
+  00D7    01BE    CLR	0x3E
+  00D8    0837    LD	A,0x37
+  00D9    0438    ORA	0x38
   00DA    1903    SZB	0x3,2
   00DB    28FB    JP	0xFB
-  00DC    01BA    CLR	0x3A
-  00DD    0ABA    INCR	0x3A
-  00DE    1BB7    SZB	0x37,7
+  00DC    01BB    CLR	0x3B
+  00DD    0ABB    INCR	0x3B
+  00DE    1BB8    SZB	0x38,7
   00DF    28E4    JP	0xE4
   00E0    1003    CLRB	0x3,0
-  00E1    0DB6    RLCR	0x36
-  00E2    0DB7    RLCR	0x37
+  00E1    0DB7    RLCR	0x37
+  00E2    0DB8    RLCR	0x38
   00E3    28DD    JP	0xDD
   00E4    1003    CLRB	0x3,0
-  00E5    0DBC    RLCR	0x3C
-  00E6    0DBD    RLCR	0x3D
-  00E7    0837    LD	A,0x37
-  00E8    0239    SUBA	0x39
+  00E5    0DBD    RLCR	0x3D
+  00E6    0DBE    RLCR	0x3E
+  00E7    0838    LD	A,0x38
+  00E8    023A    SUBA	0x3A
   00E9    1D03    SNZB	0x3,2
   00EA    28ED    JP	0xED
-  00EB    0836    LD	A,0x36
-  00EC    0238    SUBA	0x38
+  00EB    0837    LD	A,0x37
+  00EC    0239    SUBA	0x39
   00ED    1C03    SNZB	0x3,0
   00EE    28F7    JP	0xF7
-  00EF    0836    LD	A,0x36
-  00F0    02B8    SUBR	0x38
-  00F1    0837    LD	A,0x37
+  00EF    0837    LD	A,0x37
+  00F0    02B9    SUBR	0x39
+  00F1    0838    LD	A,0x38
   00F2    1C03    SNZB	0x3,0
-  00F3    03B9    DECR	0x39
-  00F4    02B9    SUBR	0x39
-  00F5    143C    SETB	0x3C,0
+  00F3    03BA    DECR	0x3A
+  00F4    02BA    SUBR	0x3A
+  00F5    143D    SETB	0x3D,0
   00F6    1003    CLRB	0x3,0
-  00F7    0CB7    RRCR	0x37
-  00F8    0CB6    RRCR	0x36
-  00F9    0BBA    SZDECR	0x3A
+  00F7    0CB8    RRCR	0x38
+  00F8    0CB7    RRCR	0x37
+  00F9    0BBB    SZDECR	0x3B
   00FA    28E4    JP	0xE4
-  00FB    083B    LD	A,0x3B
+  00FB    083C    LD	A,0x3C
   00FC    1903    SZB	0x3,2
   00FD    2903    JP	0x103
-  00FE    09BC    COMR	0x3C
-  00FF    09BD    COMR	0x3D
-  0100    0ABC    INCR	0x3C
+  00FE    09BD    COMR	0x3D
+  00FF    09BE    COMR	0x3E
+  0100    0ABD    INCR	0x3D
   0101    1903    SZB	0x3,2
-  0102    0ABD    INCR	0x3D
-  0103    083D    LD	A,0x3D
-  0104    00B7    LD	0x37,A
-  0105    083C    LD	A,0x3C
-  0106    00B6    LD	0x36,A
+  0102    0ABE    INCR	0x3E
+  0103    083E    LD	A,0x3E
+  0104    00B8    LD	0x38,A
+  0105    083D    LD	A,0x3D
+  0106    00B7    LD	0x37,A
   0107    0008    RET
 7:                #else
 8:                __awdiv(signed int dividend, signed int divisor)
@@ -1225,17 +1269,17 @@
 1:                #include "init.h"
 2:                
 3:                void Init_System() {
-  02D6    0000    NOP
-  02D7    0064    CLRWDT
-  0304    0000    NOP
-  0305    0064    CLRWDT
+  02FF    0000    NOP
+  0300    0064    CLRWDT
+  0326    0000    NOP
+  0327    0064    CLRWDT
 4:                    asm("nop");
 5:                    asm("clrwdt");
 6:                    INTCON = 0;                    //系统初始化
 7:                    OSCCON = 0X71;                //配置振荡为8M,开 WDT
 8:                    OPTION_REG = 0x00;        //Timer0使用内部时钟Focs/4，预分频比为1:2
-  02D8    2AD9    JP	0x2D9
-  0306    2AD9    JP	0x2D9
+  0301    2B02    JP	0x302
+  0328    2B02    JP	0x302
 9:                
 10:               }
 11:               
@@ -1251,8 +1295,8 @@
 21:                   PORTB = 0xFF;
 22:                   PORTC = 0xFF;
 23:                   IOCB = 0x00;
-  027C    2A7D    JP	0x27D
-  0309    2A7D    JP	0x27D
+  0295    2A96    JP	0x296
+  032B    2A96    JP	0x296
 24:               
 25:               }
 26:               
@@ -1260,8 +1304,8 @@
 28:                   OPTION_REG = 0x00;        //Timer0使用内部时钟Focs/4，预分频比为1:2
 29:                   TMR0 = 0;                //赋予初始值
 30:                   INTCON = 0xE0;            //允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
-  02E8    2AE9    JP	0x2E9
-  0308    2AE9    JP	0x2E9
+  0311    2B12    JP	0x312
+  032A    2B12    JP	0x312
 31:               
 32:               }
 ---- stringtab ------------------------------------------------------------------
@@ -1270,15 +1314,15 @@
   000C    280D    JP	0xD
 ---- start_initialization ------------------------------------------------------------------
   000D    3001    LDIA	0x1
-  000E    00F8    LD	0x78,A
-  000F    00F9    LD	0x79,A
-  0010    3020    LDIA	0x20
-  0011    1383    CLRB	0x3,7
-  0012    0084    LD	0x4,A
-  0013    3036    LDIA	0x36
-  0014    22E0    CALL	0x2E0
-  0015    01F6    CLR	0x76
-  0016    01F7    CLR	0x77
+  000E    00F9    LD	0x79,A
+  000F    3020    LDIA	0x20
+  0010    1383    CLRB	0x3,7
+  0011    0084    LD	0x4,A
+  0012    3037    LDIA	0x37
+  0013    2309    CALL	0x309
+  0014    01F6    CLR	0x76
+  0015    01F7    CLR	0x77
+  0016    01F8    CLR	0x78
 ---- interrupt_function_enter ----------------------------------------------------------
   0004    00FE    LD	0x7E,A
   0005    0E03    SWAPA	0x3
@@ -1287,98 +1331,103 @@
   0008    00F2    LD	0x72,A
   0009    080A    LD	A,0xA
   000A    00F3    LD	0x73,A
-  000B    2A40    JP	0x240
+  000B    2A6C    JP	0x26C
 ---- common_function ------------------------------------------------------------------
   0017    0183    CLR	0x3
-  0018    29C2    JP	0x1C2
-  00AF    00B7    LD	0x37,A
-  00B0    01B8    CLR	0x38
-  00B1    01B9    CLR	0x39
-  00B2    0836    LD	A,0x36
+  0018    29C4    JP	0x1C4
+  00AF    00B8    LD	0x38,A
+  00B0    01B9    CLR	0x39
+  00B1    01BA    CLR	0x3A
+  00B2    0837    LD	A,0x37
   00B3    02A0    SUBR	0x20
-  00B4    0837    LD	A,0x37
+  00B4    0838    LD	A,0x38
   00B5    1C03    SNZB	0x3,0
-  00B6    0F37    SZINCA	0x37
+  00B6    0F38    SZINCA	0x38
   00B7    02A1    SUBR	0x21
-  00B8    0838    LD	A,0x38
+  00B8    0839    LD	A,0x39
   00B9    1C03    SNZB	0x3,0
-  00BA    0F38    SZINCA	0x38
+  00BA    0F39    SZINCA	0x39
   00BB    02A2    SUBR	0x22
-  00BC    0839    LD	A,0x39
+  00BC    083A    LD	A,0x3A
   00BD    0008    RET
-  00BE    083D    LD	A,0x3D
+  00BE    083E    LD	A,0x3E
   00BF    00A5    LD	0x25,A
-  00C0    083C    LD	A,0x3C
+  00C0    083D    LD	A,0x3D
   00C1    00A4    LD	0x24,A
   00C2    0008    RET
-  0231    3004    LDIA	0x4
-  0232    0096    LD	0x16,A
-  0233    309B    LDIA	0x9B
-  0234    1283    CLRB	0x3,5
-  0235    0081    LD	0x1,A
-  0236    1203    CLRB	0x3,4
-  0237    3005    LDIA	0x5
-  0238    00B5    LD	0x35,A
-  0239    342F    RET	0x2F
-  023A    1683    SETB	0x3,5
-  023B    0185    CLR	0x5
-  023C    307E    LDIA	0x7E
-  023D    0086    LD	0x6,A
-  023E    0187    CLR	0x7
-  023F    0008    RET
-  027D    0185    CLR	0x5
-  027E    0186    CLR	0x6
-  027F    0187    CLR	0x7
-  0280    30FF    LDIA	0xFF
-  0281    1703    SETB	0x3,6
-  0282    008E    LD	0xE,A
-  0283    1303    CLRB	0x3,6
-  0284    0095    LD	0x15,A
-  0285    1703    SETB	0x3,6
-  0286    008F    LD	0xF,A
-  0287    1283    CLRB	0x3,5
-  0288    1303    CLRB	0x3,6
-  0289    0085    LD	0x5,A
-  028A    0086    LD	0x6,A
-  028B    0087    LD	0x7,A
-  028C    1683    SETB	0x3,5
-  028D    0196    CLR	0x16
-  028E    0008    RET
-  02B0    300F    LDIA	0xF
-  02B1    0097    LD	0x17,A
-  02B2    0192    CLR	0x12
-  02B3    3007    LDIA	0x7
+  0244    3004    LDIA	0x4
+  0245    1683    SETB	0x3,5
+  0246    0096    LD	0x16,A
+  0247    309B    LDIA	0x9B
+  0248    1283    CLRB	0x3,5
+  0249    0081    LD	0x1,A
+  024A    1203    CLRB	0x3,4
+  024B    3005    LDIA	0x5
+  024C    00B6    LD	0x36,A
+  024D    3430    RET	0x30
+  024E    1683    SETB	0x3,5
+  024F    0185    CLR	0x5
+  0250    307E    LDIA	0x7E
+  0251    0086    LD	0x6,A
+  0252    0187    CLR	0x7
+  0253    0008    RET
+  0296    0185    CLR	0x5
+  0297    0186    CLR	0x6
+  0298    0187    CLR	0x7
+  0299    30FF    LDIA	0xFF
+  029A    1703    SETB	0x3,6
+  029B    008E    LD	0xE,A
+  029C    1303    CLRB	0x3,6
+  029D    0095    LD	0x15,A
+  029E    1703    SETB	0x3,6
+  029F    008F    LD	0xF,A
+  02A0    1283    CLRB	0x3,5
+  02A1    1303    CLRB	0x3,6
+  02A2    0085    LD	0x5,A
+  02A3    0086    LD	0x6,A
+  02A4    0087    LD	0x7,A
+  02A5    1683    SETB	0x3,5
+  02A6    0196    CLR	0x16
+  02A7    0008    RET
+  02A9    300F    LDIA	0xF
+  02AA    1283    CLRB	0x3,5
+  02AB    0097    LD	0x17,A
+  02AC    0192    CLR	0x12
+  02AD    3007    LDIA	0x7
+  02AE    1683    SETB	0x3,5
+  02AF    0092    LD	0x12,A
+  02B0    1283    CLRB	0x3,5
+  02B1    0195    CLR	0x15
+  02B2    108C    CLRB	0xC,1
+  02B3    0192    CLR	0x12
   02B4    1683    SETB	0x3,5
-  02B5    0092    LD	0x12,A
-  02B6    1283    CLRB	0x3,5
-  02B7    0195    CLR	0x15
-  02B8    108C    CLRB	0xC,1
-  02B9    0192    CLR	0x12
-  02BA    1683    SETB	0x3,5
-  02BB    1107    CLRB	0x7,2
-  02BC    0008    RET
-  02D9    018B    CLR	0xB
-  02DA    3071    LDIA	0x71
-  02DB    1683    SETB	0x3,5
-  02DC    1303    CLRB	0x3,6
-  02DD    008F    LD	0xF,A
-  02DE    0181    CLR	0x1
-  02DF    0008    RET
-  02E0    0064    CLRWDT
-  02E1    0180    CLR	0x0
-  02E2    0A84    INCR	0x4
-  02E3    0604    XORA	0x4
-  02E4    1903    SZB	0x3,2
-  02E5    3400    RET	0x0
-  02E6    0604    XORA	0x4
-  02E7    2AE1    JP	0x2E1
-  02E9    0181    CLR	0x1
-  02EA    1283    CLRB	0x3,5
-  02EB    0181    CLR	0x1
-  02EC    30E0    LDIA	0xE0
-  02ED    008B    LD	0xB,A
-  02EE    0008    RET
-  0300    2910    JP	0x110
-  0301    2918    JP	0x118
-  0302    2922    JP	0x122
-  0303    2935    JP	0x135
+  02B5    1107    CLRB	0x7,2
+  02B6    3004    LDIA	0x4
+  02B7    1283    CLRB	0x3,5
+  02B8    0092    LD	0x12,A
+  02B9    0008    RET
+  0302    018B    CLR	0xB
+  0303    3071    LDIA	0x71
+  0304    1683    SETB	0x3,5
+  0305    1303    CLRB	0x3,6
+  0306    008F    LD	0xF,A
+  0307    0181    CLR	0x1
+  0308    0008    RET
+  0309    0064    CLRWDT
+  030A    0180    CLR	0x0
+  030B    0A84    INCR	0x4
+  030C    0604    XORA	0x4
+  030D    1903    SZB	0x3,2
+  030E    3400    RET	0x0
+  030F    0604    XORA	0x4
+  0310    2B0A    JP	0x30A
+  0312    0181    CLR	0x1
+  0313    1283    CLRB	0x3,5
+  0314    0181    CLR	0x1
+  0315    30E0    LDIA	0xE0
+  0316    008B    LD	0xB,A
+  0317    0008    RET
+  0322    2910    JP	0x110
+  0323    2918    JP	0x118
+  0324    2922    JP	0x122
+  0325    2935    JP	0x135
