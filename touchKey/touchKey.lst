@@ -1,0 +1,472 @@
+---- C:\SCMCU WorkSpace\touchKey\main.c ----------------------------------------------------------------------
+1:                #include <sc.h>
+2:                #define getbit(x, y)   ((x) >> (y)&1)
+3:                #define setbit(x, y)  x|=(1<<y)
+4:                #define resetbit(x, y)  x&=~(1<<y)
+5:                #define reversebit(x, y)  x^=(1<<y)
+6:                
+7:                char IntFlag = 0;
+8:                char tempKey0H = 0;
+9:                char tempKey0L = 0;
+10:               char key0Flag = 0;//1表示为有按键
+11:               
+12:               char tempKey1H = 0;
+13:               char tempKey1L = 0;
+14:               char key1Flag = 0;//1表示为有按键
+15:               
+16:               void initTimer0() ;
+17:               void initSys();
+18:               void checkKey0TouchKey();
+19:               void checkKey1TouchKey();
+20:               void initPWM();
+21:               
+22:               void main()
+23:               {
+24:               	initSys();
+  00C3    20CC    CALL	0xCC
+25:               	while(1)
+  00C4    0064    CLRWDT
+26:               	{
+27:               		asm("clrwdt");
+28:               		if(!IntFlag)			//10毫秒执行一次
+  00C5    0874    LD	A,0x74
+  00C6    1903    SZB	0x3,2
+  00C7    28C4    JP	0xC4
+29:               			continue;
+30:               		IntFlag = 0;
+  00C8    01F4    CLR	0x74
+31:               		checkKey0TouchKey();
+  00C9    2051    CALL	0x51
+32:               		checkKey1TouchKey();
+  00CA    2012    CALL	0x12
+  00CB    28C4    JP	0xC4
+33:               	}
+34:               }
+35:               
+36:               void initSys()
+37:               {
+38:               	initTimer0();
+  00CC    2090    CALL	0x90
+39:               	initPWM();
+  00CD    28B7    JP	0xB7
+40:               }
+41:               
+42:               
+43:               void initPWM()
+44:               {
+45:               	PWMCON1 = 0x40;	//选择C组PWM
+  00B7    3040    LDIA	0x40
+  00B8    0094    LD	0x14,A
+46:               	PWMCON0 = 0x40;//分频比 1：4
+  00B9    0093    LD	0x13,A
+47:               	PWMCON2 = 0;
+  00BA    019D    CLR	0x1D
+48:               	PWMTH = 0;
+  00BB    0196    CLR	0x16
+49:               	PWMTL = 31;		//约等于32K
+  00BC    301F    LDIA	0x1F
+  00BD    0095    LD	0x15,A
+50:               	PWMD0L = 1;
+  00BE    3001    LDIA	0x1
+  00BF    0097    LD	0x17,A
+51:               	PWMD1L = 1;		//pwm1占空比
+  00C0    0098    LD	0x18,A
+52:               	PWMD01H = 0;
+  00C1    019C    CLR	0x1C
+  00C2    0008    RET
+53:               }
+54:               
+55:               void mode1_a()
+56:               {
+57:               	PWMD0L = 1;
+58:               	PWMD1L = 0;		//pwm1占空比
+59:               	PWMTH = 0;
+60:               	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+61:               	setbit(PORTB, 7);
+62:               	
+63:               }
+64:               
+65:               void mode1_b()
+66:               {
+67:               	PWMD0L = 1;
+68:               	PWMD1L = 0;		//pwm1占空比
+69:               	PWMTH = 0;
+70:               	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+71:               	resetbit(PORTB, 7);
+72:               	
+73:               }
+74:               
+75:               void mode1_c()
+76:               {
+77:               	PWMD0L = 1;
+78:               	PWMD1L = 8;		//pwm1占空比
+79:               	PWMTH = 0;
+80:               	PWMCON0 = 0x43;		//分频比 1：4 ,开启PWM0 PWM1
+81:               	
+82:               }
+83:               
+84:               void mode1_d()
+85:               {
+86:               	PWMD0L = 1;
+87:               	PWMD1L = 16;		//pwm1占空比
+88:               	PWMTH = 0;
+89:               	PWMCON0 = 0x43;		//分频比 1：4 ,开启PWM0 PWM1
+90:               	
+91:               }
+92:               
+93:               void mode1_e()
+94:               {
+95:               	PWMD0L = 1;
+96:               	PWMD1L = 24;		//pwm1占空比
+97:               	PWMTH = 0;
+98:               	PWMCON0 = 0x43;		//分频比 1：4 ,开启PWM0 PWM1
+99:               	
+100:              }
+101:              
+102:              void mode2_a()
+103:              {
+104:              	PWMD0L = 3;
+105:              	PWMD1L = 0;		//pwm1占空比
+106:              	PWMTH = 0;
+107:              	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+108:              	setbit(PORTB, 7);
+109:              	
+110:              }
+111:              
+112:              void mode3_a()
+113:              {
+114:              	PWMD0L = 5;
+115:              	PWMD1L = 0;		//pwm1占空比
+116:              	PWMTH = 0;
+117:              	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+118:              	setbit(PORTB, 7);
+119:              	
+120:              }
+121:              
+122:              void mode4_a()
+123:              {
+124:              	PWMD0L = 18;
+125:              	PWMD1L = 0;		//pwm1占空比
+126:              	PWMTH = 0;
+127:              	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+128:              	setbit(PORTB, 7);
+129:              	
+130:              }
+131:              
+132:              void mode5_a()
+133:              {
+134:              	PWMD0L = 0;
+135:              	PWMD1L = 0;		//pwm1占空比
+136:              	PWMTH = 0;
+137:              	PWMCON0 = 0x40;		//分频比 1：4 ,开启PWM0
+138:              	setbit(PORTB, 7);
+139:              	setbit(PORTA, 5);
+140:              }
+141:              
+142:              void checkKey0TouchKey()
+143:              {
+144:              	TRISB |= 0x03;	//PB0 PB1为输入口
+  0051    3003    LDIA	0x3
+  0052    1683    SETB	0x3,5
+  0053    1303    CLRB	0x3,6
+  0054    0486    ORR	0x6
+145:              	KEYCON1 = 0x00;	//Key0通道检测
+  0055    0193    CLR	0x13
+146:              	KEYCON0 = 0x03;
+  0056    0092    LD	0x12,A
+147:              	while(!(KEYCON0, 7));
+  0057    0812    LD	A,0x12
+148:              	key0Flag = 0;
+149:              	if(tempKey0L)
+  0058    0872    LD	A,0x72
+  0059    1903    SZB	0x3,2
+  005A    2867    JP	0x67
+150:              	{
+151:              		if(tempKey0L > (KEYDATAL + 10) && tempKey0H >= KEYDATAH)
+  005B    0814    LD	A,0x14
+  005C    3E0A    ADDIA	0xA
+  005D    2086    CALL	0x86
+  005E    1D03    SNZB	0x3,2
+  005F    2862    JP	0x62
+  0060    0872    LD	A,0x72
+  0061    0277    SUBA	0x77
+  0062    1803    SZB	0x3,0
+  0063    2867    JP	0x67
+152:              		{
+153:              			key0Flag = 1;
+  0064    1683    SETB	0x3,5
+  0065    1303    CLRB	0x3,6
+  0066    0815    LD	A,0x15
+154:              		}
+155:              	}
+156:              	
+157:              	
+158:              	if(tempKey0H)
+  0067    0873    LD	A,0x73
+  0068    1903    SZB	0x3,2
+  0069    287F    JP	0x7F
+159:              	{
+160:              		if(tempKey0H > KEYDATAH)
+  006A    0873    LD	A,0x73
+  006B    1683    SETB	0x3,5
+  006C    1303    CLRB	0x3,6
+  006D    0215    SUBA	0x15
+  006E    1803    SZB	0x3,0
+  006F    287F    JP	0x7F
+161:              		{
+162:              			if(tempKey0H > (KEYDATAH+1))
+163:              			{
+164:              				key0Flag = 1;
+  0070    0815    LD	A,0x15
+  0071    3E01    ADDIA	0x1
+  0072    2086    CALL	0x86
+  0073    1D03    SNZB	0x3,2
+  0074    2877    JP	0x77
+  0075    0873    LD	A,0x73
+  0076    0277    SUBA	0x77
+  0077    1C03    SNZB	0x3,0
+  0078    287F    JP	0x7F
+165:              			}
+166:              			else
+167:              			{
+168:              				//判断低位
+169:              				if(tempKey0L > KEYDATAL)
+170:              				{
+171:              					key0Flag = 1;
+  0079    0872    LD	A,0x72
+  007A    1683    SETB	0x3,5
+  007B    1303    CLRB	0x3,6
+  007C    0214    SUBA	0x14
+  007D    1803    SZB	0x3,0
+172:              				}
+173:              				else if((255-tempKey0L)> (KEYDATAL + 10) )
+174:              				{
+175:              					key0Flag = 1;
+  007E    0814    LD	A,0x14
+176:              				}
+177:              			}
+178:              		}
+179:              	}
+180:              	tempKey0H = KEYDATAH;
+  007F    1683    SETB	0x3,5
+  0080    1303    CLRB	0x3,6
+  0081    0815    LD	A,0x15
+  0082    00F3    LD	0x73,A
+181:              	tempKey0L = KEYDATAL;
+  0083    0814    LD	A,0x14
+  0084    00F2    LD	0x72,A
+  0085    0008    RET
+182:              	
+183:              	
+184:              }
+185:              
+186:              void checkKey1TouchKey()
+187:              {
+188:              	TRISB |= 0x03;	//PB0 PB1为输入口
+  0012    3003    LDIA	0x3
+  0013    0486    ORR	0x6
+189:              	KEYCON1 = 0x01;	//Key1通道检测
+  0014    3001    LDIA	0x1
+  0015    0093    LD	0x13,A
+190:              	KEYCON0 = 0x03;
+  0016    3003    LDIA	0x3
+  0017    0092    LD	0x12,A
+191:              	while(!(KEYCON0, 7));
+  0018    0812    LD	A,0x12
+192:              	key1Flag = 0;
+193:              	if(tempKey1L)
+  0019    0870    LD	A,0x70
+  001A    1903    SZB	0x3,2
+  001B    2828    JP	0x28
+194:              	{
+195:              		if(tempKey1L > (KEYDATAL + 10) && tempKey1H >= KEYDATAH)
+  001C    0814    LD	A,0x14
+  001D    3E0A    ADDIA	0xA
+  001E    2047    CALL	0x47
+  001F    1D03    SNZB	0x3,2
+  0020    2823    JP	0x23
+  0021    0870    LD	A,0x70
+  0022    0277    SUBA	0x77
+  0023    1803    SZB	0x3,0
+  0024    2828    JP	0x28
+196:              		{
+197:              			key1Flag = 1;
+  0025    1683    SETB	0x3,5
+  0026    1303    CLRB	0x3,6
+  0027    0815    LD	A,0x15
+198:              		}
+199:              	}
+200:              	
+201:              	
+202:              	if(tempKey1H)
+  0028    0871    LD	A,0x71
+  0029    1903    SZB	0x3,2
+  002A    2840    JP	0x40
+203:              	{
+204:              		if(tempKey1H > KEYDATAH)
+  002B    0871    LD	A,0x71
+  002C    1683    SETB	0x3,5
+  002D    1303    CLRB	0x3,6
+  002E    0215    SUBA	0x15
+  002F    1803    SZB	0x3,0
+  0030    2840    JP	0x40
+205:              		{
+206:              			if(tempKey1H > (KEYDATAH+1))
+207:              			{
+208:              				key1Flag = 1;
+  0031    0815    LD	A,0x15
+  0032    3E01    ADDIA	0x1
+  0033    2047    CALL	0x47
+  0034    1D03    SNZB	0x3,2
+  0035    2838    JP	0x38
+  0036    0871    LD	A,0x71
+  0037    0277    SUBA	0x77
+  0038    1C03    SNZB	0x3,0
+  0039    2840    JP	0x40
+209:              			}
+210:              			else
+211:              			{
+212:              				//判断低位
+213:              				if(tempKey1L > KEYDATAL)
+214:              				{
+215:              					key1Flag = 1;
+  003A    0870    LD	A,0x70
+  003B    1683    SETB	0x3,5
+  003C    1303    CLRB	0x3,6
+  003D    0214    SUBA	0x14
+  003E    1803    SZB	0x3,0
+216:              				}
+217:              				else if((255-tempKey1L)> (KEYDATAL + 10) )
+218:              				{
+219:              					key1Flag = 1;
+  003F    0814    LD	A,0x14
+220:              				}
+221:              			}
+222:              		}
+223:              	}
+224:              	tempKey1H = KEYDATAH;
+  0040    1683    SETB	0x3,5
+  0041    1303    CLRB	0x3,6
+  0042    0815    LD	A,0x15
+  0043    00F1    LD	0x71,A
+225:              	tempKey1L = KEYDATAL;
+  0044    0814    LD	A,0x14
+  0045    00F0    LD	0x70,A
+  0046    0008    RET
+226:              	
+227:              	
+228:              }
+229:              
+230:              
+231:              
+232:              //初始化定时器0
+233:              void initTimer0()         
+  0090    0000    NOP
+  0091    0064    CLRWDT
+234:              {	
+235:              		asm("nop");
+236:              		asm("clrwdt");
+237:              		INTCON = 0;
+  0092    018B    CLR	0xB
+238:              		TRISB = 0x04;			//PB2为红外接收口
+  0093    3004    LDIA	0x4
+  0094    1683    SETB	0x3,5
+  0095    1303    CLRB	0x3,6
+  0096    0086    LD	0x6,A
+239:              		WPUB = 0xFF;
+  0097    30FF    LDIA	0xFF
+  0098    1283    CLRB	0x3,5
+  0099    0088    LD	0x8,A
+240:              		PORTA = 0xFF;
+  009A    0085    LD	0x5,A
+241:              		PORTB = 0xFF;					//系统初始化
+  009B    0086    LD	0x6,A
+242:              		OSCCON = 0X52;				//配置振荡为8M,开 WDT
+  009C    3052    LDIA	0x52
+  009D    1683    SETB	0x3,5
+  009E    0088    LD	0x8,A
+243:              		OPTION_REG = 0x07;		//Timer0使用内部时钟Focs/4，预分频比为1:128
+  009F    3007    LDIA	0x7
+  00A0    0081    LD	0x1,A
+244:              		TMR0 = 99;				//赋予初始值 4*128*156/8M = 0.01
+  00A1    3063    LDIA	0x63
+  00A2    1283    CLRB	0x3,5
+  00A3    0081    LD	0x1,A
+245:              		//INTCON = 0xE0;			//允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
+246:              		
+247:              		//TMR0PRD = 128;			//4*4*128/8M = 0.256ms
+248:              
+249:              		INTCON = 0xA0;			//TIME0 中断打开
+  00A4    30A0    LDIA	0xA0
+  00A5    008B    LD	0xB,A
+  00A6    0008    RET
+250:              }
+251:              
+252:              void interrupt Timer0_Isr()
+253:              {
+254:              	if(T0IF)
+  00A7    1D0B    SNZB	0xB,2
+  00A8    28B0    JP	0xB0
+255:              	{
+256:              	//---------------------------------------
+257:              		TMR0 += 99;		//重新赋初值 4*128*156/8M
+  00A9    3063    LDIA	0x63
+  00AA    1283    CLRB	0x3,5
+  00AB    1303    CLRB	0x3,6
+  00AC    0781    ADDR	0x1
+258:              		IntFlag = 1;
+  00AD    01F4    CLR	0x74
+  00AE    0AF4    INCR	0x74
+259:              	//---------------------------------------
+260:              		T0IF = 0;			//清中断标志位	
+  00AF    110B    CLRB	0xB,2
+  00B0    0876    LD	A,0x76
+  00B1    008A    LD	0xA,A
+  00B2    0E75    SWAPA	0x75
+  00B3    0083    LD	0x3,A
+  00B4    0EFE    SWAPR	0x7E
+  00B5    0E7E    SWAPA	0x7E
+  00B6    0009    RETI
+261:              
+262:              	}
+263:              }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    01F0    CLR	0x70
+  000C    01F1    CLR	0x71
+  000D    01F2    CLR	0x72
+  000E    01F3    CLR	0x73
+  000F    01F4    CLR	0x74
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00FE    LD	0x7E,A
+  0005    0E03    SWAPA	0x3
+  0006    00F5    LD	0x75,A
+  0007    080A    LD	A,0xA
+  0008    00F6    LD	0x76,A
+  0009    28A7    JP	0xA7
+---- common_function ------------------------------------------------------------------
+  0010    0183    CLR	0x3
+  0011    28C3    JP	0xC3
+  0047    00F7    LD	0x77,A
+  0048    3000    LDIA	0x0
+  0049    1803    SZB	0x3,0
+  004A    3001    LDIA	0x1
+  004B    00F8    LD	0x78,A
+  004C    3A80    XORIA	0x80
+  004D    00F9    LD	0x79,A
+  004E    3080    LDIA	0x80
+  004F    0279    SUBA	0x79
+  0050    0008    RET
+  0086    00F7    LD	0x77,A
+  0087    3000    LDIA	0x0
+  0088    1803    SZB	0x3,0
+  0089    3001    LDIA	0x1
+  008A    00F8    LD	0x78,A
+  008B    3A80    XORIA	0x80
+  008C    00F9    LD	0x79,A
+  008D    3080    LDIA	0x80
+  008E    0279    SUBA	0x79
+  008F    0008    RET

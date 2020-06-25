@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/SCMCU\ WorkSpace/touchKey/main.c
