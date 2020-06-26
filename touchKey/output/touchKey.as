@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8F2852
-opt include "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc8f2852.cgen.inc"
+opt include "F:\安装软件\SCMCU_IDE_V2.00.08_Beta9\SCMCU_IDE_V2.00.08_Beta9\data\include\sc8f2852.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -33,12 +33,15 @@ skipnz	macro
 	FNCALL	_main,_checkKey0TouchKey
 	FNCALL	_main,_checkKey1TouchKey
 	FNCALL	_main,_initSys
+	FNCALL	_main,_mode1_c
 	FNCALL	_initSys,_initPWM
 	FNCALL	_initSys,_initTimer0
 	FNROOT	_main
 	FNCALL	intlevel1,_Timer0_Isr
 	global	intlevel1
 	FNROOT	intlevel1
+	global	_timeCount
+	global	_pwmFlag
 	global	_tempKey1L
 	global	_tempKey1H
 	global	_tempKey0L
@@ -85,8 +88,12 @@ _KEYCON1	set	147
 _KEYCON0	set	146
 	global	_OSCCON
 _OSCCON	set	136
+	global	_WPDB
+_WPDB	set	135
 	global	_TRISB
 _TRISB	set	134
+	global	_TRISA
+_TRISA	set	133
 	global	_OPTION_REG
 _OPTION_REG	set	129
 ; #config settings
@@ -101,6 +108,12 @@ __initialization:
 psect	bssCOMMON,class=COMMON,space=1,noexec
 global __pbssCOMMON
 __pbssCOMMON:
+_timeCount:
+       ds      2
+
+_pwmFlag:
+       ds      1
+
 _tempKey1L:
        ds      1
 
@@ -125,6 +138,9 @@ psect cinit,class=CODE,delta=2,merge=1
 	clrf	((__pbssCOMMON)+2)&07Fh
 	clrf	((__pbssCOMMON)+3)&07Fh
 	clrf	((__pbssCOMMON)+4)&07Fh
+	clrf	((__pbssCOMMON)+5)&07Fh
+	clrf	((__pbssCOMMON)+6)&07Fh
+	clrf	((__pbssCOMMON)+7)&07Fh
 psect cinit,class=CODE,delta=2,merge=1
 global end_of_initialization,__end_of__initialization
 
@@ -140,6 +156,7 @@ __pcstackCOMMON:
 ?_initSys:	; 1 bytes @ 0x0
 ?_checkKey0TouchKey:	; 1 bytes @ 0x0
 ?_checkKey1TouchKey:	; 1 bytes @ 0x0
+?_mode1_c:	; 1 bytes @ 0x0
 ?_initTimer0:	; 1 bytes @ 0x0
 ?_initPWM:	; 1 bytes @ 0x0
 ?_main:	; 1 bytes @ 0x0
@@ -149,6 +166,7 @@ __pcstackCOMMON:
 ??_initSys:	; 1 bytes @ 0x2
 ??_checkKey0TouchKey:	; 1 bytes @ 0x2
 ??_checkKey1TouchKey:	; 1 bytes @ 0x2
+??_mode1_c:	; 1 bytes @ 0x2
 ??_initTimer0:	; 1 bytes @ 0x2
 ??_initPWM:	; 1 bytes @ 0x2
 	ds	3
@@ -158,13 +176,13 @@ __pcstackCOMMON:
 ;!    Strings     0
 ;!    Constant    0
 ;!    Data        0
-;!    BSS         5
+;!    BSS         8
 ;!    Persistent  0
 ;!    Stack       0
 ;!
 ;!Auto Spaces:
 ;!    Space          Size  Autos    Used
-;!    COMMON           14      5      10
+;!    COMMON           14      5      13
 ;!    BANK0            80      0       0
 ;!    BANK1            80      0       0
 ;!    BANK2            80      0       0
@@ -223,6 +241,9 @@ __pcstackCOMMON:
 ;!                  _checkKey0TouchKey
 ;!                  _checkKey1TouchKey
 ;!                            _initSys
+;!                            _mode1_c
+;! ---------------------------------------------------------------------------------
+;! (1) _mode1_c                                              0     0      0       0
 ;! ---------------------------------------------------------------------------------
 ;! (1) _initSys                                              0     0      0       0
 ;!                            _initPWM
@@ -256,6 +277,7 @@ __pcstackCOMMON:
 ;!   _initSys
 ;!     _initPWM
 ;!     _initTimer0
+;!   _mode1_c
 ;!
 ;! _Timer0_Isr (ROOT)
 ;!
@@ -266,14 +288,14 @@ __pcstackCOMMON:
 ;!BITCOMMON            E      0       0       0        0.0%
 ;!NULL                 0      0       0       0        0.0%
 ;!CODE                 0      0       0       0        0.0%
-;!COMMON               E      5       A       1       71.4%
+;!COMMON               E      5       D       1       92.9%
 ;!BITSFR0              0      0       0       1        0.0%
 ;!SFR0                 0      0       0       1        0.0%
 ;!BITSFR1              0      0       0       2        0.0%
 ;!SFR1                 0      0       0       2        0.0%
 ;!STACK                0      0       0       2        0.0%
 ;!BANK0               50      0       0       3        0.0%
-;!ABS                  0      0       A       4        0.0%
+;!ABS                  0      0       D       4        0.0%
 ;!BITBANK0            50      0       0       5        0.0%
 ;!BITSFR2              0      0       0       5        0.0%
 ;!SFR2                 0      0       0       5        0.0%
@@ -281,13 +303,13 @@ __pcstackCOMMON:
 ;!BANK1               50      0       0       7        0.0%
 ;!BITBANK2            50      0       0       8        0.0%
 ;!BANK2               50      0       0       9        0.0%
-;!DATA                 0      0       A      10        0.0%
+;!DATA                 0      0       D      10        0.0%
 
 	global	_main
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 22 in file "C:\SCMCU WorkSpace\touchKey\main.c"
+;;		line 27 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -298,7 +320,7 @@ __pcstackCOMMON:
 ;;		wreg, status,2, status,0, pclath, cstack
 ;; Tracked objects:
 ;;		On entry : B00/0
-;;		On exit  : 300/100
+;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
 ;;      Params:         0       0       0       0
@@ -311,18 +333,19 @@ __pcstackCOMMON:
 ;;		_checkKey0TouchKey
 ;;		_checkKey1TouchKey
 ;;		_initSys
+;;		_mode1_c
 ;; This function is called by:
 ;;		Startup code after reset
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	22
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	27
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	22
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	27
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
@@ -330,59 +353,157 @@ _main:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _main: [wreg+status,2+status,0+pclath+cstack]
-	line	24
+	line	29
 	
-l973:	
-;main.c: 24: initSys();
+l985:	
+;main.c: 29: initSys();
 	fcall	_initSys
-	line	25
-;main.c: 25: while(1)
+	line	30
+;main.c: 30: while(1)
 	
-l431:	
-	line	27
-# 27 "C:\SCMCU WorkSpace\touchKey\main.c"
+l437:	
+	line	32
+# 32 "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 clrwdt ;# 
 psect	maintext
-	line	28
+	line	33
 	
-l975:	
-;main.c: 28: if(!IntFlag)
+l987:	
+;main.c: 33: if(!IntFlag)
 	movf	((_IntFlag)),w
 	btfss	status,2
 	goto	u131
 	goto	u130
 u131:
-	goto	l979
+	goto	l991
 u130:
-	goto	l431
-	line	30
+	goto	l437
+	line	35
 	
-l979:	
-;main.c: 30: IntFlag = 0;
+l991:	
+;main.c: 35: IntFlag = 0;
 	clrf	(_IntFlag)
-	line	31
+	line	36
 	
-l981:	
-;main.c: 31: checkKey0TouchKey();
+l993:	
+;main.c: 36: checkKey0TouchKey();
 	fcall	_checkKey0TouchKey
-	line	32
+	line	37
 	
-l983:	
-;main.c: 32: checkKey1TouchKey();
+l995:	
+;main.c: 37: checkKey1TouchKey();
 	fcall	_checkKey1TouchKey
-	goto	l431
+	line	38
+	
+l997:	
+;main.c: 38: if(pwmFlag == 0)
+	movf	((_pwmFlag)),w
+	btfss	status,2
+	goto	u141
+	goto	u140
+u141:
+	goto	l437
+u140:
+	line	40
+	
+l999:	
+;main.c: 39: {
+;main.c: 40: pwmFlag = 1;
+	clrf	(_pwmFlag)
+	incf	(_pwmFlag),f
+	line	41
+	
+l1001:	
+;main.c: 41: mode1_c();
+	fcall	_mode1_c
+	goto	l437
 	global	start
 	ljmp	start
 	opt stack 0
-	line	34
+	line	44
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
+	global	_mode1_c
+
+;; *************** function _mode1_c *****************
+;; Defined at:
+;;		line 85 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, status,2, status,0
+;; Tracked objects:
+;;		On entry : 300/100
+;;		On exit  : 300/0
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1   BANK2
+;;      Params:         0       0       0       0
+;;      Locals:         0       0       0       0
+;;      Temps:          0       0       0       0
+;;      Totals:         0       0       0       0
+;;Total ram usage:        0 bytes
+;; Hardware stack levels used:    1
+;; Hardware stack levels required when called:    1
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		_main
+;; This function uses a non-reentrant model
+;;
+psect	text1,local,class=CODE,delta=2,merge=1,group=0
+	line	85
+global __ptext1
+__ptext1:	;psect for function _mode1_c
+psect	text1
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	85
+	global	__size_of_mode1_c
+	__size_of_mode1_c	equ	__end_of_mode1_c-_mode1_c
+	
+_mode1_c:	
+;incstack = 0
+	opt	stack 6
+; Regs used in _mode1_c: [wreg+status,2+status,0]
+	line	87
+	
+l979:	
+;main.c: 87: PWMD0L = 1;
+	movlw	low(01h)
+	bcf	status, 5	;RP0=0, select bank0
+	movwf	(23)	;volatile
+	line	88
+;main.c: 88: PWMD1L = 32;
+	movlw	low(020h)
+	movwf	(24)	;volatile
+	line	89
+	
+l981:	
+;main.c: 89: PWMTH = 0;
+	clrf	(22)	;volatile
+	line	90
+	
+l983:	
+;main.c: 90: PWMCON0 |= 0x03;
+	movlw	low(03h)
+	iorwf	(19),f	;volatile
+	line	92
+	
+l457:	
+	return
+	opt stack 0
+GLOBAL	__end_of_mode1_c
+	__end_of_mode1_c:
+	signat	_mode1_c,89
 	global	_initSys
 
 ;; *************** function _initSys *****************
 ;; Defined at:
-;;		line 36 in file "C:\SCMCU WorkSpace\touchKey\main.c"
+;;		line 46 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -410,13 +531,13 @@ GLOBAL	__end_of_main
 ;;		_main
 ;; This function uses a non-reentrant model
 ;;
-psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	36
-global __ptext1
-__ptext1:	;psect for function _initSys
-psect	text1
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	36
+psect	text2,local,class=CODE,delta=2,merge=1,group=0
+	line	46
+global __ptext2
+__ptext2:	;psect for function _initSys
+psect	text2
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	46
 	global	__size_of_initSys
 	__size_of_initSys	equ	__end_of_initSys-_initSys
 	
@@ -424,17 +545,17 @@ _initSys:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _initSys: [wreg+status,2+status,0+pclath+cstack]
-	line	38
+	line	48
 	
-l911:	
-;main.c: 38: initTimer0();
+l907:	
+;main.c: 48: initTimer0();
 	fcall	_initTimer0
-	line	39
-;main.c: 39: initPWM();
+	line	49
+;main.c: 49: initPWM();
 	fcall	_initPWM
-	line	40
+	line	50
 	
-l438:	
+l445:	
 	return
 	opt stack 0
 GLOBAL	__end_of_initSys
@@ -444,7 +565,7 @@ GLOBAL	__end_of_initSys
 
 ;; *************** function _initTimer0 *****************
 ;; Defined at:
-;;		line 233 in file "C:\SCMCU WorkSpace\touchKey\main.c"
+;;		line 247 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -471,13 +592,13 @@ GLOBAL	__end_of_initSys
 ;;		_initSys
 ;; This function uses a non-reentrant model
 ;;
-psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	line	233
-global __ptext2
-__ptext2:	;psect for function _initTimer0
-psect	text2
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	233
+psect	text3,local,class=CODE,delta=2,merge=1,group=0
+	line	247
+global __ptext3
+__ptext3:	;psect for function _initTimer0
+psect	text3
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	247
 	global	__size_of_initTimer0
 	__size_of_initTimer0	equ	__end_of_initTimer0-_initTimer0
 	
@@ -485,76 +606,70 @@ _initTimer0:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _initTimer0: [wreg+status,2]
-	line	235
+	line	249
 	
-l883:	
-# 235 "C:\SCMCU WorkSpace\touchKey\main.c"
+l891:	
+# 249 "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 nop ;# 
-	line	236
-# 236 "C:\SCMCU WorkSpace\touchKey\main.c"
+	line	250
+# 250 "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 clrwdt ;# 
-psect	text2
-	line	237
+psect	text3
+	line	251
 	
-l885:	
-;main.c: 237: INTCON = 0;
+l893:	
+;main.c: 251: INTCON = 0;
 	clrf	(11)	;volatile
-	line	238
-	
-l887:	
-;main.c: 238: TRISB = 0x04;
-	movlw	low(04h)
+	line	252
+;main.c: 252: TRISA = 0x00;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
-	movwf	(134)^080h	;volatile
-	line	239
+	clrf	(133)^080h	;volatile
+	line	253
 	
-l889:	
-;main.c: 239: WPUB = 0xFF;
+l895:	
+;main.c: 253: TRISB = 0x04;
+	movlw	low(04h)
+	movwf	(134)^080h	;volatile
+	line	254
+	
+l897:	
+;main.c: 254: WPDB = 0x00;
+	clrf	(135)^080h	;volatile
+	line	255
+;main.c: 255: WPUB = 0xFF;
 	movlw	low(0FFh)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(8)	;volatile
-	line	240
-	
-l891:	
-;main.c: 240: PORTA = 0xFF;
+	line	256
+;main.c: 256: PORTA = 0xFF;
 	movlw	low(0FFh)
 	movwf	(5)	;volatile
-	line	241
-	
-l893:	
-;main.c: 241: PORTB = 0xFF;
+	line	257
+;main.c: 257: PORTB = 0xFF;
 	movlw	low(0FFh)
 	movwf	(6)	;volatile
-	line	242
-	
-l895:	
-;main.c: 242: OSCCON = 0X52;
+	line	258
+;main.c: 258: OSCCON = 0X52;
 	movlw	low(052h)
 	bsf	status, 5	;RP0=1, select bank1
 	movwf	(136)^080h	;volatile
-	line	243
-	
-l897:	
-;main.c: 243: OPTION_REG = 0x07;
+	line	259
+;main.c: 259: OPTION_REG = 0x07;
 	movlw	low(07h)
 	movwf	(129)^080h	;volatile
-	line	244
-	
-l899:	
-;main.c: 244: TMR0 = 99;
+	line	260
+;main.c: 260: TMR0 = 99;
 	movlw	low(063h)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(1)	;volatile
-	line	249
-	
-l901:	
-;main.c: 249: INTCON = 0xA0;
+	line	265
+;main.c: 265: INTCON = 0xA0;
 	movlw	low(0A0h)
 	movwf	(11)	;volatile
-	line	250
+	line	266
 	
-l501:	
+l508:	
 	return
 	opt stack 0
 GLOBAL	__end_of_initTimer0
@@ -564,7 +679,7 @@ GLOBAL	__end_of_initTimer0
 
 ;; *************** function _initPWM *****************
 ;; Defined at:
-;;		line 43 in file "C:\SCMCU WorkSpace\touchKey\main.c"
+;;		line 53 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -591,13 +706,13 @@ GLOBAL	__end_of_initTimer0
 ;;		_initSys
 ;; This function uses a non-reentrant model
 ;;
-psect	text3,local,class=CODE,delta=2,merge=1,group=0
-	line	43
-global __ptext3
-__ptext3:	;psect for function _initPWM
-psect	text3
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	43
+psect	text4,local,class=CODE,delta=2,merge=1,group=0
+	line	53
+global __ptext4
+__ptext4:	;psect for function _initPWM
+psect	text4
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	53
 	global	__size_of_initPWM
 	__size_of_initPWM	equ	__end_of_initPWM-_initPWM
 	
@@ -605,46 +720,46 @@ _initPWM:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _initPWM: [wreg+status,2]
-	line	45
+	line	55
 	
-l903:	
-;main.c: 45: PWMCON1 = 0x40;
+l899:	
+;main.c: 55: PWMCON1 = 0x40;
 	movlw	low(040h)
 	movwf	(20)	;volatile
-	line	46
-;main.c: 46: PWMCON0 = 0x40;
-	movlw	low(040h)
+	line	56
+;main.c: 56: PWMCON0 = 0x21;
+	movlw	low(021h)
 	movwf	(19)	;volatile
-	line	47
+	line	57
 	
-l905:	
-;main.c: 47: PWMCON2 = 0;
+l901:	
+;main.c: 57: PWMCON2 = 0;
 	clrf	(29)	;volatile
-	line	48
+	line	58
 	
-l907:	
-;main.c: 48: PWMTH = 0;
+l903:	
+;main.c: 58: PWMTH = 0;
 	clrf	(22)	;volatile
-	line	49
-;main.c: 49: PWMTL = 31;
-	movlw	low(01Fh)
+	line	59
+;main.c: 59: PWMTL = 126;
+	movlw	low(07Eh)
 	movwf	(21)	;volatile
-	line	50
-;main.c: 50: PWMD0L = 1;
+	line	60
+;main.c: 60: PWMD0L = 1;
 	movlw	low(01h)
 	movwf	(23)	;volatile
-	line	51
-;main.c: 51: PWMD1L = 1;
+	line	61
+;main.c: 61: PWMD1L = 1;
 	movlw	low(01h)
 	movwf	(24)	;volatile
-	line	52
+	line	62
 	
-l909:	
-;main.c: 52: PWMD01H = 0;
+l905:	
+;main.c: 62: PWMD01H = 0;
 	clrf	(28)	;volatile
-	line	53
+	line	63
 	
-l441:	
+l448:	
 	return
 	opt stack 0
 GLOBAL	__end_of_initPWM
@@ -654,7 +769,7 @@ GLOBAL	__end_of_initPWM
 
 ;; *************** function _checkKey1TouchKey *****************
 ;; Defined at:
-;;		line 186 in file "C:\SCMCU WorkSpace\touchKey\main.c"
+;;		line 198 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -681,13 +796,13 @@ GLOBAL	__end_of_initPWM
 ;;		_main
 ;; This function uses a non-reentrant model
 ;;
-psect	text4,local,class=CODE,delta=2,merge=1,group=0
-	line	186
-global __ptext4
-__ptext4:	;psect for function _checkKey1TouchKey
-psect	text4
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	186
+psect	text5,local,class=CODE,delta=2,merge=1,group=0
+	line	198
+global __ptext5
+__ptext5:	;psect for function _checkKey1TouchKey
+psect	text5
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	198
 	global	__size_of_checkKey1TouchKey
 	__size_of_checkKey1TouchKey	equ	__end_of_checkKey1TouchKey-_checkKey1TouchKey
 	
@@ -695,45 +810,51 @@ _checkKey1TouchKey:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _checkKey1TouchKey: [wreg+status,2+status,0]
-	line	188
-	
-l943:	
-;main.c: 188: TRISB |= 0x03;
-	movlw	low(03h)
-	iorwf	(134)^080h,f	;volatile
-	line	189
+	line	200
 	
 l945:	
-;main.c: 189: KEYCON1 = 0x01;
-	movlw	low(01h)
-	movwf	(147)^080h	;volatile
-	line	190
+;main.c: 200: INTCON = 0x20;
+	movlw	low(020h)
+	movwf	(11)	;volatile
+	line	201
 	
 l947:	
-;main.c: 190: KEYCON0 = 0x03;
-	movlw	low(03h)
-	movwf	(146)^080h	;volatile
-	line	191
-;main.c: 191: while(!(KEYCON0, 7));
+;main.c: 201: TRISB |= 0x4F;
+	movlw	low(04Fh)
+	iorwf	(134)^080h,f	;volatile
+	line	202
 	
 l949:	
-	movf	(146)^080h,w	;volatile
-	line	193
+;main.c: 202: KEYCON1 = 0x51;
+	movlw	low(051h)
+	movwf	(147)^080h	;volatile
+	line	203
 	
 l951:	
-;main.c: 193: if(tempKey1L)
+;main.c: 203: KEYCON0 = 0x03;
+	movlw	low(03h)
+	movwf	(146)^080h	;volatile
+	line	204
+;main.c: 204: while(!(KEYCON0, 7));
+	
+l953:	
+	movf	(146)^080h,w	;volatile
+	line	206
+	
+l955:	
+;main.c: 206: if(tempKey1L)
 	movf	((_tempKey1L)),w
 	btfsc	status,2
 	goto	u71
 	goto	u70
 u71:
-	goto	l957
+	goto	l961
 u70:
-	line	195
+	line	208
 	
-l953:	
-;main.c: 194: {
-;main.c: 195: if(tempKey1L > (KEYDATAL + 10) && tempKey1H >= KEYDATAH)
+l957:	
+;main.c: 207: {
+;main.c: 208: if(tempKey1L > (KEYDATAL + 10) && tempKey1H >= KEYDATAH)
 	movf	(148)^080h,w	;volatile
 	addlw	low(0Ah)
 	movwf	(??_checkKey1TouchKey+0)+0
@@ -756,33 +877,33 @@ u85:
 	goto	u81
 	goto	u80
 u81:
-	goto	l957
+	goto	l961
 u80:
 	
-l955:	
-;main.c: 196: {
-;main.c: 197: key1Flag = 1;
+l959:	
+;main.c: 209: {
+;main.c: 210: key1Flag = 1;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	movf	(149)^080h,w	;volatile
-	line	202
+	line	215
 	
-l957:	
-;main.c: 198: }
-;main.c: 199: }
-;main.c: 202: if(tempKey1H)
+l961:	
+;main.c: 211: }
+;main.c: 212: }
+;main.c: 215: if(tempKey1H)
 	movf	((_tempKey1H)),w
 	btfsc	status,2
 	goto	u91
 	goto	u90
 u91:
-	goto	l971
+	goto	l975
 u90:
-	line	204
+	line	217
 	
-l959:	
-;main.c: 203: {
-;main.c: 204: if(tempKey1H > KEYDATAH)
+l963:	
+;main.c: 216: {
+;main.c: 217: if(tempKey1H > KEYDATAH)
 	movf	(_tempKey1H),w
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
@@ -791,13 +912,13 @@ l959:
 	goto	u101
 	goto	u100
 u101:
-	goto	l971
+	goto	l975
 u100:
-	line	206
+	line	219
 	
-l961:	
-;main.c: 207: {
-;main.c: 208: key1Flag = 1;
+l965:	
+;main.c: 220: {
+;main.c: 221: key1Flag = 1;
 	movf	(149)^080h,w	;volatile
 	addlw	low(01h)
 	movwf	(??_checkKey1TouchKey+0)+0
@@ -820,14 +941,14 @@ u115:
 	goto	u111
 	goto	u110
 u111:
-	goto	l965
+	goto	l969
 u110:
-	goto	l971
-	line	213
+	goto	l975
+	line	226
 	
-l965:	
-;main.c: 214: {
-;main.c: 215: key1Flag = 1;
+l969:	
+;main.c: 227: {
+;main.c: 228: key1Flag = 1;
 	movf	(_tempKey1L),w
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
@@ -836,34 +957,43 @@ l965:
 	goto	u121
 	goto	u120
 u121:
-	goto	l969
+	goto	l973
 u120:
-	goto	l971
-	line	217
+	goto	l975
+	line	230
 	
-l969:	
-;main.c: 218: {
-;main.c: 219: key1Flag = 1;
+l973:	
+;main.c: 231: {
+;main.c: 232: key1Flag = 1;
 	movf	(148)^080h,w	;volatile
-	line	224
+	line	237
 	
-l971:	
-;main.c: 220: }
-;main.c: 221: }
-;main.c: 222: }
-;main.c: 223: }
-;main.c: 224: tempKey1H = KEYDATAH;
+l975:	
+;main.c: 233: }
+;main.c: 234: }
+;main.c: 235: }
+;main.c: 236: }
+;main.c: 237: tempKey1H = KEYDATAH;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	movf	(149)^080h,w	;volatile
 	movwf	(_tempKey1H)
-	line	225
-;main.c: 225: tempKey1L = KEYDATAL;
+	line	238
+;main.c: 238: tempKey1L = KEYDATAL;
 	movf	(148)^080h,w	;volatile
 	movwf	(_tempKey1L)
-	line	228
+	line	239
 	
-l498:	
+l977:	
+;main.c: 239: KEYCON0 &= 0xFE;
+	bcf	(146)^080h+(0/8),(0)&7	;volatile
+	line	240
+;main.c: 240: INTCON = 0xA0;
+	movlw	low(0A0h)
+	movwf	(11)	;volatile
+	line	242
+	
+l505:	
 	return
 	opt stack 0
 GLOBAL	__end_of_checkKey1TouchKey
@@ -873,7 +1003,7 @@ GLOBAL	__end_of_checkKey1TouchKey
 
 ;; *************** function _checkKey0TouchKey *****************
 ;; Defined at:
-;;		line 142 in file "C:\SCMCU WorkSpace\touchKey\main.c"
+;;		line 152 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -900,13 +1030,13 @@ GLOBAL	__end_of_checkKey1TouchKey
 ;;		_main
 ;; This function uses a non-reentrant model
 ;;
-psect	text5,local,class=CODE,delta=2,merge=1,group=0
-	line	142
-global __ptext5
-__ptext5:	;psect for function _checkKey0TouchKey
-psect	text5
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	142
+psect	text6,local,class=CODE,delta=2,merge=1,group=0
+	line	152
+global __ptext6
+__ptext6:	;psect for function _checkKey0TouchKey
+psect	text6
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	152
 	global	__size_of_checkKey0TouchKey
 	__size_of_checkKey0TouchKey	equ	__end_of_checkKey0TouchKey-_checkKey0TouchKey
 	
@@ -914,34 +1044,46 @@ _checkKey0TouchKey:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _checkKey0TouchKey: [wreg+status,2+status,0]
-	line	144
+	line	154
 	
-l913:	
-;main.c: 144: TRISB |= 0x03;
-	movlw	low(03h)
+l909:	
+;main.c: 154: INTCON = 0x20;
+	movlw	low(020h)
+	movwf	(11)	;volatile
+	line	155
+	
+l911:	
+;main.c: 155: TRISB |= 0x4F;
+	movlw	low(04Fh)
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	iorwf	(134)^080h,f	;volatile
-	line	145
+	line	156
+	
+l913:	
+;main.c: 156: KEYCON1 = 0x50;
+	movlw	low(050h)
+	movwf	(147)^080h	;volatile
+	line	157
 	
 l915:	
-;main.c: 145: KEYCON1 = 0x00;
-	clrf	(147)^080h	;volatile
-	line	146
+;main.c: 157: KEYCON0 = 0x02;
+	movlw	low(02h)
+	movwf	(146)^080h	;volatile
+	line	158
 	
 l917:	
-;main.c: 146: KEYCON0 = 0x03;
-	movlw	low(03h)
-	movwf	(146)^080h	;volatile
-	line	147
-;main.c: 147: while(!(KEYCON0, 7));
+;main.c: 158: KEYCON0 |= 0x01;
+	bsf	(146)^080h+(0/8),(0)&7	;volatile
+	line	159
+;main.c: 159: while(!(KEYCON0, 7));
 	
 l919:	
 	movf	(146)^080h,w	;volatile
-	line	149
+	line	161
 	
 l921:	
-;main.c: 149: if(tempKey0L)
+;main.c: 161: if(tempKey0L)
 	movf	((_tempKey0L)),w
 	btfsc	status,2
 	goto	u11
@@ -949,11 +1091,11 @@ l921:
 u11:
 	goto	l927
 u10:
-	line	151
+	line	163
 	
 l923:	
-;main.c: 150: {
-;main.c: 151: if(tempKey0L > (KEYDATAL + 10) && tempKey0H >= KEYDATAH)
+;main.c: 162: {
+;main.c: 163: if(tempKey0L > (KEYDATAL + 10) && tempKey0H >= KEYDATAH)
 	movf	(148)^080h,w	;volatile
 	addlw	low(0Ah)
 	movwf	(??_checkKey0TouchKey+0)+0
@@ -980,17 +1122,17 @@ u21:
 u20:
 	
 l925:	
-;main.c: 152: {
-;main.c: 153: key0Flag = 1;
+;main.c: 164: {
+;main.c: 165: key0Flag = 1;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	movf	(149)^080h,w	;volatile
-	line	158
+	line	170
 	
 l927:	
-;main.c: 154: }
-;main.c: 155: }
-;main.c: 158: if(tempKey0H)
+;main.c: 166: }
+;main.c: 167: }
+;main.c: 170: if(tempKey0H)
 	movf	((_tempKey0H)),w
 	btfsc	status,2
 	goto	u31
@@ -998,11 +1140,11 @@ l927:
 u31:
 	goto	l941
 u30:
-	line	160
+	line	172
 	
 l929:	
-;main.c: 159: {
-;main.c: 160: if(tempKey0H > KEYDATAH)
+;main.c: 171: {
+;main.c: 172: if(tempKey0H > KEYDATAH)
 	movf	(_tempKey0H),w
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
@@ -1013,11 +1155,11 @@ l929:
 u41:
 	goto	l941
 u40:
-	line	162
+	line	174
 	
 l931:	
-;main.c: 163: {
-;main.c: 164: key0Flag = 1;
+;main.c: 175: {
+;main.c: 176: key0Flag = 1;
 	movf	(149)^080h,w	;volatile
 	addlw	low(01h)
 	movwf	(??_checkKey0TouchKey+0)+0
@@ -1043,11 +1185,11 @@ u51:
 	goto	l935
 u50:
 	goto	l941
-	line	169
+	line	181
 	
 l935:	
-;main.c: 170: {
-;main.c: 171: key0Flag = 1;
+;main.c: 182: {
+;main.c: 183: key0Flag = 1;
 	movf	(_tempKey0L),w
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
@@ -1059,31 +1201,40 @@ u61:
 	goto	l939
 u60:
 	goto	l941
-	line	173
+	line	185
 	
 l939:	
-;main.c: 174: {
-;main.c: 175: key0Flag = 1;
+;main.c: 186: {
+;main.c: 187: key0Flag = 1;
 	movf	(148)^080h,w	;volatile
-	line	180
+	line	192
 	
 l941:	
-;main.c: 176: }
-;main.c: 177: }
-;main.c: 178: }
-;main.c: 179: }
-;main.c: 180: tempKey0H = KEYDATAH;
+;main.c: 188: }
+;main.c: 189: }
+;main.c: 190: }
+;main.c: 191: }
+;main.c: 192: tempKey0H = KEYDATAH;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	movf	(149)^080h,w	;volatile
 	movwf	(_tempKey0H)
-	line	181
-;main.c: 181: tempKey0L = KEYDATAL;
+	line	193
+;main.c: 193: tempKey0L = KEYDATAL;
 	movf	(148)^080h,w	;volatile
 	movwf	(_tempKey0L)
-	line	184
+	line	194
 	
-l483:	
+l943:	
+;main.c: 194: KEYCON0 &= 0xFE;
+	bcf	(146)^080h+(0/8),(0)&7	;volatile
+	line	195
+;main.c: 195: INTCON = 0xA0;
+	movlw	low(0A0h)
+	movwf	(11)	;volatile
+	line	196
+	
+l490:	
 	return
 	opt stack 0
 GLOBAL	__end_of_checkKey0TouchKey
@@ -1093,7 +1244,7 @@ GLOBAL	__end_of_checkKey0TouchKey
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 252 in file "C:\SCMCU WorkSpace\touchKey\main.c"
+;;		line 268 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1119,13 +1270,13 @@ GLOBAL	__end_of_checkKey0TouchKey
 ;;		Interrupt level 1
 ;; This function uses a non-reentrant model
 ;;
-psect	text6,local,class=CODE,delta=2,merge=1,group=0
-	line	252
-global __ptext6
-__ptext6:	;psect for function _Timer0_Isr
-psect	text6
-	file	"C:\SCMCU WorkSpace\touchKey\main.c"
-	line	252
+psect	text7,local,class=CODE,delta=2,merge=1,group=0
+	line	268
+global __ptext7
+__ptext7:	;psect for function _Timer0_Isr
+psect	text7
+	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	line	268
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
 	
@@ -1146,40 +1297,62 @@ interrupt_function:
 	movf	pclath,w
 	movwf	(??_Timer0_Isr+1)
 	ljmp	_Timer0_Isr
-psect	text6
-	line	254
+psect	text7
+	line	270
 	
-i1l985:	
-;main.c: 254: if(T0IF)
+i1l1003:	
+;main.c: 270: if(T0IF)
 	btfss	(90/8),(90)&7	;volatile
-	goto	u14_21
-	goto	u14_20
-u14_21:
-	goto	i1l507
-u14_20:
-	line	257
+	goto	u15_21
+	goto	u15_20
+u15_21:
+	goto	i1l515
+u15_20:
+	line	273
 	
-i1l987:	
-;main.c: 255: {
-;main.c: 257: TMR0 += 99;
+i1l1005:	
+;main.c: 271: {
+;main.c: 273: TMR0 += 99;
 	movlw	low(063h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	addwf	(1),f	;volatile
-	line	258
+	line	274
+;main.c: 274: if(++timeCount == 10)
+	incf	(_timeCount),f
+	skipnz
+	incf	(_timeCount+1),f
+		movlw	10
+	xorwf	(((_timeCount))),w
+iorwf	(((_timeCount+1))),w
+	btfss	status,2
+	goto	u16_21
+	goto	u16_20
+u16_21:
+	goto	i1l1011
+u16_20:
+	line	276
 	
-i1l989:	
-;main.c: 258: IntFlag = 1;
+i1l1007:	
+;main.c: 275: {
+;main.c: 276: timeCount = 0;
+	clrf	(_timeCount)
+	clrf	(_timeCount+1)
+	line	277
+	
+i1l1009:	
+;main.c: 277: IntFlag = 1;
 	clrf	(_IntFlag)
 	incf	(_IntFlag),f
-	line	260
+	line	280
 	
-i1l991:	
-;main.c: 260: T0IF = 0;
+i1l1011:	
+;main.c: 278: }
+;main.c: 280: T0IF = 0;
 	bcf	(90/8),(90)&7	;volatile
-	line	263
+	line	283
 	
-i1l507:	
+i1l515:	
 	movf	(??_Timer0_Isr+1),w
 	movwf	pclath
 	swapf	(??_Timer0_Isr+0)^0FFFFFF80h,w

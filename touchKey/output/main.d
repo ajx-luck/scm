@@ -1,1 +1,1 @@
- main.d  main.p1:  C:/SCMCU\ WorkSpace/touchKey/main.c
+ main.d  main.p1:  C:/Users/mxy/Desktop/scm/touchKey/main.c

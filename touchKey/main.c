@@ -12,12 +12,17 @@ char key0Flag = 0;//1表示为有按键
 char tempKey1H = 0;
 char tempKey1L = 0;
 char key1Flag = 0;//1表示为有按键
+int timeCount = 0;
+char pwmFlag = 0;
 
 void initTimer0() ;
 void initSys();
 void checkKey0TouchKey();
 void checkKey1TouchKey();
 void initPWM();
+void mode1_a();
+void mode1_b();
+void mode1_c();
 
 void main()
 {
@@ -30,6 +35,11 @@ void main()
 		IntFlag = 0;
 		checkKey0TouchKey();
 		checkKey1TouchKey();
+		if(pwmFlag == 0)
+		{
+			pwmFlag = 1;
+			mode1_c();
+		}
 	}
 }
 
@@ -43,10 +53,10 @@ void initSys()
 void initPWM()
 {
 	PWMCON1 = 0x40;	//选择C组PWM
-	PWMCON0 = 0x40;//分频比 1：4
+	PWMCON0 = 0x21;//分频比 1：4
 	PWMCON2 = 0;
 	PWMTH = 0;
-	PWMTL = 31;		//约等于32K
+	PWMTL = 126;		//约等于32K
 	PWMD0L = 1;
 	PWMD1L = 1;		//pwm1占空比
 	PWMD01H = 0;
@@ -57,7 +67,7 @@ void mode1_a()
 	PWMD0L = 1;
 	PWMD1L = 0;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+	PWMCON0 |= 0x01;		//分频比 1：4 ,开启PWM0
 	setbit(PORTB, 7);
 	
 }
@@ -67,7 +77,7 @@ void mode1_b()
 	PWMD0L = 1;
 	PWMD1L = 0;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+	PWMCON0 |= 0x01;		//分频比 1：4 ,开启PWM0
 	resetbit(PORTB, 7);
 	
 }
@@ -75,56 +85,56 @@ void mode1_b()
 void mode1_c()
 {
 	PWMD0L = 1;
-	PWMD1L = 8;		//pwm1占空比
+	PWMD1L = 32;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x43;		//分频比 1：4 ,开启PWM0 PWM1
+	PWMCON0 |= 0x03;		//分频比 1：4 ,开启PWM0 PWM1
 	
 }
 
 void mode1_d()
 {
 	PWMD0L = 1;
-	PWMD1L = 16;		//pwm1占空比
+	PWMD1L = 63;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x43;		//分频比 1：4 ,开启PWM0 PWM1
+	PWMCON0 |= 0x03;		//分频比 1：4 ,开启PWM0 PWM1
 	
 }
 
 void mode1_e()
 {
 	PWMD0L = 1;
-	PWMD1L = 24;		//pwm1占空比
+	PWMD1L = 95;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x43;		//分频比 1：4 ,开启PWM0 PWM1
+	PWMCON0 |= 0x03;	//分频比 1：4 ,开启PWM0 PWM1
 	
 }
 
 void mode2_a()
 {
-	PWMD0L = 3;
+	PWMD0L = 12;
 	PWMD1L = 0;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+	PWMCON0 |= 0x01;		//分频比 1：4 ,开启PWM0
 	setbit(PORTB, 7);
 	
 }
 
 void mode3_a()
 {
-	PWMD0L = 5;
+	PWMD0L = 20;
 	PWMD1L = 0;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+	PWMCON0 |= 0x01;		//分频比 1：4 ,开启PWM0
 	setbit(PORTB, 7);
 	
 }
 
 void mode4_a()
 {
-	PWMD0L = 18;
+	PWMD0L = 72;
 	PWMD1L = 0;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x41;		//分频比 1：4 ,开启PWM0
+	PWMCON0 |= 0x01;		//分频比 1：4 ,开启PWM0
 	setbit(PORTB, 7);
 	
 }
@@ -134,16 +144,18 @@ void mode5_a()
 	PWMD0L = 0;
 	PWMD1L = 0;		//pwm1占空比
 	PWMTH = 0;
-	PWMCON0 = 0x40;		//分频比 1：4 ,开启PWM0
+	PWMCON0 = 0x60;		//分频比 1：4 ,开启PWM0
 	setbit(PORTB, 7);
 	setbit(PORTA, 5);
 }
 
 void checkKey0TouchKey()
 {
-	TRISB |= 0x03;	//PB0 PB1为输入口
-	KEYCON1 = 0x00;	//Key0通道检测
-	KEYCON0 = 0x03;
+	INTCON = 0x20;	//关闭中断
+	TRISB |= 0x4F;	//PB0 PB1为输入口
+	KEYCON1 = 0x50;	//Key0通道检测
+	KEYCON0 = 0x02;
+	KEYCON0 |= 0x01;
 	while(!(KEYCON0, 7));
 	key0Flag = 0;
 	if(tempKey0L)
@@ -179,14 +191,15 @@ void checkKey0TouchKey()
 	}
 	tempKey0H = KEYDATAH;
 	tempKey0L = KEYDATAL;
-	
-	
+	KEYCON0 &= 0xFE;
+	INTCON = 0xA0;
 }
 
 void checkKey1TouchKey()
 {
-	TRISB |= 0x03;	//PB0 PB1为输入口
-	KEYCON1 = 0x01;	//Key1通道检测
+	INTCON = 0x20;	//关闭中断
+	TRISB |= 0x4F;	//PB0 PB1为输入口
+	KEYCON1 = 0x51;	//Key1通道检测
 	KEYCON0 = 0x03;
 	while(!(KEYCON0, 7));
 	key1Flag = 0;
@@ -223,7 +236,8 @@ void checkKey1TouchKey()
 	}
 	tempKey1H = KEYDATAH;
 	tempKey1L = KEYDATAL;
-	
+	KEYCON0 &= 0xFE;
+	INTCON = 0xA0;
 	
 }
 
@@ -235,7 +249,9 @@ void initTimer0()
 		asm("nop");
 		asm("clrwdt");
 		INTCON = 0;
+		TRISA = 0x00;
 		TRISB = 0x04;			//PB2为红外接收口
+		WPDB = 0x00;
 		WPUB = 0xFF;
 		PORTA = 0xFF;
 		PORTB = 0xFF;					//系统初始化
@@ -255,7 +271,11 @@ void interrupt Timer0_Isr()
 	{
 	//---------------------------------------
 		TMR0 += 99;		//重新赋初值 4*128*156/8M
-		IntFlag = 1;
+		if(++timeCount == 10)
+		{
+			timeCount = 0;
+			IntFlag = 1;
+		}
 	//---------------------------------------
 		T0IF = 0;			//清中断标志位	
 
