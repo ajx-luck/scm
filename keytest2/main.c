@@ -1,0 +1,307 @@
+#include <sc.h>
+#include "pwm.h"
+#include "Touch_Kscan_Library.h"
+
+volatile unsigned char MainTime;
+volatile unsigned char pwmTime;
+volatile unsigned char irStep = 0; //0为未遮挡 1遮挡  2消抖
+unsigned char	revCount = 0;//收到的波形计数
+unsigned char	checkCount = 0;	//检测次数
+unsigned char	pwm0Step = 1;	//	pwm0档位
+unsigned char	pwm1Step = 1;	//	pwm1档位
+
+
+volatile bit	sendFlag;	//发射标记
+volatile bit	B_MainLoop;
+volatile bit	sendStartFlag;	//发射开始标记
+volatile bit	doublePressFlag;	//同时按下标记
+volatile bit	ONFlag;	//开关标记，1为打开
+volatile bit	pwmFlag;	//PWM开关标记，1为打开
+//系统初始化
+void Init_System()
+{
+	asm("nop");
+	asm("clrwdt");
+	INTCON = 0;				//禁止中断
+	OSCCON = 0X71;			//配置振荡为8M
+	OPTION_REG = 0;
+	
+	//延时等待电源电压稳定
+	//DelayXms(200);
+	
+	
+	//PIE2 = 0;
+	PIE1 = 2;
+	PR2 = 250;				//8M下将TMR2设置为125us中断
+	T2CON = 4;				//使能定时器2
+	TRISA = 0x00;
+	TRISB = 0x04;			//PB2为红外接收口
+	
+	INTCON = 0XC0;			//使能中断
+}
+
+
+/**********************************************************
+刷新特殊功能寄存器
+**********************************************************/
+void Refurbish_Sfr()
+{
+/*	//均为数字口
+	ANSEL = 0;
+	ANSELH = 0;
+	
+	TRISA = 0;
+	TRISB = 0;
+	TRISC = 0;
+	TRISE = 9;
+	
+	LEDCON0 = 0;
+	LEDCON1 = 0;
+	SEGEN0 = 0;
+	SEGEN1 = 0;
+	SEGEN2 = 0;
+	COMEN = 0;
+	
+	SSPCON = 0;
+//	SSPCON2 = 0;
+	CCP1CON = 0;
+	CCP2CON = 0;
+//	RCSTA = 0;
+//	RCREG = 0;
+//	TXSTA = 0;
+	IOCB = 0;
+	PSTRCON = 0;
+	CM1CON0 = 0;
+	CM2CON0 = 0;
+	CM2CON1 = 0;
+	SRCON = 0;
+//	BAUDCTL = 0;
+//	PWMCON0 = 0;
+//	PWMCON1 = 0;
+	T1CON = 0;
+	EECON1 = 0;
+	PIE2 = 0;
+*/	
+	OPTION_REG = 0;
+	
+	
+	//刷新中断相关控制寄存器
+	PIE1 = 2;
+	PR2 = 250;
+	INTCON = 0XC0;
+	if(4 != T2CON)
+		T2CON = 4;
+}
+//按键1处理逻辑
+void procKey1()
+{
+	pwmFlag = 1;
+	if(++pwm0Step > 4)
+		pwm0Step = 1;
+	switch(pwm0Step)
+	{
+		case 1:
+		mode2_a();
+		break;
+		case 2:
+		mode3_a();
+		break;
+		case 3:
+		mode4_a();
+		break;
+		case 4:
+		mode5_a();
+		break;
+
+	}
+}
+
+//按键2处理逻辑
+void procKey2()
+{
+	pwmFlag = 1;
+	if(++pwm1Step > 5)
+		pwm1Step = 1;
+	switch(pwm0Step)
+	{
+		case 1:
+		mode1_a();
+		break;
+		case 2:
+		mode1_b();
+		break;
+		case 3:
+		mode1_c();
+		break;
+		case 4:
+		mode1_d();
+		break;
+		case 5:
+		mode1_e();
+		break;
+	}
+}
+
+
+void startPWM()
+{	
+	pwm0Step--;
+	pwm1Step--;
+	procKey1();
+	procKey2();
+}
+
+
+
+/***********************************************************
+键处理函数
+***********************************************************/
+void KeyServer()
+{
+	static unsigned int KeyOldFlag = 0;
+	unsigned int i = (unsigned int)((KeyFlag[1]<<8) | KeyFlag[0]);
+	if(i)
+	{
+		if(i != KeyOldFlag)
+		{
+			KeyOldFlag = i;
+			switch(i)
+			{
+				case 1:
+				procKey1();
+				break;
+				case 2:
+				procKey2();
+				break;
+				case 3:
+				doublePressFlag = 1;
+				break;
+				case 4:
+				procKey1();
+				break;
+				case 8:
+				procKey2();
+				break;
+				default:
+				if(doublePressFlag)
+				{
+					//同时按下并松开后
+					if(ONFlag)
+						ONFlag = 0;
+					else
+						ONFlag = 1;
+				}
+				break;
+			}
+		}
+	}
+	else
+	{
+		KeyOldFlag = 0;
+	}
+}
+//检测红外遮挡
+void checkIRKey()
+{
+	if(getbit(PORTB, 2))
+	{
+		revCount++;		//检测到遮挡了
+		irStep = 2;
+	}
+	//revCount++;
+	if(checkCount > 3 && revCount > 2)
+	{
+		sendFlag = 0;
+		if(irStep == 0)
+		{
+			if(ONFlag = 1)
+				ONFlag = 0;
+			else
+				ONFlag = 1;
+			irStep = 1;		//检测到遮挡了
+		}
+	}
+	else
+	{
+		sendFlag = 1;	//未检测到遮挡
+		if(irStep)
+		{
+			irStep = 0;			//移开了
+			ONFlag = 1;
+		}
+	}
+
+	if(++checkCount >= 30)
+	{
+		sendFlag = 1;		//重置检测条件
+		checkCount = 0;
+		revCount = 0;
+	}
+		
+}
+
+
+/***********************************************************
+中断服务函数
+***********************************************************/
+void interrupt Isr_Timer()
+{
+	if(TMR2IF)				//若只使能了一个中断源,可以略去判断
+	{
+		TMR2IF = 0;
+		
+		if(++MainTime >= 32)
+		{
+			MainTime = 0;
+			B_MainLoop = 1;
+		}
+		//模拟pwm输出
+		if(pwmTime < 12 && sendFlag)
+			resetbit(PORTA, 3);
+		else
+			setbit(PORTA, 3);
+		if(++pwmTime >= 44)
+		{
+			pwmTime = 0;
+		}
+	}
+	else
+	{
+		PIR1 = 0;
+	//	PIR2 = 0;
+	}
+}
+
+/***********************************************************
+主循环
+***********************************************************/
+void main()
+{
+	Init_System();
+	sendFlag = 1;
+	//initPWM();
+	//mode1_a();
+	while(1)
+	{
+		if(B_MainLoop)
+		{
+			B_MainLoop = 0;
+			CLRWDT();
+			
+			CheckTouchKey();
+			
+			Refurbish_Sfr();
+			KeyServer();
+			checkIRKey();
+			if(ONFlag && pwmFlag == 0)
+			{
+				startPWM();
+			}
+			else if(ONFlag == 0 && pwmFlag == 1)
+			{
+				PWMCON0 = 0;
+				pwmFlag = 0;
+			}
+		}
+	}
+}

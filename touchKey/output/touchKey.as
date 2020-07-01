@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8F2852
-opt include "F:\安装软件\SCMCU_IDE_V2.00.08_Beta9\SCMCU_IDE_V2.00.08_Beta9\data\include\sc8f2852.cgen.inc"
+opt include "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc8f2852.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -309,7 +309,7 @@ __pcstackCOMMON:
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 27 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 27 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -339,12 +339,12 @@ __pcstackCOMMON:
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	27
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	27
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
@@ -355,7 +355,7 @@ _main:
 ; Regs used in _main: [wreg+status,2+status,0+pclath+cstack]
 	line	29
 	
-l985:	
+l991:	
 ;main.c: 29: initSys();
 	fcall	_initSys
 	line	30
@@ -363,39 +363,39 @@ l985:
 	
 l437:	
 	line	32
-# 32 "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+# 32 "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 clrwdt ;# 
 psect	maintext
 	line	33
 	
-l987:	
+l993:	
 ;main.c: 33: if(!IntFlag)
 	movf	((_IntFlag)),w
 	btfss	status,2
 	goto	u131
 	goto	u130
 u131:
-	goto	l991
+	goto	l997
 u130:
 	goto	l437
 	line	35
 	
-l991:	
+l997:	
 ;main.c: 35: IntFlag = 0;
 	clrf	(_IntFlag)
 	line	36
 	
-l993:	
+l999:	
 ;main.c: 36: checkKey0TouchKey();
 	fcall	_checkKey0TouchKey
 	line	37
 	
-l995:	
+l1001:	
 ;main.c: 37: checkKey1TouchKey();
 	fcall	_checkKey1TouchKey
 	line	38
 	
-l997:	
+l1003:	
 ;main.c: 38: if(pwmFlag == 0)
 	movf	((_pwmFlag)),w
 	btfss	status,2
@@ -406,14 +406,14 @@ u141:
 u140:
 	line	40
 	
-l999:	
+l1005:	
 ;main.c: 39: {
 ;main.c: 40: pwmFlag = 1;
 	clrf	(_pwmFlag)
 	incf	(_pwmFlag),f
 	line	41
 	
-l1001:	
+l1007:	
 ;main.c: 41: mode1_c();
 	fcall	_mode1_c
 	goto	l437
@@ -428,7 +428,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _mode1_c *****************
 ;; Defined at:
-;;		line 85 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 85 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -460,7 +460,7 @@ psect	text1,local,class=CODE,delta=2,merge=1,group=0
 global __ptext1
 __ptext1:	;psect for function _mode1_c
 psect	text1
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	85
 	global	__size_of_mode1_c
 	__size_of_mode1_c	equ	__end_of_mode1_c-_mode1_c
@@ -471,7 +471,7 @@ _mode1_c:
 ; Regs used in _mode1_c: [wreg+status,2+status,0]
 	line	87
 	
-l979:	
+l985:	
 ;main.c: 87: PWMD0L = 1;
 	movlw	low(01h)
 	bcf	status, 5	;RP0=0, select bank0
@@ -482,12 +482,12 @@ l979:
 	movwf	(24)	;volatile
 	line	89
 	
-l981:	
+l987:	
 ;main.c: 89: PWMTH = 0;
 	clrf	(22)	;volatile
 	line	90
 	
-l983:	
+l989:	
 ;main.c: 90: PWMCON0 |= 0x03;
 	movlw	low(03h)
 	iorwf	(19),f	;volatile
@@ -503,7 +503,7 @@ GLOBAL	__end_of_mode1_c
 
 ;; *************** function _initSys *****************
 ;; Defined at:
-;;		line 46 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 46 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -536,7 +536,7 @@ psect	text2,local,class=CODE,delta=2,merge=1,group=0
 global __ptext2
 __ptext2:	;psect for function _initSys
 psect	text2
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	46
 	global	__size_of_initSys
 	__size_of_initSys	equ	__end_of_initSys-_initSys
@@ -547,7 +547,7 @@ _initSys:
 ; Regs used in _initSys: [wreg+status,2+status,0+pclath+cstack]
 	line	48
 	
-l907:	
+l913:	
 ;main.c: 48: initTimer0();
 	fcall	_initTimer0
 	line	49
@@ -565,7 +565,7 @@ GLOBAL	__end_of_initSys
 
 ;; *************** function _initTimer0 *****************
 ;; Defined at:
-;;		line 247 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 247 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -597,7 +597,7 @@ psect	text3,local,class=CODE,delta=2,merge=1,group=0
 global __ptext3
 __ptext3:	;psect for function _initTimer0
 psect	text3
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	247
 	global	__size_of_initTimer0
 	__size_of_initTimer0	equ	__end_of_initTimer0-_initTimer0
@@ -609,10 +609,10 @@ _initTimer0:
 	line	249
 	
 l891:	
-# 249 "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+# 249 "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 nop ;# 
 	line	250
-# 250 "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+# 250 "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 clrwdt ;# 
 psect	text3
 	line	251
@@ -655,15 +655,20 @@ l897:
 	bsf	status, 5	;RP0=1, select bank1
 	movwf	(136)^080h	;volatile
 	line	259
-;main.c: 259: OPTION_REG = 0x07;
-	movlw	low(07h)
-	movwf	(129)^080h	;volatile
+	
+l899:	
+;main.c: 259: OPTION_REG = 0x00;
+	clrf	(129)^080h	;volatile
 	line	260
+	
+l901:	
 ;main.c: 260: TMR0 = 99;
 	movlw	low(063h)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(1)	;volatile
 	line	265
+	
+l903:	
 ;main.c: 265: INTCON = 0xA0;
 	movlw	low(0A0h)
 	movwf	(11)	;volatile
@@ -679,7 +684,7 @@ GLOBAL	__end_of_initTimer0
 
 ;; *************** function _initPWM *****************
 ;; Defined at:
-;;		line 53 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 53 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -711,7 +716,7 @@ psect	text4,local,class=CODE,delta=2,merge=1,group=0
 global __ptext4
 __ptext4:	;psect for function _initPWM
 psect	text4
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	53
 	global	__size_of_initPWM
 	__size_of_initPWM	equ	__end_of_initPWM-_initPWM
@@ -722,7 +727,7 @@ _initPWM:
 ; Regs used in _initPWM: [wreg+status,2]
 	line	55
 	
-l899:	
+l905:	
 ;main.c: 55: PWMCON1 = 0x40;
 	movlw	low(040h)
 	movwf	(20)	;volatile
@@ -732,12 +737,12 @@ l899:
 	movwf	(19)	;volatile
 	line	57
 	
-l901:	
+l907:	
 ;main.c: 57: PWMCON2 = 0;
 	clrf	(29)	;volatile
 	line	58
 	
-l903:	
+l909:	
 ;main.c: 58: PWMTH = 0;
 	clrf	(22)	;volatile
 	line	59
@@ -754,7 +759,7 @@ l903:
 	movwf	(24)	;volatile
 	line	62
 	
-l905:	
+l911:	
 ;main.c: 62: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	63
@@ -769,7 +774,7 @@ GLOBAL	__end_of_initPWM
 
 ;; *************** function _checkKey1TouchKey *****************
 ;; Defined at:
-;;		line 198 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 198 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -801,7 +806,7 @@ psect	text5,local,class=CODE,delta=2,merge=1,group=0
 global __ptext5
 __ptext5:	;psect for function _checkKey1TouchKey
 psect	text5
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	198
 	global	__size_of_checkKey1TouchKey
 	__size_of_checkKey1TouchKey	equ	__end_of_checkKey1TouchKey-_checkKey1TouchKey
@@ -812,47 +817,47 @@ _checkKey1TouchKey:
 ; Regs used in _checkKey1TouchKey: [wreg+status,2+status,0]
 	line	200
 	
-l945:	
+l951:	
 ;main.c: 200: INTCON = 0x20;
 	movlw	low(020h)
 	movwf	(11)	;volatile
 	line	201
 	
-l947:	
-;main.c: 201: TRISB |= 0x4F;
-	movlw	low(04Fh)
+l953:	
+;main.c: 201: TRISB |= 0x47;
+	movlw	low(047h)
 	iorwf	(134)^080h,f	;volatile
 	line	202
 	
-l949:	
+l955:	
 ;main.c: 202: KEYCON1 = 0x51;
 	movlw	low(051h)
 	movwf	(147)^080h	;volatile
 	line	203
 	
-l951:	
+l957:	
 ;main.c: 203: KEYCON0 = 0x03;
 	movlw	low(03h)
 	movwf	(146)^080h	;volatile
 	line	204
 ;main.c: 204: while(!(KEYCON0, 7));
 	
-l953:	
+l959:	
 	movf	(146)^080h,w	;volatile
 	line	206
 	
-l955:	
+l961:	
 ;main.c: 206: if(tempKey1L)
 	movf	((_tempKey1L)),w
 	btfsc	status,2
 	goto	u71
 	goto	u70
 u71:
-	goto	l961
+	goto	l967
 u70:
 	line	208
 	
-l957:	
+l963:	
 ;main.c: 207: {
 ;main.c: 208: if(tempKey1L > (KEYDATAL + 10) && tempKey1H >= KEYDATAH)
 	movf	(148)^080h,w	;volatile
@@ -877,10 +882,10 @@ u85:
 	goto	u81
 	goto	u80
 u81:
-	goto	l961
+	goto	l967
 u80:
 	
-l959:	
+l965:	
 ;main.c: 209: {
 ;main.c: 210: key1Flag = 1;
 	bsf	status, 5	;RP0=1, select bank1
@@ -888,7 +893,7 @@ l959:
 	movf	(149)^080h,w	;volatile
 	line	215
 	
-l961:	
+l967:	
 ;main.c: 211: }
 ;main.c: 212: }
 ;main.c: 215: if(tempKey1H)
@@ -897,11 +902,11 @@ l961:
 	goto	u91
 	goto	u90
 u91:
-	goto	l975
+	goto	l981
 u90:
 	line	217
 	
-l963:	
+l969:	
 ;main.c: 216: {
 ;main.c: 217: if(tempKey1H > KEYDATAH)
 	movf	(_tempKey1H),w
@@ -912,11 +917,11 @@ l963:
 	goto	u101
 	goto	u100
 u101:
-	goto	l975
+	goto	l981
 u100:
 	line	219
 	
-l965:	
+l971:	
 ;main.c: 220: {
 ;main.c: 221: key1Flag = 1;
 	movf	(149)^080h,w	;volatile
@@ -941,12 +946,12 @@ u115:
 	goto	u111
 	goto	u110
 u111:
-	goto	l969
-u110:
 	goto	l975
+u110:
+	goto	l981
 	line	226
 	
-l969:	
+l975:	
 ;main.c: 227: {
 ;main.c: 228: key1Flag = 1;
 	movf	(_tempKey1L),w
@@ -957,18 +962,18 @@ l969:
 	goto	u121
 	goto	u120
 u121:
-	goto	l973
+	goto	l979
 u120:
-	goto	l975
+	goto	l981
 	line	230
 	
-l973:	
+l979:	
 ;main.c: 231: {
 ;main.c: 232: key1Flag = 1;
 	movf	(148)^080h,w	;volatile
 	line	237
 	
-l975:	
+l981:	
 ;main.c: 233: }
 ;main.c: 234: }
 ;main.c: 235: }
@@ -984,7 +989,7 @@ l975:
 	movwf	(_tempKey1L)
 	line	239
 	
-l977:	
+l983:	
 ;main.c: 239: KEYCON0 &= 0xFE;
 	bcf	(146)^080h+(0/8),(0)&7	;volatile
 	line	240
@@ -1003,7 +1008,7 @@ GLOBAL	__end_of_checkKey1TouchKey
 
 ;; *************** function _checkKey0TouchKey *****************
 ;; Defined at:
-;;		line 152 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 152 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1035,7 +1040,7 @@ psect	text6,local,class=CODE,delta=2,merge=1,group=0
 global __ptext6
 __ptext6:	;psect for function _checkKey0TouchKey
 psect	text6
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	152
 	global	__size_of_checkKey0TouchKey
 	__size_of_checkKey0TouchKey	equ	__end_of_checkKey0TouchKey-_checkKey0TouchKey
@@ -1046,54 +1051,54 @@ _checkKey0TouchKey:
 ; Regs used in _checkKey0TouchKey: [wreg+status,2+status,0]
 	line	154
 	
-l909:	
+l915:	
 ;main.c: 154: INTCON = 0x20;
 	movlw	low(020h)
 	movwf	(11)	;volatile
 	line	155
 	
-l911:	
-;main.c: 155: TRISB |= 0x4F;
-	movlw	low(04Fh)
+l917:	
+;main.c: 155: TRISB |= 0x47;
+	movlw	low(047h)
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	iorwf	(134)^080h,f	;volatile
 	line	156
 	
-l913:	
+l919:	
 ;main.c: 156: KEYCON1 = 0x50;
 	movlw	low(050h)
 	movwf	(147)^080h	;volatile
 	line	157
 	
-l915:	
+l921:	
 ;main.c: 157: KEYCON0 = 0x02;
 	movlw	low(02h)
 	movwf	(146)^080h	;volatile
 	line	158
 	
-l917:	
+l923:	
 ;main.c: 158: KEYCON0 |= 0x01;
 	bsf	(146)^080h+(0/8),(0)&7	;volatile
 	line	159
 ;main.c: 159: while(!(KEYCON0, 7));
 	
-l919:	
+l925:	
 	movf	(146)^080h,w	;volatile
 	line	161
 	
-l921:	
+l927:	
 ;main.c: 161: if(tempKey0L)
 	movf	((_tempKey0L)),w
 	btfsc	status,2
 	goto	u11
 	goto	u10
 u11:
-	goto	l927
+	goto	l933
 u10:
 	line	163
 	
-l923:	
+l929:	
 ;main.c: 162: {
 ;main.c: 163: if(tempKey0L > (KEYDATAL + 10) && tempKey0H >= KEYDATAH)
 	movf	(148)^080h,w	;volatile
@@ -1118,10 +1123,10 @@ u25:
 	goto	u21
 	goto	u20
 u21:
-	goto	l927
+	goto	l933
 u20:
 	
-l925:	
+l931:	
 ;main.c: 164: {
 ;main.c: 165: key0Flag = 1;
 	bsf	status, 5	;RP0=1, select bank1
@@ -1129,7 +1134,7 @@ l925:
 	movf	(149)^080h,w	;volatile
 	line	170
 	
-l927:	
+l933:	
 ;main.c: 166: }
 ;main.c: 167: }
 ;main.c: 170: if(tempKey0H)
@@ -1138,11 +1143,11 @@ l927:
 	goto	u31
 	goto	u30
 u31:
-	goto	l941
+	goto	l947
 u30:
 	line	172
 	
-l929:	
+l935:	
 ;main.c: 171: {
 ;main.c: 172: if(tempKey0H > KEYDATAH)
 	movf	(_tempKey0H),w
@@ -1153,11 +1158,11 @@ l929:
 	goto	u41
 	goto	u40
 u41:
-	goto	l941
+	goto	l947
 u40:
 	line	174
 	
-l931:	
+l937:	
 ;main.c: 175: {
 ;main.c: 176: key0Flag = 1;
 	movf	(149)^080h,w	;volatile
@@ -1182,12 +1187,12 @@ u55:
 	goto	u51
 	goto	u50
 u51:
-	goto	l935
-u50:
 	goto	l941
+u50:
+	goto	l947
 	line	181
 	
-l935:	
+l941:	
 ;main.c: 182: {
 ;main.c: 183: key0Flag = 1;
 	movf	(_tempKey0L),w
@@ -1198,18 +1203,18 @@ l935:
 	goto	u61
 	goto	u60
 u61:
-	goto	l939
+	goto	l945
 u60:
-	goto	l941
+	goto	l947
 	line	185
 	
-l939:	
+l945:	
 ;main.c: 186: {
 ;main.c: 187: key0Flag = 1;
 	movf	(148)^080h,w	;volatile
 	line	192
 	
-l941:	
+l947:	
 ;main.c: 188: }
 ;main.c: 189: }
 ;main.c: 190: }
@@ -1225,7 +1230,7 @@ l941:
 	movwf	(_tempKey0L)
 	line	194
 	
-l943:	
+l949:	
 ;main.c: 194: KEYCON0 &= 0xFE;
 	bcf	(146)^080h+(0/8),(0)&7	;volatile
 	line	195
@@ -1244,7 +1249,7 @@ GLOBAL	__end_of_checkKey0TouchKey
 
 ;; *************** function _Timer0_Isr *****************
 ;; Defined at:
-;;		line 268 in file "C:\Users\mxy\Desktop\scm\touchKey\main.c"
+;;		line 268 in file "C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1275,7 +1280,7 @@ psect	text7,local,class=CODE,delta=2,merge=1,group=0
 global __ptext7
 __ptext7:	;psect for function _Timer0_Isr
 psect	text7
-	file	"C:\Users\mxy\Desktop\scm\touchKey\main.c"
+	file	"C:\Users\hhmm6\Desktop\scm\touchKey\main.c"
 	line	268
 	global	__size_of_Timer0_Isr
 	__size_of_Timer0_Isr	equ	__end_of_Timer0_Isr-_Timer0_Isr
@@ -1300,7 +1305,7 @@ interrupt_function:
 psect	text7
 	line	270
 	
-i1l1003:	
+i1l1009:	
 ;main.c: 270: if(T0IF)
 	btfss	(90/8),(90)&7	;volatile
 	goto	u15_21
@@ -1310,7 +1315,7 @@ u15_21:
 u15_20:
 	line	273
 	
-i1l1005:	
+i1l1011:	
 ;main.c: 271: {
 ;main.c: 273: TMR0 += 99;
 	movlw	low(063h)
@@ -1318,7 +1323,11 @@ i1l1005:
 	bcf	status, 6	;RP1=0, select bank0
 	addwf	(1),f	;volatile
 	line	274
-;main.c: 274: if(++timeCount == 10)
+;main.c: 274: PORTB^=(1<<3);
+	movlw	low(08h)
+	xorwf	(6),f	;volatile
+	line	275
+;main.c: 275: if(++timeCount == 10)
 	incf	(_timeCount),f
 	skipnz
 	incf	(_timeCount+1),f
@@ -1329,28 +1338,28 @@ iorwf	(((_timeCount+1))),w
 	goto	u16_21
 	goto	u16_20
 u16_21:
-	goto	i1l1011
+	goto	i1l1017
 u16_20:
-	line	276
-	
-i1l1007:	
-;main.c: 275: {
-;main.c: 276: timeCount = 0;
-	clrf	(_timeCount)
-	clrf	(_timeCount+1)
 	line	277
 	
-i1l1009:	
-;main.c: 277: IntFlag = 1;
+i1l1013:	
+;main.c: 276: {
+;main.c: 277: timeCount = 0;
+	clrf	(_timeCount)
+	clrf	(_timeCount+1)
+	line	278
+	
+i1l1015:	
+;main.c: 278: IntFlag = 1;
 	clrf	(_IntFlag)
 	incf	(_IntFlag),f
-	line	280
+	line	281
 	
-i1l1011:	
-;main.c: 278: }
-;main.c: 280: T0IF = 0;
+i1l1017:	
+;main.c: 279: }
+;main.c: 281: T0IF = 0;
 	bcf	(90/8),(90)&7	;volatile
-	line	283
+	line	284
 	
 i1l515:	
 	movf	(??_Timer0_Isr+1),w

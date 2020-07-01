@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/Users/hhmm6/Desktop/scm/keytest2/main.c C:/Users/hhmm6/Desktop/scm/keytest2/pwm.h C:/Users/hhmm6/Desktop/scm/keytest2/Touch_Kscan_Library.h C:/Users/hhmm6/Desktop/scm/keytest2/TouchKeyConst.h

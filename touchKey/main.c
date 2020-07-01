@@ -152,7 +152,7 @@ void mode5_a()
 void checkKey0TouchKey()
 {
 	INTCON = 0x20;	//关闭中断
-	TRISB |= 0x4F;	//PB0 PB1为输入口
+	TRISB |= 0x47;	//PB0 PB1为输入口
 	KEYCON1 = 0x50;	//Key0通道检测
 	KEYCON0 = 0x02;
 	KEYCON0 |= 0x01;
@@ -198,7 +198,7 @@ void checkKey0TouchKey()
 void checkKey1TouchKey()
 {
 	INTCON = 0x20;	//关闭中断
-	TRISB |= 0x4F;	//PB0 PB1为输入口
+	TRISB |= 0x47;	//PB0 PB1为输入口
 	KEYCON1 = 0x51;	//Key1通道检测
 	KEYCON0 = 0x03;
 	while(!(KEYCON0, 7));
@@ -256,7 +256,7 @@ void initTimer0()
 		PORTA = 0xFF;
 		PORTB = 0xFF;					//系统初始化
 		OSCCON = 0X52;				//配置振荡为8M,开 WDT
-		OPTION_REG = 0x07;		//Timer0使用内部时钟Focs/4，预分频比为1:128
+		OPTION_REG = 0x00;		//Timer0使用内部时钟Focs/4，预分频比为1:2
 		TMR0 = 99;				//赋予初始值 4*128*156/8M = 0.01
 		//INTCON = 0xE0;			//允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
 		
@@ -271,6 +271,7 @@ void interrupt Timer0_Isr()
 	{
 	//---------------------------------------
 		TMR0 += 99;		//重新赋初值 4*128*156/8M
+		reversebit(PORTB,3);
 		if(++timeCount == 10)
 		{
 			timeCount = 0;
