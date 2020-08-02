@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/Users/hhmm6/Desktop/scm/GN_101bt/main.c C:/Users/hhmm6/Desktop/scm/GN_101bt/TouchKeyConst.h C:/Users/hhmm6/Desktop/scm/GN_101bt/Touch_Kscan_Library.h

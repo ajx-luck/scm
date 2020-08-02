@@ -1,0 +1,1347 @@
+---- C:\Users\hhmm6\Desktop\scm\GN_101bt\main.c ----------------------------------------------------------------------
+1:                #include <sc.h>
+2:                #include "Touch_Kscan_Library.h"
+3:                
+4:                
+5:                void processPress();
+6:                
+7:                volatile unsigned char MainTime;
+8:                volatile unsigned int PwmData;
+9:                volatile bit	B_MainLoop,B_OnOff;
+10:               unsigned char key1Count = 0;
+11:               unsigned int time1sCount = 0;
+12:               unsigned char pressKey = 0;
+13:               unsigned char lowCount = 26;
+14:               
+15:               //系统初始化
+16:               void Init_System()
+  0357    0000    NOP
+  0358    0064    CLRWDT
+17:               {
+18:               	asm("nop");
+19:               	asm("clrwdt");
+20:               	OPTION_REG |= 0x07;
+  0359    3007    LDIA	0x7
+  035A    1683    SETB	0x3,5
+  035B    1303    CLRB	0x3,6
+  035C    0481    ORR	0x1
+21:               			
+22:               	OPTION_REG |= 0x08;
+  035D    1581    SETB	0x1,3
+  035E    0064    CLRWDT
+  035F    21DE    CALL	0x1DE
+  0360    0064    CLRWDT
+23:               	asm("clrwdt");
+24:               			
+25:               	OPTION_REG = C_OPTION_REG_;		//预分频给看门狗，18ms*2*3=108ms
+26:               	asm("clrwdt");
+27:               	
+28:               	INTCON = 0;				//禁止中断
+  0361    018B    CLR	0xB
+29:               	OSCCON = 0X70;			//配置振荡为8M
+  0362    3070    LDIA	0x70
+  0363    1683    SETB	0x3,5
+  0364    1303    CLRB	0x3,6
+  0365    0088    LD	0x8,A
+30:               	
+31:               	PORTB = 0;
+  0366    1283    CLRB	0x3,5
+  0367    0186    CLR	0x6
+32:               	TRISB = 0;
+  0368    1683    SETB	0x3,5
+  0369    0186    CLR	0x6
+33:               	PORTB = 0X10;	
+  036A    3010    LDIA	0x10
+  036B    1283    CLRB	0x3,5
+  036C    0086    LD	0x6,A
+34:               	WPUB = 0X10;		//PORTB.4如果要输出高电平必须打开上拉电阻
+  036D    0088    LD	0x8,A
+35:               						//输出低的时候记得关闭上拉，否则会增加休眠电流
+36:               	WPDB = 0;
+  036E    1683    SETB	0x3,5
+  036F    0187    CLR	0x7
+37:               	//延时等待电源电压稳定
+38:               	//DelayXms(200);
+39:               	
+40:               	TMR0 = 6;				//预分频给WDT，此时TMR0的分频比为1:1，8M下将TMR0设置为125us中断，
+  0370    3006    LDIA	0x6
+  0371    1283    CLRB	0x3,5
+  0372    0081    LD	0x1,A
+41:               	INTCON = 0XA0;			//使能中断
+  0373    30A0    LDIA	0xA0
+  0374    008B    LD	0xB,A
+42:               	
+43:               	PwmData = 0xF0;			//占空比（CCPRXL:PWMXB(1,0))/（PR2+1)*4
+  0375    30F0    LDIA	0xF0
+  0376    00C7    LD	0x47,A
+  0377    01C8    CLR	0x48
+44:               	PR2 =0XFF;				//pwm周期T=（PR2+1)*4*(TMR2预分频）/Fosc,此处T=128uS;
+  0378    30FF    LDIA	0xFF
+  0379    1683    SETB	0x3,5
+  037A    0091    LD	0x11,A
+  037B    0008    RET
+45:               }
+46:               
+47:               
+48:               /**********************************************************
+49:               函数名称：Refurbish_Sfr
+50:               函数功能：刷新一些特殊功能寄存器
+51:               入口参数：无
+52:               出口参数：无 
+53:               备    注：每隔一定时间刷新一次SFR可增强抗干扰能力
+54:               **********************************************************/
+55:               void Refurbish_Sfr()
+56:               {	
+57:               	//刷新中断相关控制寄存器
+58:               	INTCON = 0XA0;
+  045F    30A0    LDIA	0xA0
+  0460    008B    LD	0xB,A
+59:               	TRISB = 0;
+  0461    1683    SETB	0x3,5
+  0462    1303    CLRB	0x3,6
+  0463    0186    CLR	0x6
+60:               	WPUB = 0X10;
+  0464    3010    LDIA	0x10
+  0465    1283    CLRB	0x3,5
+  0466    0088    LD	0x8,A
+  0467    0008    RET
+61:               }
+62:               
+63:               
+64:               /***********************************************************
+65:               键处理函数
+66:               ***********************************************************/
+67:               void KeyServer()
+68:               {
+69:               	static unsigned char KeyOldFlag = 0;
+70:               	if(KeyFlag[0])
+  03B0    082E    LD	A,0x2E
+  03B1    1903    SZB	0x3,2
+  03B2    2BC4    JP	0x3C4
+71:               	{
+72:               		if(KeyFlag[0] != KeyOldFlag)
+  03B3    082E    LD	A,0x2E
+  03B4    0636    XORA	0x36
+  03B5    1903    SZB	0x3,2
+  03B6    0008    RET
+73:               		{
+74:               			//确定状态改变的按键
+75:               			KeyOldFlag ^= KeyFlag[0];
+  03B7    082E    LD	A,0x2E
+  03B8    06B6    XORR	0x36
+76:               			if((KeyOldFlag&0x1) && (KeyFlag[0]&0x1))
+  03B9    1836    SZB	0x36,0
+  03BA    1C2E    SNZB	0x2E,0
+  03BB    2BC1    JP	0x3C1
+77:               			{
+78:               				//KEY1被按下
+79:               				B_OnOff = !B_OnOff;
+  03BC    3020    LDIA	0x20
+  03BD    06F9    XORR	0x79
+80:               				//PORTB ^= 0X10;
+81:               				pressKey = 1;
+  03BE    01B7    CLR	0x37
+  03BF    0AB7    INCR	0x37
+82:               				B_OnOff = 1;
+  03C0    16F9    SETB	0x79,5
+83:               			}
+84:               			
+85:               			KeyOldFlag = KeyFlag[0];
+  03C1    082E    LD	A,0x2E
+  03C2    00B6    LD	0x36,A
+  03C3    0008    RET
+86:               		}
+87:               	}
+88:               	else
+89:               	{
+90:               		KeyOldFlag = 0;
+  03C4    01B6    CLR	0x36
+91:               		pressKey = 0;
+  03C5    01B7    CLR	0x37
+92:               		B_OnOff = 0;
+  03C6    12F9    CLRB	0x79,5
+  03C7    0008    RET
+93:               	}
+94:               }
+95:               
+96:               /***********************************************************
+97:               中断服务函数
+98:               ***********************************************************/
+99:               void interrupt Isr_Timer()
+100:              {
+101:              	if(T0IF)				//若只使能了一个中断源,可以略去判断
+  037C    1D0B    SNZB	0xB,2
+  037D    2B8B    JP	0x38B
+102:              	{
+103:              		TMR0 += 6;
+  037E    3006    LDIA	0x6
+  037F    1283    CLRB	0x3,5
+  0380    1303    CLRB	0x3,6
+  0381    0781    ADDR	0x1
+104:              		T0IF = 0;
+  0382    110B    CLRB	0xB,2
+105:              		if(++MainTime >= 32)		//4ms进一次主循环
+  0383    3020    LDIA	0x20
+  0384    0AB8    INCR	0x38
+  0385    0238    SUBA	0x38
+  0386    1C03    SNZB	0x3,0
+  0387    2B90    JP	0x390
+106:              		{
+107:              			MainTime = 0;
+  0388    01B8    CLR	0x38
+108:              			B_MainLoop = 1;
+  0389    1779    SETB	0x79,6
+  038A    2B90    JP	0x390
+109:              		}
+110:              	}
+111:              	else
+112:              	{
+113:              		INTCON = 0XA0;
+  038B    30A0    LDIA	0xA0
+  038C    008B    LD	0xB,A
+114:              		PIR1 = 0;
+  038D    1283    CLRB	0x3,5
+  038E    1303    CLRB	0x3,6
+  038F    018C    CLR	0xC
+  0390    0871    LD	A,0x71
+  0391    008A    LD	0xA,A
+  0392    0E70    SWAPA	0x70
+  0393    0083    LD	0x3,A
+  0394    0EFE    SWAPR	0x7E
+  0395    0E7E    SWAPA	0x7E
+  0396    0009    RETI
+115:              	}
+116:              	
+117:              }
+118:              
+119:              /***********************************************************
+120:              休眠函数
+121:              ***********************************************************/
+122:              void WorkSleep()
+123:              {
+124:              #if (0 != C_KEY_WAKEUP)
+125:              	static unsigned char time;
+126:              	
+127:              	if(B_OnOff)	
+  03C8    1AF9    SZB	0x79,5
+128:              		time = 0;
+  03C9    01B5    CLR	0x35
+129:              	
+130:              	if(++time >= 250)
+  03CA    30FA    LDIA	0xFA
+  03CB    0AB5    INCR	0x35
+  03CC    0235    SUBA	0x35
+  03CD    1C03    SNZB	0x3,0
+  03CE    0008    RET
+131:              	{
+132:              		time = 0;
+  03CF    01B5    CLR	0x35
+133:              		INTCON = 0;			//;关断ADC模块及中断使能；
+  03D0    018B    CLR	0xB
+134:              		PIE1 = 0;
+  03D1    018D    CLR	0xD
+135:              		PIR1 = 0;
+  03D2    018C    CLR	0xC
+136:              		T2CON = 0;
+  03D3    0192    CLR	0x12
+137:              		KEYCON0 = 0;
+  03D4    1683    SETB	0x3,5
+  03D5    0192    CLR	0x12
+138:              		//进入休眠前,必须固定口线电平,这儿全部输出低电平,并关闭所有上拉电阻
+139:              		TRISB = 0;
+  03D6    0186    CLR	0x6
+140:              		PORTB = 0;
+  03D7    1283    CLRB	0x3,5
+  03D8    0186    CLR	0x6
+141:              		WPUB = 0;
+  03D9    0188    CLR	0x8
+142:              
+143:              /****如需要PB口中断唤醒，使能下列程序并按需修改****/
+144:              			//RBPU = 0;//使能PB上拉
+145:              			//TRISB1 =1;//输入
+146:              			//WPUB1 = 1;//上拉			
+147:              			//RBIF = 0;//清标志
+148:              			//IOCB1 = 1;//允许PB1电平变化中断
+149:              			//PORTB;//读一次PB口			
+150:              /************************************/	
+151:              
+152:              		//进入休眠模式,触摸允许唤醒的按键后恢复正常工作
+153:              		SystemEnterSleep();
+  03DA    2100    CALL	0x100
+154:              		if(RBIF) RBIF = 0;
+  03DB    180B    SZB	0xB,0
+  03DC    100B    CLRB	0xB,0
+155:              		//休眠被唤醒,重新配置中断等SFR,使系统进入正常工作
+156:              		Refurbish_Sfr();
+  03DD    2C5F    JP	0x45F
+157:              	}
+158:              #endif
+159:              }
+160:              
+161:              /***********************************************************
+162:              主循环
+163:              ***********************************************************/
+164:              void main()
+165:              {
+166:              	Init_System();
+  0454    2357    CALL	0x357
+167:              	while(1)
+168:              	{
+169:              		if(B_MainLoop)
+  0455    1F79    SNZB	0x79,6
+  0456    2C55    JP	0x455
+170:              		{
+171:              			B_MainLoop = 0;
+  0457    1379    CLRB	0x79,6
+  0458    0064    CLRWDT
+172:              			CLRWDT();
+173:              							
+174:              			Refurbish_Sfr();
+  0459    245F    CALL	0x45F
+175:              			CheckTouchKey();
+  045A    2330    CALL	0x330
+176:              			KeyServer();
+  045B    23B0    CALL	0x3B0
+177:              			WorkSleep();
+  045C    23C8    CALL	0x3C8
+178:              			processPress();//处理按键
+  045D    242D    CALL	0x42D
+  045E    2C55    JP	0x455
+179:              		}
+180:              	}
+181:              }
+182:              
+183:              
+184:              void processPress()
+185:              {
+186:              	if(pressKey)
+  042D    0837    LD	A,0x37
+  042E    1D03    SNZB	0x3,2
+187:              	{
+188:              		lowCount = 0;
+  042F    01C9    CLR	0x49
+189:              	}
+190:              	if(++lowCount > 25)
+  0430    301A    LDIA	0x1A
+  0431    0AC9    INCR	0x49
+  0432    0249    SUBA	0x49
+  0433    1C03    SNZB	0x3,0
+  0434    2C39    JP	0x439
+191:              	{
+192:              		lowCount = 26;	//避免溢出
+  0435    301A    LDIA	0x1A
+  0436    00C9    LD	0x49,A
+193:              		PORTB |= 0x10;
+  0437    1606    SETB	0x6,4
+194:              	}
+  0438    0008    RET
+195:              	else
+196:              	{
+197:              		PORTB &= 0xEF;		//输出低电平
+  0439    1206    CLRB	0x6,4
+  043A    0008    RET
+198:              	}
+199:              }
+---- library_code ------------------------------------------------------------------
+  0017    01C2    CLR	0x42
+  0018    01FA    CLR	0x7A
+  0019    01FB    CLR	0x7B
+  001A    01B3    CLR	0x33
+  001B    0842    LD	A,0x42
+  001C    3907    ANDIA	0x7
+  001D    3E01    ADDIA	0x1
+  001E    0084    LD	0x4,A
+  001F    2408    CALL	0x408
+  0020    00BE    LD	0x3E,A
+  0021    1003    CLRB	0x3,0
+  0022    0D42    RLCA	0x42
+  0023    3E2C    ADDIA	0x2C
+  0024    0084    LD	0x4,A
+  0025    3003    LDIA	0x3
+  0026    0A84    INCR	0x4
+  0027    1003    CLRB	0x3,0
+  0028    1383    CLRB	0x3,7
+  0029    0C80    RRCR	0x0
+  002A    0384    DECR	0x4
+  002B    0C80    RRCR	0x0
+  002C    3EFF    ADDIA	0xFF
+  002D    1D03    SNZB	0x3,2
+  002E    2826    JP	0x26
+  002F    1003    CLRB	0x3,0
+  0030    0D42    RLCA	0x42
+  0031    3E2C    ADDIA	0x2C
+  0032    0084    LD	0x4,A
+  0033    0800    LD	A,0x0
+  0034    00C0    LD	0x40,A
+  0035    0A84    INCR	0x4
+  0036    0800    LD	A,0x0
+  0037    00C1    LD	0x41,A
+  0038    0842    LD	A,0x42
+  0039    3E0C    ADDIA	0xC
+  003A    0084    LD	0x4,A
+  003B    2408    CALL	0x408
+  003C    00BF    LD	0x3F,A
+  003D    00BC    LD	0x3C,A
+  003E    01BD    CLR	0x3D
+  003F    0840    LD	A,0x40
+  0040    07BC    ADDR	0x3C
+  0041    1803    SZB	0x3,0
+  0042    0ABD    INCR	0x3D
+  0043    0841    LD	A,0x41
+  0044    07BD    ADDR	0x3D
+  0045    0842    LD	A,0x42
+  0046    241B    CALL	0x41B
+  0047    3A00    XORIA	0x0
+  0048    1003    CLRB	0x3,0
+  0049    1D03    SNZB	0x3,2
+  004A    28A2    JP	0xA2
+  004B    0D42    RLCA	0x42
+  004C    3E26    ADDIA	0x26
+  004D    0084    LD	0x4,A
+  004E    1383    CLRB	0x3,7
+  004F    0800    LD	A,0x0
+  0050    00BA    LD	0x3A,A
+  0051    0A84    INCR	0x4
+  0052    0800    LD	A,0x0
+  0053    00BB    LD	0x3B,A
+  0054    1003    CLRB	0x3,0
+  0055    0D42    RLCA	0x42
+  0056    3E24    ADDIA	0x24
+  0057    20F9    CALL	0xF9
+  0058    023D    SUBA	0x3D
+  0059    1D03    SNZB	0x3,2
+  005A    285D    JP	0x5D
+  005B    0875    LD	A,0x75
+  005C    023C    SUBA	0x3C
+  005D    1803    SZB	0x3,0
+  005E    286B    JP	0x6B
+  005F    1003    CLRB	0x3,0
+  0060    0D42    RLCA	0x42
+  0061    3E24    ADDIA	0x24
+  0062    20F9    CALL	0xF9
+  0063    0840    LD	A,0x40
+  0064    0275    SUBA	0x75
+  0065    00C0    LD	0x40,A
+  0066    0841    LD	A,0x41
+  0067    1C03    SNZB	0x3,0
+  0068    0A41    INCA	0x41
+  0069    0276    SUBA	0x76
+  006A    288E    JP	0x8E
+  006B    083B    LD	A,0x3B
+  006C    023D    SUBA	0x3D
+  006D    1D03    SNZB	0x3,2
+  006E    2871    JP	0x71
+  006F    083A    LD	A,0x3A
+  0070    023C    SUBA	0x3C
+  0071    1803    SZB	0x3,0
+  0072    28E2    JP	0xE2
+  0073    1003    CLRB	0x3,0
+  0074    0D42    RLCA	0x42
+  0075    3E28    ADDIA	0x28
+  0076    20F9    CALL	0xF9
+  0077    023D    SUBA	0x3D
+  0078    1D03    SNZB	0x3,2
+  0079    287C    JP	0x7C
+  007A    0875    LD	A,0x75
+  007B    023C    SUBA	0x3C
+  007C    1803    SZB	0x3,0
+  007D    28E2    JP	0xE2
+  007E    1003    CLRB	0x3,0
+  007F    0D42    RLCA	0x42
+  0080    3E24    ADDIA	0x24
+  0081    0084    LD	0x4,A
+  0082    083A    LD	A,0x3A
+  0083    0080    LD	0x0,A
+  0084    0A84    INCR	0x4
+  0085    083B    LD	A,0x3B
+  0086    0080    LD	0x0,A
+  0087    0840    LD	A,0x40
+  0088    023A    SUBA	0x3A
+  0089    00C0    LD	0x40,A
+  008A    0841    LD	A,0x41
+  008B    1C03    SNZB	0x3,0
+  008C    0A41    INCA	0x41
+  008D    023B    SUBA	0x3B
+  008E    00C1    LD	0x41,A
+  008F    0842    LD	A,0x42
+  0090    3E39    ADDIA	0x39
+  0091    0084    LD	0x4,A
+  0092    0180    CLR	0x0
+  0093    0841    LD	A,0x41
+  0094    1903    SZB	0x3,2
+  0095    2898    JP	0x98
+  0096    30FF    LDIA	0xFF
+  0097    2899    JP	0x99
+  0098    0840    LD	A,0x40
+  0099    00BF    LD	0x3F,A
+  009A    0233    SUBA	0x33
+  009B    1803    SZB	0x3,0
+  009C    28A0    JP	0xA0
+  009D    083F    LD	A,0x3F
+  009E    00B3    LD	0x33,A
+  009F    28DD    JP	0xDD
+  00A0    0AB4    INCR	0x34
+  00A1    28E2    JP	0xE2
+  00A2    0D42    RLCA	0x42
+  00A3    3E24    ADDIA	0x24
+  00A4    0084    LD	0x4,A
+  00A5    1383    CLRB	0x3,7
+  00A6    0800    LD	A,0x0
+  00A7    00F5    LD	0x75,A
+  00A8    0A84    INCR	0x4
+  00A9    0800    LD	A,0x0
+  00AA    00F6    LD	0x76,A
+  00AB    0875    LD	A,0x75
+  00AC    3E01    ADDIA	0x1
+  00AD    00F7    LD	0x77,A
+  00AE    0876    LD	A,0x76
+  00AF    1803    SZB	0x3,0
+  00B0    3E01    ADDIA	0x1
+  00B1    00F8    LD	0x78,A
+  00B2    083D    LD	A,0x3D
+  00B3    0278    SUBA	0x78
+  00B4    1D03    SNZB	0x3,2
+  00B5    28B8    JP	0xB8
+  00B6    083C    LD	A,0x3C
+  00B7    0277    SUBA	0x77
+  00B8    1C03    SNZB	0x3,0
+  00B9    28E2    JP	0xE2
+  00BA    1003    CLRB	0x3,0
+  00BB    0D42    RLCA	0x42
+  00BC    3E26    ADDIA	0x26
+  00BD    0084    LD	0x4,A
+  00BE    0800    LD	A,0x0
+  00BF    20E7    CALL	0xE7
+  00C0    1C03    SNZB	0x3,0
+  00C1    28CA    JP	0xCA
+  00C2    1003    CLRB	0x3,0
+  00C3    0D42    RLCA	0x42
+  00C4    3E28    ADDIA	0x28
+  00C5    0084    LD	0x4,A
+  00C6    0800    LD	A,0x0
+  00C7    20E7    CALL	0xE7
+  00C8    1803    SZB	0x3,0
+  00C9    28D5    JP	0xD5
+  00CA    0842    LD	A,0x42
+  00CB    3E39    ADDIA	0x39
+  00CC    0084    LD	0x4,A
+  00CD    3009    LDIA	0x9
+  00CE    0A80    INCR	0x0
+  00CF    0200    SUBA	0x0
+  00D0    1C03    SNZB	0x3,0
+  00D1    28D9    JP	0xD9
+  00D2    0842    LD	A,0x42
+  00D3    2397    CALL	0x397
+  00D4    28E2    JP	0xE2
+  00D5    0842    LD	A,0x42
+  00D6    3E39    ADDIA	0x39
+  00D7    0084    LD	0x4,A
+  00D8    0180    CLR	0x0
+  00D9    087B    LD	A,0x7B
+  00DA    047A    ORA	0x7A
+  00DB    1D03    SNZB	0x3,2
+  00DC    28E2    JP	0xE2
+  00DD    083E    LD	A,0x3E
+  00DE    00F2    LD	0x72,A
+  00DF    01F3    CLR	0x73
+  00E0    0842    LD	A,0x42
+  00E1    2448    CALL	0x448
+  00E2    1283    CLRB	0x3,5
+  00E3    1303    CLRB	0x3,6
+  00E4    0FC2    SZINCR	0x42
+  00E5    0008    RET
+  00E6    281B    JP	0x1B
+  0100    0064    CLRWDT
+  0101    1283    CLRB	0x3,5
+  0102    1303    CLRB	0x3,6
+  0103    0181    CLR	0x1
+  0104    3007    LDIA	0x7
+  0105    1683    SETB	0x3,5
+  0106    0481    ORR	0x1
+  0107    1581    SETB	0x1,3
+  0108    0064    CLRWDT
+  0109    21DE    CALL	0x1DE
+  010A    0064    CLRWDT
+  010B    1683    SETB	0x3,5
+  010C    1303    CLRB	0x3,6
+  010D    0192    CLR	0x12
+  010E    1283    CLRB	0x3,5
+  010F    0196    CLR	0x16
+  0110    1683    SETB	0x3,5
+  0111    1286    CLRB	0x6,5
+  0112    1283    CLRB	0x3,5
+  0113    1286    CLRB	0x6,5
+  0114    3070    LDIA	0x70
+  0115    1683    SETB	0x3,5
+  0116    0088    LD	0x8,A
+  0117    0063    STOP
+  0118    0000    NOP
+  0119    0064    CLRWDT
+  011A    2470    CALL	0x470
+  011B    1479    SETB	0x79,0
+  011C    225F    CALL	0x25F
+  011D    1283    CLRB	0x3,5
+  011E    1303    CLRB	0x3,6
+  011F    21D9    CALL	0x1D9
+  0120    1C0B    SNZB	0xB,0
+  0121    2929    JP	0x129
+  0122    2470    CALL	0x470
+  0123    1283    CLRB	0x3,5
+  0124    1303    CLRB	0x3,6
+  0125    01B4    CLR	0x34
+  0126    1279    CLRB	0x79,4
+  0127    11F9    CLRB	0x79,3
+  0128    0008    RET
+  0129    1C40    SNZB	0x40,0
+  012A    29B3    JP	0x1B3
+  012B    1003    CLRB	0x3,0
+  012C    0D46    RLCA	0x46
+  012D    3E2C    ADDIA	0x2C
+  012E    0084    LD	0x4,A
+  012F    1383    CLRB	0x3,7
+  0130    0800    LD	A,0x0
+  0131    00C2    LD	0x42,A
+  0132    0A84    INCR	0x4
+  0133    0800    LD	A,0x0
+  0134    00C3    LD	0x43,A
+  0135    00BF    LD	0x3F,A
+  0136    0842    LD	A,0x42
+  0137    00BE    LD	0x3E,A
+  0138    0842    LD	A,0x42
+  0139    0443    ORA	0x43
+  013A    1903    SZB	0x3,2
+  013B    29B3    JP	0x1B3
+  013C    0846    LD	A,0x46
+  013D    3E0C    ADDIA	0xC
+  013E    0084    LD	0x4,A
+  013F    2408    CALL	0x408
+  0140    07BE    ADDR	0x3E
+  0141    1803    SZB	0x3,0
+  0142    0ABF    INCR	0x3F
+  0143    1003    CLRB	0x3,0
+  0144    0D46    RLCA	0x46
+  0145    3E24    ADDIA	0x24
+  0146    21C8    CALL	0x1C8
+  0147    083F    LD	A,0x3F
+  0148    023B    SUBA	0x3B
+  0149    1D03    SNZB	0x3,2
+  014A    294D    JP	0x14D
+  014B    083E    LD	A,0x3E
+  014C    023A    SUBA	0x3A
+  014D    1C03    SNZB	0x3,0
+  014E    295C    JP	0x15C
+  014F    21D9    CALL	0x1D9
+  0150    1840    SZB	0x40,0
+  0151    2954    JP	0x154
+  0152    0846    LD	A,0x46
+  0153    2397    CALL	0x397
+  0154    1283    CLRB	0x3,5
+  0155    1303    CLRB	0x3,6
+  0156    1003    CLRB	0x3,0
+  0157    0DC0    RLCR	0x40
+  0158    0DC1    RLCR	0x41
+  0159    0FC6    SZINCR	0x46
+  015A    2922    JP	0x122
+  015B    2950    JP	0x150
+  015C    0D46    RLCA	0x46
+  015D    3E2A    ADDIA	0x2A
+  015E    21B9    CALL	0x1B9
+  015F    1903    SZB	0x3,2
+  0160    0244    SUBA	0x44
+  0161    1C03    SNZB	0x3,0
+  0162    296B    JP	0x16B
+  0163    30FF    LDIA	0xFF
+  0164    0245    SUBA	0x45
+  0165    30FC    LDIA	0xFC
+  0166    1903    SZB	0x3,2
+  0167    0244    SUBA	0x44
+  0168    1C03    SNZB	0x3,0
+  0169    29A1    JP	0x1A1
+  016A    1003    CLRB	0x3,0
+  016B    0D46    RLCA	0x46
+  016C    3E28    ADDIA	0x28
+  016D    21B9    CALL	0x1B9
+  016E    1903    SZB	0x3,2
+  016F    0244    SUBA	0x44
+  0170    1C03    SNZB	0x3,0
+  0171    297A    JP	0x17A
+  0172    30FF    LDIA	0xFF
+  0173    0245    SUBA	0x45
+  0174    30FC    LDIA	0xFC
+  0175    1903    SZB	0x3,2
+  0176    0244    SUBA	0x44
+  0177    1C03    SNZB	0x3,0
+  0178    29A1    JP	0x1A1
+  0179    1003    CLRB	0x3,0
+  017A    0D46    RLCA	0x46
+  017B    3E26    ADDIA	0x26
+  017C    21B9    CALL	0x1B9
+  017D    1903    SZB	0x3,2
+  017E    0244    SUBA	0x44
+  017F    1C03    SNZB	0x3,0
+  0180    2989    JP	0x189
+  0181    30FF    LDIA	0xFF
+  0182    0245    SUBA	0x45
+  0183    30FC    LDIA	0xFC
+  0184    1903    SZB	0x3,2
+  0185    0244    SUBA	0x44
+  0186    1C03    SNZB	0x3,0
+  0187    29A1    JP	0x1A1
+  0188    1003    CLRB	0x3,0
+  0189    0D46    RLCA	0x46
+  018A    3E26    ADDIA	0x26
+  018B    21C8    CALL	0x1C8
+  018C    0842    LD	A,0x42
+  018D    073A    ADDA	0x3A
+  018E    00BC    LD	0x3C,A
+  018F    0843    LD	A,0x43
+  0190    1803    SZB	0x3,0
+  0191    0A43    INCA	0x43
+  0192    073B    ADDA	0x3B
+  0193    00BD    LD	0x3D,A
+  0194    1003    CLRB	0x3,0
+  0195    0CBD    RRCR	0x3D
+  0196    0CBC    RRCR	0x3C
+  0197    1003    CLRB	0x3,0
+  0198    0D46    RLCA	0x46
+  0199    3E24    ADDIA	0x24
+  019A    0084    LD	0x4,A
+  019B    083C    LD	A,0x3C
+  019C    0080    LD	0x0,A
+  019D    0A84    INCR	0x4
+  019E    083D    LD	A,0x3D
+  019F    0080    LD	0x0,A
+  01A0    1003    CLRB	0x3,0
+  01A1    0D46    RLCA	0x46
+  01A2    3E28    ADDIA	0x28
+  01A3    21C8    CALL	0x1C8
+  01A4    1003    CLRB	0x3,0
+  01A5    0D46    RLCA	0x46
+  01A6    3E26    ADDIA	0x26
+  01A7    21CF    CALL	0x1CF
+  01A8    21C8    CALL	0x1C8
+  01A9    1003    CLRB	0x3,0
+  01AA    0D46    RLCA	0x46
+  01AB    3E28    ADDIA	0x28
+  01AC    21CF    CALL	0x1CF
+  01AD    0084    LD	0x4,A
+  01AE    0842    LD	A,0x42
+  01AF    0080    LD	0x0,A
+  01B0    0A84    INCR	0x4
+  01B1    0843    LD	A,0x43
+  01B2    0080    LD	0x0,A
+  01B3    1003    CLRB	0x3,0
+  01B4    0DC0    RLCR	0x40
+  01B5    0DC1    RLCR	0x41
+  01B6    0FC6    SZINCR	0x46
+  01B7    2900    JP	0x100
+  01B8    2929    JP	0x129
+  01E3    3004    LDIA	0x4
+  01E4    01BE    CLR	0x3E
+  01E5    0AB2    INCR	0x32
+  01E6    0232    SUBA	0x32
+  01E7    1C03    SNZB	0x3,0
+  01E8    0008    RET
+  01E9    01B2    CLR	0x32
+  01EA    1003    CLRB	0x3,0
+  01EB    0D3E    RLCA	0x3E
+  01EC    3E2C    ADDIA	0x2C
+  01ED    0084    LD	0x4,A
+  01EE    1383    CLRB	0x3,7
+  01EF    0800    LD	A,0x0
+  01F0    00BA    LD	0x3A,A
+  01F1    0A84    INCR	0x4
+  01F2    0800    LD	A,0x0
+  01F3    00BB    LD	0x3B,A
+  01F4    083E    LD	A,0x3E
+  01F5    241B    CALL	0x41B
+  01F6    3A00    XORIA	0x0
+  01F7    1003    CLRB	0x3,0
+  01F8    1D03    SNZB	0x3,2
+  01F9    2A2A    JP	0x22A
+  01FA    0D3E    RLCA	0x3E
+  01FB    3E2A    ADDIA	0x2A
+  01FC    0084    LD	0x4,A
+  01FD    1383    CLRB	0x3,7
+  01FE    2238    CALL	0x238
+  01FF    1903    SZB	0x3,2
+  0200    023C    SUBA	0x3C
+  0201    1C03    SNZB	0x3,0
+  0202    2A09    JP	0x209
+  0203    0F3C    SZINCA	0x3C
+  0204    2A29    JP	0x229
+  0205    0A3D    INCA	0x3D
+  0206    1003    CLRB	0x3,0
+  0207    1D03    SNZB	0x3,2
+  0208    2A2A    JP	0x22A
+  0209    0D3E    RLCA	0x3E
+  020A    3E28    ADDIA	0x28
+  020B    0084    LD	0x4,A
+  020C    2238    CALL	0x238
+  020D    1903    SZB	0x3,2
+  020E    023C    SUBA	0x3C
+  020F    1C03    SNZB	0x3,0
+  0210    2A17    JP	0x217
+  0211    0F3C    SZINCA	0x3C
+  0212    2A29    JP	0x229
+  0213    0A3D    INCA	0x3D
+  0214    1003    CLRB	0x3,0
+  0215    1D03    SNZB	0x3,2
+  0216    2A2A    JP	0x22A
+  0217    0D3E    RLCA	0x3E
+  0218    3E26    ADDIA	0x26
+  0219    0084    LD	0x4,A
+  021A    2238    CALL	0x238
+  021B    1903    SZB	0x3,2
+  021C    023C    SUBA	0x3C
+  021D    1C03    SNZB	0x3,0
+  021E    2A25    JP	0x225
+  021F    0F3C    SZINCA	0x3C
+  0220    2A29    JP	0x229
+  0221    0A3D    INCA	0x3D
+  0222    1003    CLRB	0x3,0
+  0223    1D03    SNZB	0x3,2
+  0224    2A2A    JP	0x22A
+  0225    0D3E    RLCA	0x3E
+  0226    3E24    ADDIA	0x24
+  0227    0084    LD	0x4,A
+  0228    2259    CALL	0x259
+  0229    1003    CLRB	0x3,0
+  022A    0D3E    RLCA	0x3E
+  022B    3E28    ADDIA	0x28
+  022C    0084    LD	0x4,A
+  022D    1383    CLRB	0x3,7
+  022E    2251    CALL	0x251
+  022F    3E26    ADDIA	0x26
+  0230    2246    CALL	0x246
+  0231    2251    CALL	0x251
+  0232    3E28    ADDIA	0x28
+  0233    2246    CALL	0x246
+  0234    2259    CALL	0x259
+  0235    0FBE    SZINCR	0x3E
+  0236    0008    RET
+  0237    29EA    JP	0x1EA
+  025F    01F6    CLR	0x76
+  0260    01F3    CLR	0x73
+  0261    0AF3    INCR	0x73
+  0262    01F4    CLR	0x74
+  0263    0873    LD	A,0x73
+  0264    0474    ORA	0x74
+  0265    1903    SZB	0x3,2
+  0266    2AA0    JP	0x2A0
+  0267    1683    SETB	0x3,5
+  0268    1303    CLRB	0x3,6
+  0269    0192    CLR	0x12
+  026A    0193    CLR	0x13
+  026B    0876    LD	A,0x76
+  026C    3E0B    ADDIA	0xB
+  026D    0084    LD	0x4,A
+  026E    2408    CALL	0x408
+  026F    3801    ORIA	0x1
+  0270    1283    CLRB	0x3,5
+  0271    0096    LD	0x16,A
+  0272    0876    LD	A,0x76
+  0273    3E0D    ADDIA	0xD
+  0274    0084    LD	0x4,A
+  0275    2408    CALL	0x408
+  0276    1683    SETB	0x3,5
+  0277    0092    LD	0x12,A
+  0278    0876    LD	A,0x76
+  0279    3E09    ADDIA	0x9
+  027A    0084    LD	0x4,A
+  027B    2408    CALL	0x408
+  027C    0093    LD	0x13,A
+  027D    3040    LDIA	0x40
+  027E    008B    LD	0xB,A
+  027F    3001    LDIA	0x1
+  0280    1283    CLRB	0x3,5
+  0281    008D    LD	0xD,A
+  0282    018C    CLR	0xC
+  0283    1683    SETB	0x3,5
+  0284    1686    SETB	0x6,5
+  0285    0000    NOP
+  0286    0000    NOP
+  0287    1683    SETB	0x3,5
+  0288    1303    CLRB	0x3,6
+  0289    1412    SETB	0x12,0
+  028A    0063    STOP
+  028B    0064    CLRWDT
+  028C    1283    CLRB	0x3,5
+  028D    1303    CLRB	0x3,6
+  028E    018D    CLR	0xD
+  028F    018C    CLR	0xC
+  0290    01F5    CLR	0x75
+  0291    1683    SETB	0x3,5
+  0292    1B92    SZB	0x12,7
+  0293    2A9A    JP	0x29A
+  0294    0BF5    SZDECR	0x75
+  0295    2A91    JP	0x291
+  0296    30FF    LDIA	0xFF
+  0297    1283    CLRB	0x3,5
+  0298    00B4    LD	0x34,A
+  0299    2C70    JP	0x470
+  029A    1003    CLRB	0x3,0
+  029B    0D76    RLCA	0x76
+  029C    22AB    CALL	0x2AB
+  029D    1286    CLRB	0x6,5
+  029E    1283    CLRB	0x3,5
+  029F    1286    CLRB	0x6,5
+  02A0    1003    CLRB	0x3,0
+  02A1    0DF3    RLCR	0x73
+  02A2    0DF4    RLCR	0x74
+  02A3    0AF6    INCR	0x76
+  02A4    1903    SZB	0x3,2
+  02A5    2A63    JP	0x263
+  02A6    1283    CLRB	0x3,5
+  02A7    1303    CLRB	0x3,6
+  02A8    0196    CLR	0x16
+  02A9    1079    CLRB	0x79,0
+  02AA    0008    RET
+  02BA    01F6    CLR	0x76
+  02BB    01F3    CLR	0x73
+  02BC    0AF3    INCR	0x73
+  02BD    01F4    CLR	0x74
+  02BE    1C79    SNZB	0x79,0
+  02BF    2AC2    JP	0x2C2
+  02C0    1C73    SNZB	0x73,0
+  02C1    2AF9    JP	0x2F9
+  02C2    1683    SETB	0x3,5
+  02C3    0192    CLR	0x12
+  02C4    0193    CLR	0x13
+  02C5    0876    LD	A,0x76
+  02C6    3E0B    ADDIA	0xB
+  02C7    0084    LD	0x4,A
+  02C8    2408    CALL	0x408
+  02C9    3801    ORIA	0x1
+  02CA    1283    CLRB	0x3,5
+  02CB    0096    LD	0x16,A
+  02CC    1683    SETB	0x3,5
+  02CD    1286    CLRB	0x6,5
+  02CE    1283    CLRB	0x3,5
+  02CF    1286    CLRB	0x6,5
+  02D0    0000    NOP
+  02D1    0000    NOP
+  02D2    0000    NOP
+  02D3    0000    NOP
+  02D4    0000    NOP
+  02D5    0000    NOP
+  02D6    0000    NOP
+  02D7    0000    NOP
+  02D8    0000    NOP
+  02D9    0000    NOP
+  02DA    0000    NOP
+  02DB    1683    SETB	0x3,5
+  02DC    1303    CLRB	0x3,6
+  02DD    1686    SETB	0x6,5
+  02DE    0876    LD	A,0x76
+  02DF    3E0D    ADDIA	0xD
+  02E0    0084    LD	0x4,A
+  02E1    2408    CALL	0x408
+  02E2    0092    LD	0x12,A
+  02E3    0876    LD	A,0x76
+  02E4    3E09    ADDIA	0x9
+  02E5    0084    LD	0x4,A
+  02E6    2408    CALL	0x408
+  02E7    0093    LD	0x13,A
+  02E8    0000    NOP
+  02E9    0000    NOP
+  02EA    1683    SETB	0x3,5
+  02EB    1303    CLRB	0x3,6
+  02EC    1412    SETB	0x12,0
+  02ED    01F5    CLR	0x75
+  02EE    1B92    SZB	0x12,7
+  02EF    2AF6    JP	0x2F6
+  02F0    0BF5    SZDECR	0x75
+  02F1    2AEE    JP	0x2EE
+  02F2    30FF    LDIA	0xFF
+  02F3    1283    CLRB	0x3,5
+  02F4    00B4    LD	0x34,A
+  02F5    2C70    JP	0x470
+  02F6    1003    CLRB	0x3,0
+  02F7    0D76    RLCA	0x76
+  02F8    22AB    CALL	0x2AB
+  02F9    1003    CLRB	0x3,0
+  02FA    0DF3    RLCR	0x73
+  02FB    0DF4    RLCR	0x74
+  02FC    0AF6    INCR	0x76
+  02FD    1903    SZB	0x3,2
+  02FE    2ABE    JP	0x2BE
+  02FF    1079    CLRB	0x79,0
+  0300    0008    RET
+  0301    087B    LD	A,0x7B
+  0302    047A    ORA	0x7A
+  0303    1903    SZB	0x3,2
+  0304    2B23    JP	0x323
+  0305    01B0    CLR	0x30
+  0306    087A    LD	A,0x7A
+  0307    0622    XORA	0x22
+  0308    1D03    SNZB	0x3,2
+  0309    2B1C    JP	0x31C
+  030A    087B    LD	A,0x7B
+  030B    0623    XORA	0x23
+  030C    1D03    SNZB	0x3,2
+  030D    2B1C    JP	0x31C
+  030E    3002    LDIA	0x2
+  030F    0AB1    INCR	0x31
+  0310    0231    SUBA	0x31
+  0311    1C03    SNZB	0x3,0
+  0312    0008    RET
+  0313    01B1    CLR	0x31
+  0314    087A    LD	A,0x7A
+  0315    00AE    LD	0x2E,A
+  0316    087B    LD	A,0x7B
+  0317    00AF    LD	0x2F,A
+  0318    1979    SZB	0x79,2
+  0319    0008    RET
+  031A    1579    SETB	0x79,2
+  031B    2C3B    JP	0x43B
+  031C    1179    CLRB	0x79,2
+  031D    087A    LD	A,0x7A
+  031E    00A2    LD	0x22,A
+  031F    087B    LD	A,0x7B
+  0320    00A3    LD	0x23,A
+  0321    01B1    CLR	0x31
+  0322    0008    RET
+  0323    01B1    CLR	0x31
+  0324    01A2    CLR	0x22
+  0325    01A3    CLR	0x23
+  0326    3002    LDIA	0x2
+  0327    0AB0    INCR	0x30
+  0328    0230    SUBA	0x30
+  0329    1C03    SNZB	0x3,0
+  032A    0008    RET
+  032B    01B0    CLR	0x30
+  032C    01AE    CLR	0x2E
+  032D    01AF    CLR	0x2F
+  032E    1179    CLRB	0x79,2
+  032F    0008    RET
+  0330    1A79    SZB	0x79,4
+  0331    2B3D    JP	0x33D
+  0332    22BA    CALL	0x2BA
+  0333    3008    LDIA	0x8
+  0334    1283    CLRB	0x3,5
+  0335    1303    CLRB	0x3,6
+  0336    0AB4    INCR	0x34
+  0337    0234    SUBA	0x34
+  0338    1C03    SNZB	0x3,0
+  0339    2B56    JP	0x356
+  033A    01B4    CLR	0x34
+  033B    1679    SETB	0x79,4
+  033C    2B56    JP	0x356
+  033D    19F9    SZB	0x79,3
+  033E    2B52    JP	0x352
+  033F    2017    CALL	0x17
+  0340    2301    CALL	0x301
+  0341    15F9    SETB	0x79,3
+  0342    18F9    SZB	0x79,1
+  0343    2B4A    JP	0x34A
+  0344    3002    LDIA	0x2
+  0345    1283    CLRB	0x3,5
+  0346    1303    CLRB	0x3,6
+  0347    0234    SUBA	0x34
+  0348    1C03    SNZB	0x3,0
+  0349    2B4E    JP	0x34E
+  034A    23DE    CALL	0x3DE
+  034B    10F9    CLRB	0x79,1
+  034C    1279    CLRB	0x79,4
+  034D    11F9    CLRB	0x79,3
+  034E    1283    CLRB	0x3,5
+  034F    1303    CLRB	0x3,6
+  0350    01B4    CLR	0x34
+  0351    2B56    JP	0x356
+  0352    21E3    CALL	0x1E3
+  0353    2470    CALL	0x470
+  0354    1279    CLRB	0x79,4
+  0355    11F9    CLRB	0x79,3
+  0356    2BF4    JP	0x3F4
+  0397    00F2    LD	0x72,A
+  0398    1003    CLRB	0x3,0
+  0399    0D72    RLCA	0x72
+  039A    3E2A    ADDIA	0x2A
+  039B    23EE    CALL	0x3EE
+  039C    1003    CLRB	0x3,0
+  039D    0D72    RLCA	0x72
+  039E    3E28    ADDIA	0x28
+  039F    0084    LD	0x4,A
+  03A0    23AA    CALL	0x3AA
+  03A1    3E26    ADDIA	0x26
+  03A2    0084    LD	0x4,A
+  03A3    23AA    CALL	0x3AA
+  03A4    3E24    ADDIA	0x24
+  03A5    0084    LD	0x4,A
+  03A6    0180    CLR	0x0
+  03A7    0A84    INCR	0x4
+  03A8    0180    CLR	0x0
+  03A9    0008    RET
+  03DE    1283    CLRB	0x3,5
+  03DF    1303    CLRB	0x3,6
+  03E0    01AE    CLR	0x2E
+  03E1    01AF    CLR	0x2F
+  03E2    01F3    CLR	0x73
+  03E3    1003    CLRB	0x3,0
+  03E4    0D73    RLCA	0x73
+  03E5    3E2C    ADDIA	0x2C
+  03E6    23EE    CALL	0x3EE
+  03E7    0873    LD	A,0x73
+  03E8    2397    CALL	0x397
+  03E9    0AF3    INCR	0x73
+  03EA    0873    LD	A,0x73
+  03EB    1D03    SNZB	0x3,2
+  03EC    0008    RET
+  03ED    2BE3    JP	0x3E3
+  03F4    1283    CLRB	0x3,5
+  03F5    1303    CLRB	0x3,6
+  03F6    082F    LD	A,0x2F
+  03F7    042E    ORA	0x2E
+  03F8    1903    SZB	0x3,2
+  03F9    2C05    JP	0x405
+  03FA    0AA0    INCR	0x20
+  03FB    1903    SZB	0x3,2
+  03FC    0AA1    INCR	0x21
+  03FD    303A    LDIA	0x3A
+  03FE    0221    SUBA	0x21
+  03FF    3098    LDIA	0x98
+  0400    1903    SZB	0x3,2
+  0401    0220    SUBA	0x20
+  0402    1C03    SNZB	0x3,0
+  0403    0008    RET
+  0404    14F9    SETB	0x79,1
+  0405    01A0    CLR	0x20
+  0406    01A1    CLR	0x21
+  0407    0008    RET
+  041B    00F3    LD	0x73,A
+  041C    3907    ANDIA	0x7
+  041D    3E01    ADDIA	0x1
+  041E    0084    LD	0x4,A
+  041F    2408    CALL	0x408
+  0420    00F2    LD	0x72,A
+  0421    1DF3    SNZB	0x73,3
+  0422    2C27    JP	0x427
+  0423    1283    CLRB	0x3,5
+  0424    1303    CLRB	0x3,6
+  0425    082F    LD	A,0x2F
+  0426    2C2A    JP	0x42A
+  0427    1283    CLRB	0x3,5
+  0428    1303    CLRB	0x3,6
+  0429    082E    LD	A,0x2E
+  042A    05F2    ANDR	0x72
+  042B    0872    LD	A,0x72
+  042C    0008    RET
+  043B    01F4    CLR	0x74
+  043C    0874    LD	A,0x74
+  043D    241B    CALL	0x41B
+  043E    3A00    XORIA	0x0
+  043F    1D03    SNZB	0x3,2
+  0440    2C43    JP	0x443
+  0441    0874    LD	A,0x74
+  0442    2397    CALL	0x397
+  0443    0AF4    INCR	0x74
+  0444    0874    LD	A,0x74
+  0445    1D03    SNZB	0x3,2
+  0446    0008    RET
+  0447    2C3C    JP	0x43C
+  0448    00F4    LD	0x74,A
+  0449    0AB4    INCR	0x34
+  044A    01FA    CLR	0x7A
+  044B    01FB    CLR	0x7B
+  044C    1DF4    SNZB	0x74,3
+  044D    2C51    JP	0x451
+  044E    0872    LD	A,0x72
+  044F    00FB    LD	0x7B,A
+  0450    0008    RET
+  0451    0872    LD	A,0x72
+  0452    00FA    LD	0x7A,A
+  0453    0008    RET
+  0470    01F2    CLR	0x72
+  0471    1003    CLRB	0x3,0
+  0472    0D72    RLCA	0x72
+  0473    3E2C    ADDIA	0x2C
+  0474    23EE    CALL	0x3EE
+  0475    0FF2    SZINCR	0x72
+  0476    0008    RET
+  0477    2C71    JP	0x471
+---- stringtab ------------------------------------------------------------------
+  0408    3004    LDIA	0x4
+  0409    008A    LD	0xA,A
+  040A    0804    LD	A,0x4
+  040B    0A84    INCR	0x4
+  040C    0782    ADDR	0x2
+  040D    3400    RET	0x0
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    301A    LDIA	0x1A
+  000C    00C9    LD	0x49,A
+  000D    3020    LDIA	0x20
+  000E    1383    CLRB	0x3,7
+  000F    0084    LD	0x4,A
+  0010    303A    LDIA	0x3A
+  0011    2468    CALL	0x468
+  0012    01FA    CLR	0x7A
+  0013    01FB    CLR	0x7B
+  0014    01F9    CLR	0x79
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00FE    LD	0x7E,A
+  0005    0E03    SWAPA	0x3
+  0006    00F0    LD	0x70,A
+  0007    080A    LD	A,0xA
+  0008    00F1    LD	0x71,A
+  0009    2B7C    JP	0x37C
+---- common_function ------------------------------------------------------------------
+  0015    0183    CLR	0x3
+  0016    2C54    JP	0x454
+  00E7    00F5    LD	0x75,A
+  00E8    0A84    INCR	0x4
+  00E9    0800    LD	A,0x0
+  00EA    00F6    LD	0x76,A
+  00EB    083F    LD	A,0x3F
+  00EC    0775    ADDA	0x75
+  00ED    00F7    LD	0x77,A
+  00EE    0876    LD	A,0x76
+  00EF    1803    SZB	0x3,0
+  00F0    0A76    INCA	0x76
+  00F1    00F8    LD	0x78,A
+  00F2    0841    LD	A,0x41
+  00F3    0278    SUBA	0x78
+  00F4    1D03    SNZB	0x3,2
+  00F5    0008    RET
+  00F6    0840    LD	A,0x40
+  00F7    0277    SUBA	0x77
+  00F8    0008    RET
+  00F9    0084    LD	0x4,A
+  00FA    0800    LD	A,0x0
+  00FB    00F5    LD	0x75,A
+  00FC    0A84    INCR	0x4
+  00FD    0800    LD	A,0x0
+  00FE    00F6    LD	0x76,A
+  00FF    0008    RET
+  01B9    0084    LD	0x4,A
+  01BA    0800    LD	A,0x0
+  01BB    00C4    LD	0x44,A
+  01BC    0A84    INCR	0x4
+  01BD    0800    LD	A,0x0
+  01BE    00C5    LD	0x45,A
+  01BF    0842    LD	A,0x42
+  01C0    02C4    SUBR	0x44
+  01C1    0843    LD	A,0x43
+  01C2    1C03    SNZB	0x3,0
+  01C3    03C5    DECR	0x45
+  01C4    02C5    SUBR	0x45
+  01C5    3000    LDIA	0x0
+  01C6    0245    SUBA	0x45
+  01C7    3405    RET	0x5
+  01C8    0084    LD	0x4,A
+  01C9    0800    LD	A,0x0
+  01CA    00BA    LD	0x3A,A
+  01CB    0A84    INCR	0x4
+  01CC    0800    LD	A,0x0
+  01CD    00BB    LD	0x3B,A
+  01CE    0008    RET
+  01CF    0084    LD	0x4,A
+  01D0    083A    LD	A,0x3A
+  01D1    0080    LD	0x0,A
+  01D2    0A84    INCR	0x4
+  01D3    083B    LD	A,0x3B
+  01D4    0080    LD	0x0,A
+  01D5    1003    CLRB	0x3,0
+  01D6    0D46    RLCA	0x46
+  01D7    3E2A    ADDIA	0x2A
+  01D8    0008    RET
+  01D9    01C6    CLR	0x46
+  01DA    01C0    CLR	0x40
+  01DB    0AC0    INCR	0x40
+  01DC    01C1    CLR	0x41
+  01DD    0008    RET
+  01DE    3009    LDIA	0x9
+  01DF    1683    SETB	0x3,5
+  01E0    1303    CLRB	0x3,6
+  01E1    0081    LD	0x1,A
+  01E2    0008    RET
+  0238    0800    LD	A,0x0
+  0239    00BC    LD	0x3C,A
+  023A    0A84    INCR	0x4
+  023B    0800    LD	A,0x0
+  023C    00BD    LD	0x3D,A
+  023D    083A    LD	A,0x3A
+  023E    02BC    SUBR	0x3C
+  023F    083B    LD	A,0x3B
+  0240    1C03    SNZB	0x3,0
+  0241    03BD    DECR	0x3D
+  0242    02BD    SUBR	0x3D
+  0243    3000    LDIA	0x0
+  0244    023D    SUBA	0x3D
+  0245    3402    RET	0x2
+  0246    0084    LD	0x4,A
+  0247    0874    LD	A,0x74
+  0248    0080    LD	0x0,A
+  0249    0A84    INCR	0x4
+  024A    0875    LD	A,0x75
+  024B    0080    LD	0x0,A
+  024C    1003    CLRB	0x3,0
+  024D    0D3E    RLCA	0x3E
+  024E    3E2A    ADDIA	0x2A
+  024F    0084    LD	0x4,A
+  0250    0008    RET
+  0251    0800    LD	A,0x0
+  0252    00F4    LD	0x74,A
+  0253    0A84    INCR	0x4
+  0254    0800    LD	A,0x0
+  0255    00F5    LD	0x75,A
+  0256    1003    CLRB	0x3,0
+  0257    0D3E    RLCA	0x3E
+  0258    0008    RET
+  0259    083A    LD	A,0x3A
+  025A    0080    LD	0x0,A
+  025B    0A84    INCR	0x4
+  025C    083B    LD	A,0x3B
+  025D    0080    LD	0x0,A
+  025E    0008    RET
+  02AB    3E2C    ADDIA	0x2C
+  02AC    0084    LD	0x4,A
+  02AD    0814    LD	A,0x14
+  02AE    1383    CLRB	0x3,7
+  02AF    0780    ADDR	0x0
+  02B0    0F84    SZINCR	0x4
+  02B1    0800    LD	A,0x0
+  02B2    1803    SZB	0x3,0
+  02B3    0A00    INCA	0x0
+  02B4    00FF    LD	0x7F,A
+  02B5    0815    LD	A,0x15
+  02B6    077F    ADDA	0x7F
+  02B7    0080    LD	0x0,A
+  02B8    0384    DECR	0x4
+  02B9    0008    RET
+  03AA    0180    CLR	0x0
+  03AB    0A84    INCR	0x4
+  03AC    0180    CLR	0x0
+  03AD    1003    CLRB	0x3,0
+  03AE    0D72    RLCA	0x72
+  03AF    0008    RET
+  03EE    0084    LD	0x4,A
+  03EF    1383    CLRB	0x3,7
+  03F0    0180    CLR	0x0
+  03F1    0A84    INCR	0x4
+  03F2    0180    CLR	0x0
+  03F3    0008    RET
+  040E    3401    RET	0x1
+  040F    3402    RET	0x2
+  0410    3404    RET	0x4
+  0411    3408    RET	0x8
+  0412    3410    RET	0x10
+  0413    3420    RET	0x20
+  0414    3440    RET	0x40
+  0415    3480    RET	0x80
+  0416    3452    RET	0x52
+  0417    3453    RET	0x53
+  0418    3480    RET	0x80
+  0419    340A    RET	0xA
+  041A    3402    RET	0x2
+  0468    0064    CLRWDT
+  0469    0180    CLR	0x0
+  046A    0A84    INCR	0x4
+  046B    0604    XORA	0x4
+  046C    1903    SZB	0x3,2
+  046D    3400    RET	0x0
+  046E    0604    XORA	0x4
+  046F    2C69    JP	0x469

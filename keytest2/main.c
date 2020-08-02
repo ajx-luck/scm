@@ -17,6 +17,8 @@ volatile bit	sendStartFlag;	//发射开始标记
 volatile bit	doublePressFlag;	//同时按下标记
 volatile bit	ONFlag;	//开关标记，1为打开
 volatile bit	pwmFlag;	//PWM开关标记，1为打开
+volatile bit	keyLockFlag;	//触摸长按锁定
+volatile bit	doubleTouchFlag;	//同时触摸标记位
 //系统初始化
 void Init_System()
 {
@@ -96,6 +98,7 @@ void Refurbish_Sfr()
 void procKey1()
 {
 	pwmFlag = 1;
+	ONFlag = 1;
 	if(++pwm0Step > 4)
 		pwm0Step = 1;
 	switch(pwm0Step)
@@ -120,9 +123,10 @@ void procKey1()
 void procKey2()
 {
 	pwmFlag = 1;
+	ONFlag = 1;
 	if(++pwm1Step > 5)
 		pwm1Step = 1;
-	switch(pwm0Step)
+	switch(pwm1Step)
 	{
 		case 1:
 		mode1_a();
@@ -162,8 +166,14 @@ void KeyServer()
 	unsigned int i = (unsigned int)((KeyFlag[1]<<8) | KeyFlag[0]);
 	if(i)
 	{
+	
 		if(i != KeyOldFlag)
 		{
+			if(keyLockFlag)
+			{
+				doubleTouchFlag = 1;
+				return;
+			}
 			KeyOldFlag = i;
 			switch(i)
 			{
@@ -183,21 +193,21 @@ void KeyServer()
 				procKey2();
 				break;
 				default:
-				if(doublePressFlag)
-				{
-					//同时按下并松开后
-					if(ONFlag)
-						ONFlag = 0;
-					else
-						ONFlag = 1;
-				}
 				break;
 			}
 		}
+		keyLockFlag = 1;	//锁定按键
 	}
 	else
 	{
 		KeyOldFlag = 0;
+		keyLockFlag = 0;
+		if(doubleTouchFlag)
+		{
+			//同时按下并松开后
+			ONFlag = !ONFlag;
+		}
+		doubleTouchFlag = 0;
 	}
 }
 //检测红外遮挡
@@ -279,7 +289,7 @@ void main()
 {
 	Init_System();
 	sendFlag = 1;
-	//initPWM();
+	initPWM();
 	//mode1_a();
 	while(1)
 	{
@@ -287,12 +297,10 @@ void main()
 		{
 			B_MainLoop = 0;
 			CLRWDT();
-			
-			CheckTouchKey();
-			
 			Refurbish_Sfr();
+			CheckTouchKey();
 			KeyServer();
-			checkIRKey();
+			//checkIRKey();
 			if(ONFlag && pwmFlag == 0)
 			{
 				startPWM();

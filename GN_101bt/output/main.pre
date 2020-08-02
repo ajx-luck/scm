@@ -1,5 +1,5 @@
 
-# 1 "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+# 1 "C:\Users\hhmm6\Desktop\scm\GN_101bt\main.c"
 
 # 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
@@ -306,322 +306,227 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 8 "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.h"
-void initPWM();
-void mode1_a();
-void mode1_b();
-void mode1_c();
-void mode1_d();
-void mode1_e();
-void mode2_a();
-void mode3_a();
-void mode4_a();
-void mode5_a();
 
-
-# 12 "C:\Users\hhmm6\Desktop\scm\keytest2\Touch_Kscan_Library.h"
+# 12 "C:\Users\hhmm6\Desktop\scm\GN_101bt\Touch_Kscan_Library.h"
 #pragma warning disable 752,759
 
-# 18
+# 5 "C:\Users\hhmm6\Desktop\scm\GN_101bt\TouchKeyConst.h"
+const unsigned char C_OPTION_REG_ = 0x09;
+
+# 18 "C:\Users\hhmm6\Desktop\scm\GN_101bt\Touch_Kscan_Library.h"
 extern void CheckTouchKey(void);
+extern void SystemEnterSleep();
 extern volatile bit b_kerr;
 
-# 25
+# 26
 extern volatile unsigned char KeyFlag[2];
 
-# 59
+# 63
 const unsigned char Table_KeyChannel[] = {
-0x40|0x20|0x00,
-0x40|0x20|0x01
+0x40|0x10|0x02,0x40|0x10|0x03
 };
 
 
 const unsigned char Table_KeyCap[] = {
-0x00 | 0x2,
 0x00 | 0x2
 };
 
 
 const unsigned char Table_KeyDown[] = {
-10,
 10
 };
 
-# 84
-unsigned int KeyResSum[2];
-unsigned int KeyOldValue0[2];
-unsigned int KeyOldValue1[2];
-unsigned int KeyOldValue2[2];
-unsigned int KeyReference[2];
-unsigned char KeyUpShake[2];
+
+const unsigned char Table_C_LVBO[] = {
+0x80,
+};
+
+# 90
+unsigned int KeyResSum[1];
+unsigned int KeyOldValue0[1];
+unsigned int KeyOldValue1[1];
+unsigned int KeyOldValue2[1];
+unsigned int KeyReference[1];
+unsigned char KeyUpShake[1];
 
 const unsigned int KeyValidTime = 60*(1000/4);
-const unsigned char KeyTotalNumber = 2;
+const unsigned char KeyTotalNumber = 1;
 const unsigned char KeyShakeCounter = 2;
 const unsigned char KeyValidNumber = 1;
+
+const unsigned int KeyWakeUpEn = 0x0001;
 
 
 const unsigned char WaterModeSel = 1;
 
-# 5 "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+# 5 "C:\Users\hhmm6\Desktop\scm\GN_101bt\main.c"
+void processPress();
+
 volatile unsigned char MainTime;
-volatile unsigned char pwmTime;
-volatile unsigned char irStep = 0;
-unsigned char revCount = 0;
-unsigned char checkCount = 0;
-unsigned char pwm0Step = 1;
-unsigned char pwm1Step = 1;
+volatile unsigned int PwmData;
+volatile bit B_MainLoop,B_OnOff;
+unsigned char key1Count = 0;
+unsigned int time1sCount = 0;
+unsigned char pressKey = 0;
+unsigned char lowCount = 26;
 
-
-volatile bit sendFlag;
-volatile bit B_MainLoop;
-volatile bit sendStartFlag;
-volatile bit doublePressFlag;
-volatile bit ONFlag;
-volatile bit pwmFlag;
-volatile bit keyLockFlag;
-volatile bit doubleTouchFlag;
 
 void Init_System()
 {
 asm("nop");
 asm("clrwdt");
+OPTION_REG |= 0x07;
+
+OPTION_REG |= 0x08;
+asm("clrwdt");
+
+OPTION_REG = C_OPTION_REG_;
+asm("clrwdt");
+
 INTCON = 0;
-OSCCON = 0X71;
-OPTION_REG = 0;
+OSCCON = 0X70;
 
-# 36
-PIE1 = 2;
-PR2 = 250;
-T2CON = 4;
-TRISA = 0x00;
-TRISB = 0x04;
+PORTB = 0;
+TRISB = 0;
+PORTB = 0X10;
+WPUB = 0X10;
 
-INTCON = 0XC0;
+WPDB = 0;
+
+
+
+TMR0 = 6;
+INTCON = 0XA0;
+
+PwmData = 0xF0;
+PR2 =0XFF;
 }
 
-# 49
+# 55
 void Refurbish_Sfr()
 {
 
-# 87
-OPTION_REG = 0;
-
-
-
-PIE1 = 2;
-PR2 = 250;
-INTCON = 0XC0;
-if(4 != T2CON)
-T2CON = 4;
+INTCON = 0XA0;
+TRISB = 0;
+WPUB = 0X10;
 }
 
-void procKey1()
-{
-pwmFlag = 1;
-ONFlag = 1;
-if(++pwm0Step > 4)
-pwm0Step = 1;
-switch(pwm0Step)
-{
-case 1:
-mode2_a();
-break;
-case 2:
-mode3_a();
-break;
-case 3:
-mode4_a();
-break;
-case 4:
-mode5_a();
-break;
-
-}
-}
-
-
-void procKey2()
-{
-pwmFlag = 1;
-ONFlag = 1;
-if(++pwm1Step > 5)
-pwm1Step = 1;
-switch(pwm1Step)
-{
-case 1:
-mode1_a();
-break;
-case 2:
-mode1_b();
-break;
-case 3:
-mode1_c();
-break;
-case 4:
-mode1_d();
-break;
-case 5:
-mode1_e();
-break;
-}
-}
-
-
-void startPWM()
-{
-pwm0Step--;
-pwm1Step--;
-procKey1();
-procKey2();
-}
-
-# 163
+# 67
 void KeyServer()
 {
-static unsigned int KeyOldFlag = 0;
-unsigned int i = (unsigned int)((KeyFlag[1]<<8) | KeyFlag[0]);
-if(i)
+static unsigned char KeyOldFlag = 0;
+if(KeyFlag[0])
+{
+if(KeyFlag[0] != KeyOldFlag)
 {
 
-if(i != KeyOldFlag)
+KeyOldFlag ^= KeyFlag[0];
+if((KeyOldFlag&0x1) && (KeyFlag[0]&0x1))
 {
-if(keyLockFlag)
-{
-doubleTouchFlag = 1;
-return;
+
+B_OnOff = !B_OnOff;
+
+pressKey = 1;
+B_OnOff = 1;
 }
-KeyOldFlag = i;
-switch(i)
-{
-case 1:
-procKey1();
-break;
-case 2:
-procKey2();
-break;
-case 3:
-doublePressFlag = 1;
-break;
-case 4:
-procKey1();
-break;
-case 8:
-procKey2();
-break;
-default:
-break;
+
+KeyOldFlag = KeyFlag[0];
 }
-}
-keyLockFlag = 1;
 }
 else
 {
 KeyOldFlag = 0;
-keyLockFlag = 0;
-if(doubleTouchFlag)
-{
-
-ONFlag = !ONFlag;
-}
-doubleTouchFlag = 0;
+pressKey = 0;
+B_OnOff = 0;
 }
 }
 
-void checkIRKey()
-{
-if(((PORTB) >> (2)&1))
-{
-revCount++;
-irStep = 2;
-}
-
-if(checkCount > 3 && revCount > 2)
-{
-sendFlag = 0;
-if(irStep == 0)
-{
-if(ONFlag = 1)
-ONFlag = 0;
-else
-ONFlag = 1;
-irStep = 1;
-}
-}
-else
-{
-sendFlag = 1;
-if(irStep)
-{
-irStep = 0;
-ONFlag = 1;
-}
-}
-
-if(++checkCount >= 30)
-{
-sendFlag = 1;
-checkCount = 0;
-revCount = 0;
-}
-
-}
-
-# 257
+# 99
 void interrupt Isr_Timer()
 {
-if(TMR2IF)
+if(T0IF)
 {
-TMR2IF = 0;
-
+TMR0 += 6;
+T0IF = 0;
 if(++MainTime >= 32)
 {
 MainTime = 0;
 B_MainLoop = 1;
 }
-
-if(pwmTime < 12 && sendFlag)
-PORTA&=~(1<<3);
-else
-PORTA|=(1<<3);
-if(++pwmTime >= 44)
-{
-pwmTime = 0;
-}
 }
 else
 {
+INTCON = 0XA0;
 PIR1 = 0;
-
-}
 }
 
-# 288
+}
+
+# 122
+void WorkSleep()
+{
+
+static unsigned char time;
+
+if(B_OnOff)
+time = 0;
+
+if(++time >= 250)
+{
+time = 0;
+INTCON = 0;
+PIE1 = 0;
+PIR1 = 0;
+T2CON = 0;
+KEYCON0 = 0;
+
+TRISB = 0;
+PORTB = 0;
+WPUB = 0;
+
+# 153
+SystemEnterSleep();
+if(RBIF) RBIF = 0;
+
+Refurbish_Sfr();
+}
+
+}
+
+# 164
 void main()
 {
 Init_System();
-sendFlag = 1;
-initPWM();
-
 while(1)
 {
 if(B_MainLoop)
 {
 B_MainLoop = 0;
 asm("clrwdt");
+
 Refurbish_Sfr();
 CheckTouchKey();
 KeyServer();
+WorkSleep();
+processPress();
+}
+}
+}
 
-if(ONFlag && pwmFlag == 0)
+
+void processPress()
 {
-startPWM();
-}
-else if(ONFlag == 0 && pwmFlag == 1)
+if(pressKey)
 {
-PWMCON0 = 0;
-pwmFlag = 0;
+lowCount = 0;
 }
+if(++lowCount > 25)
+{
+lowCount = 26;
+PORTB |= 0x10;
 }
+else
+{
+PORTB &= 0xEF;
 }
 }
