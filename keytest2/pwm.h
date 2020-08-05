@@ -6,16 +6,16 @@
 #define reversebit(x, y)  x^=(1<<y)
 
 void initPWM();
-void mode1_a();
-void mode1_b();
-void mode1_c();
-void mode1_d();
-void mode1_e();
-void mode2_a();
-void mode3_a();
-void mode4_a();
-void mode5_a();
-
+void mode1();
+void mode2();
+void mode3();
+void mode4();
+void mode5();
+void modea();
+void modeb();
+void modec();
+void moded();
+void modee();
 
 
 #endif

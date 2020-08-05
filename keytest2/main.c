@@ -104,16 +104,19 @@ void procKey1()
 	switch(pwm0Step)
 	{
 		case 1:
-		mode2_a();
+		mode1();
 		break;
 		case 2:
-		mode3_a();
+		mode2();
 		break;
 		case 3:
-		mode4_a();
+		mode3();
 		break;
 		case 4:
-		mode5_a();
+		mode4();
+		break;
+		case 5:
+		mode5();
 		break;
 
 	}
@@ -129,19 +132,19 @@ void procKey2()
 	switch(pwm1Step)
 	{
 		case 1:
-		mode1_a();
+		modea();
 		break;
 		case 2:
-		mode1_b();
+		modeb();
 		break;
 		case 3:
-		mode1_c();
+		modec();
 		break;
 		case 4:
-		mode1_d();
+		moded();
 		break;
 		case 5:
-		mode1_e();
+		modee();
 		break;
 	}
 }
@@ -290,7 +293,6 @@ void main()
 	Init_System();
 	sendFlag = 1;
 	initPWM();
-	//mode1_a();
 	while(1)
 	{
 		if(B_MainLoop)
