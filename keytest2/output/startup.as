@@ -9,12 +9,12 @@
 	;
 	; -okeytest2.cof -mkeytest2.map --summary=default,-psect,-class \
 	; --fill=0xFFFF --output=intel main.p1 pwm.p1 \
-	; C:\Users\hhmm6\Desktop\scm\keytest2\Touch_Kscan_Library.lpp \
-	; --chip=SC8F2852 -P --runtime=default, \
-	; --opt=-local,-asmfile,+asm,-speed,+space,-debug -E+cmscerr.err \
-	; -D__DEBUG=1 -g --asmlist --warn=-9 --stack=compiled:auto:auto:auto \
-	; --addrqual=request --mode=pro --errformat=Error[%n]:	%f	第%l行	%s \
-	; --msgformat=Advisory[%n]	%s --warnformat=Warning[%n]:	%f	第%l行	%s
+	; C:\Users\mxy\Desktop\keytest2\Touch_Kscan_Library.lpp --chip=SC8F2852 \
+	; -P --runtime=default, --opt=-local,-asmfile,+asm,-speed,+space,-debug \
+	; -E+cmscerr.err -D__DEBUG=1 -g --asmlist --warn=-9 \
+	; --stack=compiled:auto:auto:auto --addrqual=request --mode=pro \
+	; --errformat=Error[%n]:	%f	第%l行	%s --msgformat=Advisory[%n]	%s \
+	; --warnformat=Warning[%n]:	%f	第%l行	%s
 	;
 
 

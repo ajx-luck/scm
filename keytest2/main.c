@@ -6,10 +6,11 @@ volatile unsigned char MainTime;
 volatile unsigned char pwmTime;
 volatile unsigned char irStep = 0; //0为未遮挡 1遮挡  2消抖
 unsigned char	revCount = 0;//收到的波形计数
+unsigned char	revZeroCount = 0;//未收到的波形计数
 unsigned char	checkCount = 0;	//检测次数
 unsigned char	pwm0Step = 1;	//	pwm0档位
 unsigned char	pwm1Step = 1;	//	pwm1档位
-
+unsigned int 	timeCount = 0;
 
 volatile bit	sendFlag;	//发射标记
 volatile bit	B_MainLoop;
@@ -30,15 +31,17 @@ void Init_System()
 	
 	//延时等待电源电压稳定
 	//DelayXms(200);
-	
-	
+	WPUB = 0x00;
+	WPDB = 0x00;
+	WPUA = 0x00;
 	//PIE2 = 0;
 	PIE1 = 2;
 	PR2 = 250;				//8M下将TMR2设置为125us中断
 	T2CON = 4;				//使能定时器2
 	TRISA = 0x00;
-	TRISB = 0x04;			//PB2为红外接收口
-	
+	TRISB = 0x07;			//PB2为红外接收口
+	PORTB = 0x00;
+	PORTA = 0x00;
 	INTCON = 0XC0;			//使能中断
 }
 
@@ -97,9 +100,10 @@ void Refurbish_Sfr()
 //按键1处理逻辑
 void procKey1()
 {
+	if(ONFlag == 0)
+		return;
 	pwmFlag = 1;
-	ONFlag = 1;
-	if(++pwm0Step > 4)
+	if(++pwm0Step > 5)
 		pwm0Step = 1;
 	switch(pwm0Step)
 	{
@@ -125,8 +129,9 @@ void procKey1()
 //按键2处理逻辑
 void procKey2()
 {
+	if(ONFlag == 0)
+		return;
 	pwmFlag = 1;
-	ONFlag = 1;
 	if(++pwm1Step > 5)
 		pwm1Step = 1;
 	switch(pwm1Step)
@@ -152,8 +157,9 @@ void procKey2()
 
 void startPWM()
 {	
-	pwm0Step--;
-	pwm1Step--;
+	--pwm0Step;
+	--pwm1Step;
+	initPWM();
 	procKey1();
 	procKey2();
 }
@@ -219,33 +225,45 @@ void checkIRKey()
 	if(getbit(PORTB, 2))
 	{
 		revCount++;		//检测到遮挡了
-		irStep = 2;
 	}
-	//revCount++;
-	if(checkCount > 3 && revCount > 2)
+	
+	if(checkCount > 10 && irStep)
 	{
 		sendFlag = 0;
-		if(irStep == 0)
-		{
-			if(ONFlag = 1)
-				ONFlag = 0;
-			else
-				ONFlag = 1;
-			irStep = 1;		//检测到遮挡了
-		}
 	}
 	else
 	{
 		sendFlag = 1;	//未检测到遮挡
-		if(irStep)
-		{
-			irStep = 0;			//移开了
-			ONFlag = 1;
-		}
 	}
-
-	if(++checkCount >= 30)
+	
+	if(++checkCount >= 20)
 	{
+		if(revCount > 2)
+		{
+			if(irStep == 0)
+			{
+				irStep = 1;		//检测到遮挡了
+				if(ONFlag == 1)
+				{
+					ONFlag = 0;			
+				}
+				else
+				{
+					ONFlag = 1;
+				}
+			}
+			revZeroCount = 0;		//重置
+		}
+		else
+		{
+			if(++revZeroCount > 1)
+			{
+				revZeroCount = 1;
+				irStep = 0;			//移开了
+			}
+		}
+
+		
 		sendFlag = 1;		//重置检测条件
 		checkCount = 0;
 		revCount = 0;
@@ -290,19 +308,32 @@ void interrupt Isr_Timer()
 ***********************************************************/
 void main()
 {
+	PORTB = 0x00;
+	PORTA = 0x00;
 	Init_System();
 	sendFlag = 1;
-	initPWM();
+	//initPWM();
 	while(1)
 	{
+		CLRWDT();
 		if(B_MainLoop)
 		{
 			B_MainLoop = 0;
-			CLRWDT();
-			Refurbish_Sfr();
+			//sRefurbish_Sfr();
 			CheckTouchKey();
 			KeyServer();
-			//checkIRKey();
+			checkIRKey();
+			if(ONFlag)
+			{
+				startPWM();
+			}
+			else
+			{
+				PWMCON0 = 0;
+				PORTB &= 0x7F;
+				PORTA &= 0xDF;
+			}
+			/**
 			if(ONFlag && pwmFlag == 0)
 			{
 				startPWM();
@@ -311,7 +342,11 @@ void main()
 			{
 				PWMCON0 = 0;
 				pwmFlag = 0;
+				PORTB &= 0x7F;
+				PORTA &= 0xDF;
 			}
+			
+			*/
 		}
 	}
 }

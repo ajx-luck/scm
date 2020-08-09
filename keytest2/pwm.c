@@ -59,17 +59,18 @@ void modec()
 {
 	PWMD1L = 31;
 	PWMCON0 = 0x23;
+	PWMD01H = 0;
 }
 
 void moded()
 {
 	PWMD1L = 62;
-	PWMCON0 = 0x23;
+	PWMD01H = 0;
 }
 
 void modee()
 {
 	PWMD1L = 94;
-	PWMCON0 = 0x23;
+	PWMD01H = 0;
 }
 

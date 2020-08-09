@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8F2852
-opt include "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc8f2852.cgen.inc"
+opt include "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\sc8f2852.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -33,9 +33,9 @@ skipnz	macro
 	FNCALL	_main,_CheckTouchKey
 	FNCALL	_main,_Init_System
 	FNCALL	_main,_KeyServer
-	FNCALL	_main,_Refurbish_Sfr
-	FNCALL	_main,_initPWM
+	FNCALL	_main,_checkIRKey
 	FNCALL	_main,_startPWM
+	FNCALL	_startPWM,_initPWM
 	FNCALL	_startPWM,_procKey1
 	FNCALL	_startPWM,_procKey2
 	FNCALL	_KeyServer,_procKey1
@@ -75,12 +75,12 @@ skipnz	macro
 psect	idataBANK0,class=CODE,space=0,delta=2,noexec
 global __pidataBANK0
 __pidataBANK0:
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	11
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	12
 
 ;initializer for _pwm1Step
 	retlw	01h
-	line	10
+	line	11
 
 ;initializer for _pwm0Step
 	retlw	01h
@@ -119,7 +119,7 @@ _Table_KeyFalg:
 __end_of_Table_KeyFalg:
 	global	_Table_KeyDown
 psect	strings
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\Touch_Kscan_Library.h"
+	file	"C:\Users\mxy\Desktop\keytest2\Touch_Kscan_Library.h"
 	line	71
 _Table_KeyDown:
 	retlw	0Ah
@@ -128,7 +128,7 @@ _Table_KeyDown:
 __end_of_Table_KeyDown:
 	global	_Table_KeyCap
 psect	strings
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\Touch_Kscan_Library.h"
+	file	"C:\Users\mxy\Desktop\keytest2\Touch_Kscan_Library.h"
 	line	65
 _Table_KeyCap:
 	retlw	02h
@@ -137,7 +137,7 @@ _Table_KeyCap:
 __end_of_Table_KeyCap:
 	global	_Table_KeyChannel
 psect	strings
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\Touch_Kscan_Library.h"
+	file	"C:\Users\mxy\Desktop\keytest2\Touch_Kscan_Library.h"
 	line	59
 _Table_KeyChannel:
 	retlw	060h
@@ -176,6 +176,9 @@ __end_of_Table_KeyChannel:
 	global	CheckKeyOldValue@counter
 	global	_KeyMaxSub
 	global	_KeyCounter
+	global	_checkCount
+	global	_revZeroCount
+	global	_revCount
 	global	_irStep
 	global	_MainTime
 	global	_sendFlag
@@ -209,6 +212,10 @@ _PIE1	set	13
 _PIR1	set	12
 	global	_INTCON
 _INTCON	set	11
+	global	_WPUB
+_WPUB	set	8
+	global	_WPUA
+_WPUA	set	7
 	global	_PORTB
 _PORTB	set	6
 	global	_PORTA
@@ -227,6 +234,8 @@ _KEYCON0	set	146
 _PR2	set	145
 	global	_OSCCON
 _OSCCON	set	136
+	global	_WPDB
+_WPDB	set	135
 	global	_TRISB
 _TRISB	set	134
 	global	_TRISA
@@ -335,6 +344,15 @@ _KeyMaxSub:
 _KeyCounter:
        ds      1
 
+_checkCount:
+       ds      1
+
+_revZeroCount:
+       ds      1
+
+_revCount:
+       ds      1
+
 _irStep:
        ds      1
 
@@ -344,14 +362,14 @@ _MainTime:
 psect	dataBANK0,class=BANK0,space=1,noexec
 global __pdataBANK0
 __pdataBANK0:
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	11
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	12
 _pwm1Step:
        ds      1
 
 psect	dataBANK0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	10
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	11
 _pwm0Step:
        ds      1
 
@@ -385,7 +403,7 @@ psect cinit,class=CODE,delta=2,merge=1
 	bcf	status, 7	;select IRP bank0
 	movlw	low(__pbssBANK0)
 	movwf	fsr
-	movlw	low((__pbssBANK0)+027h)
+	movlw	low((__pbssBANK0)+02Ah)
 	fcall	clear_ram0
 ; Clear objects allocated to COMMON
 psect cinit,class=CODE,delta=2,merge=1
@@ -419,11 +437,11 @@ __pcstackCOMMON:
 ?_initPWM:	; 1 bytes @ 0x0
 ?_CheckTouchKey:	; 1 bytes @ 0x0
 ?_Init_System:	; 1 bytes @ 0x0
-?_Refurbish_Sfr:	; 1 bytes @ 0x0
 ?_procKey1:	; 1 bytes @ 0x0
 ?_procKey2:	; 1 bytes @ 0x0
 ?_startPWM:	; 1 bytes @ 0x0
 ?_KeyServer:	; 1 bytes @ 0x0
+?_checkIRKey:	; 1 bytes @ 0x0
 ?_Isr_Timer:	; 1 bytes @ 0x0
 ??_Isr_Timer:	; 1 bytes @ 0x0
 ?_main:	; 1 bytes @ 0x0
@@ -450,11 +468,11 @@ __pcstackCOMMON:
 ??_modee:	; 1 bytes @ 0x2
 ??_initPWM:	; 1 bytes @ 0x2
 ??_Init_System:	; 1 bytes @ 0x2
-??_Refurbish_Sfr:	; 1 bytes @ 0x2
 ??_procKey1:	; 1 bytes @ 0x2
 ??_procKey2:	; 1 bytes @ 0x2
 ??_startPWM:	; 1 bytes @ 0x2
 ??_KeyServer:	; 1 bytes @ 0x2
+??_checkIRKey:	; 1 bytes @ 0x2
 ??_KeyIsIn:	; 1 bytes @ 0x2
 ??_KeyClearOne:	; 1 bytes @ 0x2
 ??_ClearResSum:	; 1 bytes @ 0x2
@@ -529,14 +547,14 @@ CheckOnceResult@cnt:	; 1 bytes @ 0xC
 ;!    Strings     0
 ;!    Constant    14
 ;!    Data        2
-;!    BSS         40
+;!    BSS         43
 ;!    Persistent  0
 ;!    Stack       0
 ;!
 ;!Auto Spaces:
 ;!    Space          Size  Autos    Used
 ;!    COMMON           14      6      10
-;!    BANK0            80     13      54
+;!    BANK0            80     13      57
 ;!    BANK1            80      0       0
 ;!    BANK2            80      0       0
 
@@ -599,17 +617,18 @@ CheckOnceResult@cnt:	; 1 bytes @ 0xC
 ;!                      _CheckTouchKey
 ;!                        _Init_System
 ;!                          _KeyServer
-;!                      _Refurbish_Sfr
-;!                            _initPWM
+;!                         _checkIRKey
 ;!                           _startPWM
 ;! ---------------------------------------------------------------------------------
 ;! (1) _startPWM                                             0     0      0       0
+;!                            _initPWM
 ;!                           _procKey1
 ;!                           _procKey2
 ;! ---------------------------------------------------------------------------------
-;! (1) _initPWM                                              0     0      0       0
+;! (2) _initPWM                                              0     0      0       0
 ;! ---------------------------------------------------------------------------------
-;! (1) _Refurbish_Sfr                                        0     0      0       0
+;! (1) _checkIRKey                                           1     1      0       0
+;!                                              2 COMMON     1     1      0
 ;! ---------------------------------------------------------------------------------
 ;! (1) _KeyServer                                            2     2      0      89
 ;!                                              2 COMMON     2     2      0
@@ -746,9 +765,9 @@ CheckOnceResult@cnt:	; 1 bytes @ 0xC
 ;!       _modec
 ;!       _moded
 ;!       _modee
-;!   _Refurbish_Sfr
-;!   _initPWM
+;!   _checkIRKey
 ;!   _startPWM
+;!     _initPWM
 ;!     _procKey1
 ;!       _mode1
 ;!       _mode2
@@ -776,15 +795,15 @@ CheckOnceResult@cnt:	; 1 bytes @ 0xC
 ;!BITBANK1            50      0       0       6        0.0%
 ;!SFR1                 0      0       0       2        0.0%
 ;!BITSFR1              0      0       0       2        0.0%
-;!BANK0               50      D      36       3       67.5%
+;!BANK0               50      D      39       3       71.3%
 ;!BITBANK0            50      0       0       5        0.0%
 ;!SFR0                 0      0       0       1        0.0%
 ;!BITSFR0              0      0       0       1        0.0%
 ;!COMMON               E      6       A       1       71.4%
 ;!BITCOMMON            E      0       3       0       21.4%
 ;!CODE                 0      0       0       0        0.0%
-;!DATA                 0      0      40      10        0.0%
-;!ABS                  0      0      40       4        0.0%
+;!DATA                 0      0      43      10        0.0%
+;!ABS                  0      0      43       4        0.0%
 ;!NULL                 0      0       0       0        0.0%
 ;!STACK                0      0       0       2        0.0%
 
@@ -792,7 +811,7 @@ CheckOnceResult@cnt:	; 1 bytes @ 0xC
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 291 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 309 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -816,21 +835,20 @@ CheckOnceResult@cnt:	; 1 bytes @ 0xC
 ;;		_CheckTouchKey
 ;;		_Init_System
 ;;		_KeyServer
-;;		_Refurbish_Sfr
-;;		_initPWM
+;;		_checkIRKey
 ;;		_startPWM
 ;; This function is called by:
 ;;		Startup code after reset
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	291
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	309
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	291
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	309
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
@@ -838,120 +856,104 @@ _main:
 ;incstack = 0
 	opt	stack 2
 ; Regs used in _main: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
-	line	293
+	line	311
 	
-l2714:	
-;main.c: 293: Init_System();
-	fcall	_Init_System
-	line	294
-	
-l2716:	
-;main.c: 294: sendFlag = 1;
-	bsf	(_sendFlag/8),(_sendFlag)&7	;volatile
-	line	295
-;main.c: 295: initPWM();
-	fcall	_initPWM
-	line	298
-	
-l2718:	
-;main.c: 297: {
-;main.c: 298: if(B_MainLoop)
-	btfss	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
-	goto	u1391
-	goto	u1390
-u1391:
-	goto	l2718
-u1390:
-	line	300
-	
-l2720:	
-;main.c: 299: {
-;main.c: 300: B_MainLoop = 0;
-	bcf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
-	line	301
-# 301 "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-clrwdt ;# 
-psect	maintext
-	line	302
-	
-l2722:	
-;main.c: 302: Refurbish_Sfr();
-	fcall	_Refurbish_Sfr
-	line	303
-	
-l2724:	
-;main.c: 303: CheckTouchKey();
-	fcall	_CheckTouchKey
-	line	304
-	
-l2726:	
-;main.c: 304: KeyServer();
-	fcall	_KeyServer
-	line	306
-	
-l2728:	
-;main.c: 306: if(ONFlag && pwmFlag == 0)
-	btfss	(_ONFlag/8),(_ONFlag)&7	;volatile
-	goto	u1401
-	goto	u1400
-u1401:
-	goto	l565
-u1400:
-	
-l2730:	
-	btfsc	(_pwmFlag/8),(_pwmFlag)&7	;volatile
-	goto	u1411
-	goto	u1410
-u1411:
-	goto	l565
-u1410:
-	line	308
-	
-l2732:	
-;main.c: 307: {
-;main.c: 308: startPWM();
-	fcall	_startPWM
-	line	309
-;main.c: 309: }
-	goto	l2718
-	line	310
-	
-l565:	
-;main.c: 310: else if(ONFlag == 0 && pwmFlag == 1)
-	btfsc	(_ONFlag/8),(_ONFlag)&7	;volatile
-	goto	u1421
-	goto	u1420
-u1421:
-	goto	l564
-u1420:
-	
-l2734:	
-	btfss	(_pwmFlag/8),(_pwmFlag)&7	;volatile
-	goto	u1431
-	goto	u1430
-u1431:
-	goto	l564
-u1430:
+l2819:	
+;main.c: 311: PORTB = 0x00;
+	clrf	(6)	;volatile
 	line	312
-	
-l2736:	
-;main.c: 311: {
-;main.c: 312: PWMCON0 = 0;
-	clrf	(19)	;volatile
+;main.c: 312: PORTA = 0x00;
+	clrf	(5)	;volatile
 	line	313
 	
-l2738:	
-;main.c: 313: pwmFlag = 0;
-	bcf	(_pwmFlag/8),(_pwmFlag)&7	;volatile
-	goto	l2718
-	line	315
+l2821:	
+;main.c: 313: Init_System();
+	fcall	_Init_System
+	line	314
 	
-l564:	
-	goto	l2718
+l2823:	
+;main.c: 314: sendFlag = 1;
+	bsf	(_sendFlag/8),(_sendFlag)&7	;volatile
+	line	316
+;main.c: 316: while(1)
+	
+l571:	
+	line	318
+# 318 "C:\Users\mxy\Desktop\keytest2\main.c"
+clrwdt ;# 
+psect	maintext
+	line	319
+	
+l2825:	
+;main.c: 319: if(B_MainLoop)
+	btfss	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
+	goto	u1521
+	goto	u1520
+u1521:
+	goto	l571
+u1520:
+	line	321
+	
+l2827:	
+;main.c: 320: {
+;main.c: 321: B_MainLoop = 0;
+	bcf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
+	line	323
+	
+l2829:	
+;main.c: 323: CheckTouchKey();
+	fcall	_CheckTouchKey
+	line	324
+	
+l2831:	
+;main.c: 324: KeyServer();
+	fcall	_KeyServer
+	line	325
+	
+l2833:	
+;main.c: 325: checkIRKey();
+	fcall	_checkIRKey
+	line	326
+	
+l2835:	
+;main.c: 326: if(ONFlag)
+	btfss	(_ONFlag/8),(_ONFlag)&7	;volatile
+	goto	u1531
+	goto	u1530
+u1531:
+	goto	l2839
+u1530:
+	line	328
+	
+l2837:	
+;main.c: 327: {
+;main.c: 328: startPWM();
+	fcall	_startPWM
+	line	329
+;main.c: 329: }
+	goto	l571
+	line	332
+	
+l2839:	
+;main.c: 330: else
+;main.c: 331: {
+;main.c: 332: PWMCON0 = 0;
+	clrf	(19)	;volatile
+	line	333
+	
+l2841:	
+;main.c: 333: PORTB &= 0x7F;
+	bcf	(6)+(7/8),(7)&7	;volatile
+	line	334
+	
+l2843:	
+;main.c: 334: PORTA &= 0xDF;
+	bcf	(5)+(5/8),(5)&7	;volatile
+	goto	l571
 	global	start
 	ljmp	start
 	opt stack 0
-	line	317
+	line	352
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -959,7 +961,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _startPWM *****************
 ;; Defined at:
-;;		line 153 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 158 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -981,6 +983,7 @@ GLOBAL	__end_of_main
 ;; Hardware stack levels used:    1
 ;; Hardware stack levels required when called:    3
 ;; This function calls:
+;;		_initPWM
 ;;		_procKey1
 ;;		_procKey2
 ;; This function is called by:
@@ -988,12 +991,12 @@ GLOBAL	__end_of_main
 ;; This function uses a non-reentrant model
 ;;
 psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	153
+	line	158
 global __ptext1
 __ptext1:	;psect for function _startPWM
 psect	text1
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	153
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	158
 	global	__size_of_startPWM
 	__size_of_startPWM	equ	__end_of_startPWM-_startPWM
 	
@@ -1001,27 +1004,32 @@ _startPWM:
 ;incstack = 0
 	opt	stack 4
 ; Regs used in _startPWM: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	155
+	line	160
 	
-l2420:	
-;main.c: 155: pwm0Step--;
+l2491:	
+;main.c: 160: --pwm0Step;
 	decf	(_pwm0Step),f
-	line	156
-;main.c: 156: pwm1Step--;
+	line	161
+;main.c: 161: --pwm1Step;
 	decf	(_pwm1Step),f
-	line	157
+	line	162
 	
-l2422:	
-;main.c: 157: procKey1();
+l2493:	
+;main.c: 162: initPWM();
+	fcall	_initPWM
+	line	163
+	
+l2495:	
+;main.c: 163: procKey1();
 	fcall	_procKey1
-	line	158
+	line	164
 	
-l2424:	
-;main.c: 158: procKey2();
+l2497:	
+;main.c: 164: procKey2();
 	fcall	_procKey2
-	line	159
+	line	165
 	
-l518:	
+l524:	
 	return
 	opt stack 0
 GLOBAL	__end_of_startPWM
@@ -1031,7 +1039,7 @@ GLOBAL	__end_of_startPWM
 
 ;; *************** function _initPWM *****************
 ;; Defined at:
-;;		line 4 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 4 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1041,7 +1049,7 @@ GLOBAL	__end_of_startPWM
 ;; Registers used:
 ;;		wreg, status,2
 ;; Tracked objects:
-;;		On entry : 300/100
+;;		On entry : 300/0
 ;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
@@ -1055,30 +1063,29 @@ GLOBAL	__end_of_startPWM
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
-;;		_main
+;;		_startPWM
 ;; This function uses a non-reentrant model
 ;;
 psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	4
 global __ptext2
 __ptext2:	;psect for function _initPWM
 psect	text2
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	4
 	global	__size_of_initPWM
 	__size_of_initPWM	equ	__end_of_initPWM-_initPWM
 	
 _initPWM:	
 ;incstack = 0
-	opt	stack 6
+	opt	stack 5
 ; Regs used in _initPWM: [wreg+status,2]
 	line	6
 	
-l1952:	
+l2299:	
 ;pwm.c: 6: PWMCON1 = 0x40;
 	movlw	low(040h)
-	bcf	status, 5	;RP0=0, select bank0
 	movwf	(20)	;volatile
 	line	7
 ;pwm.c: 7: PWMCON0 = 0x23;
@@ -1086,12 +1093,12 @@ l1952:
 	movwf	(19)	;volatile
 	line	8
 	
-l1954:	
+l2301:	
 ;pwm.c: 8: PWMCON2 = 0;
 	clrf	(29)	;volatile
 	line	9
 	
-l1956:	
+l2303:	
 ;pwm.c: 9: PWMTH = 0;
 	clrf	(22)	;volatile
 	line	10
@@ -1108,22 +1115,22 @@ l1956:
 	movwf	(24)	;volatile
 	line	13
 	
-l1958:	
+l2305:	
 ;pwm.c: 13: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	14
 	
-l975:	
+l982:	
 	return
 	opt stack 0
 GLOBAL	__end_of_initPWM
 	__end_of_initPWM:
 	signat	_initPWM,89
-	global	_Refurbish_Sfr
+	global	_checkIRKey
 
-;; *************** function _Refurbish_Sfr *****************
+;; *************** function _checkIRKey *****************
 ;; Defined at:
-;;		line 49 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 223 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1133,15 +1140,15 @@ GLOBAL	__end_of_initPWM
 ;; Registers used:
 ;;		wreg, status,2, status,0
 ;; Tracked objects:
-;;		On entry : 0/0
+;;		On entry : 300/0
 ;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
 ;;      Params:         0       0       0       0
 ;;      Locals:         0       0       0       0
-;;      Temps:          0       0       0       0
-;;      Totals:         0       0       0       0
-;;Total ram usage:        0 bytes
+;;      Temps:          1       0       0       0
+;;      Totals:         1       0       0       0
+;;Total ram usage:        1 bytes
 ;; Hardware stack levels used:    1
 ;; Hardware stack levels required when called:    1
 ;; This function calls:
@@ -1151,79 +1158,217 @@ GLOBAL	__end_of_initPWM
 ;; This function uses a non-reentrant model
 ;;
 psect	text3,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	49
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	223
 global __ptext3
-__ptext3:	;psect for function _Refurbish_Sfr
+__ptext3:	;psect for function _checkIRKey
 psect	text3
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	49
-	global	__size_of_Refurbish_Sfr
-	__size_of_Refurbish_Sfr	equ	__end_of_Refurbish_Sfr-_Refurbish_Sfr
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	223
+	global	__size_of_checkIRKey
+	__size_of_checkIRKey	equ	__end_of_checkIRKey-_checkIRKey
 	
-_Refurbish_Sfr:	
+_checkIRKey:	
 ;incstack = 0
 	opt	stack 6
-; Regs used in _Refurbish_Sfr: [wreg+status,2+status,0]
-	line	87
+; Regs used in _checkIRKey: [wreg+status,2+status,0]
+	line	225
 	
-l1896:	
-;main.c: 87: OPTION_REG = 0;
-	bsf	status, 5	;RP0=1, select bank1
-	bcf	status, 6	;RP1=0, select bank1
-	clrf	(129)^080h	;volatile
-	line	91
+l2539:	
+;main.c: 225: if(((PORTB) >> (2)&1))
+	movf	(6),w	;volatile
+	movwf	(??_checkIRKey+0)+0
+	clrc
+	rrf	(??_checkIRKey+0)+0,f
+	clrc
+	rrf	(??_checkIRKey+0)+0,f
+	btfss	0+(??_checkIRKey+0)+0,(0)&7
+	goto	u1141
+	goto	u1140
+u1141:
+	goto	l2543
+u1140:
+	line	227
 	
-l1898:	
-;main.c: 91: PIE1 = 2;
-	movlw	low(02h)
-	bcf	status, 5	;RP0=0, select bank0
-	movwf	(13)	;volatile
-	line	92
+l2541:	
+;main.c: 226: {
+;main.c: 227: revCount++;
+	incf	(_revCount),f
+	line	230
 	
-l1900:	
-;main.c: 92: PR2 = 250;
-	movlw	low(0FAh)
-	bsf	status, 5	;RP0=1, select bank1
-	movwf	(145)^080h	;volatile
-	line	93
+l2543:	
+;main.c: 228: }
+;main.c: 230: if(checkCount > 10 && irStep)
+	movlw	low(0Bh)
+	subwf	(_checkCount),w
+	skipc
+	goto	u1151
+	goto	u1150
+u1151:
+	goto	l546
+u1150:
 	
-l1902:	
-;main.c: 93: INTCON = 0XC0;
-	movlw	low(0C0h)
-	movwf	(11)	;volatile
-	line	94
-	
-l1904:	
-;main.c: 94: if(4 != T2CON)
-		movlw	4
-	bcf	status, 5	;RP0=0, select bank0
-	xorwf	((18)),w	;volatile
+l2545:	
+	movf	((_irStep)),w	;volatile
 	btfsc	status,2
-	goto	u411
-	goto	u410
-u411:
-	goto	l493
-u410:
-	line	95
+	goto	u1161
+	goto	u1160
+u1161:
+	goto	l546
+u1160:
+	line	232
 	
-l1906:	
-;main.c: 95: T2CON = 4;
-	movlw	low(04h)
-	movwf	(18)	;volatile
-	line	96
+l2547:	
+;main.c: 231: {
+;main.c: 232: sendFlag = 0;
+	bcf	(_sendFlag/8),(_sendFlag)&7	;volatile
+	line	233
+;main.c: 233: }
+	goto	l2549
+	line	234
 	
-l493:	
+l546:	
+	line	236
+;main.c: 234: else
+;main.c: 235: {
+;main.c: 236: sendFlag = 1;
+	bsf	(_sendFlag/8),(_sendFlag)&7	;volatile
+	line	239
+	
+l2549:	
+;main.c: 237: }
+;main.c: 239: if(++checkCount >= 20)
+	movlw	low(014h)
+	incf	(_checkCount),f
+	subwf	((_checkCount)),w
+	skipc
+	goto	u1171
+	goto	u1170
+u1171:
+	goto	l555
+u1170:
+	line	241
+	
+l2551:	
+;main.c: 240: {
+;main.c: 241: if(revCount > 2)
+	movlw	low(03h)
+	subwf	(_revCount),w
+	skipc
+	goto	u1181
+	goto	u1180
+u1181:
+	goto	l2563
+u1180:
+	line	243
+	
+l2553:	
+;main.c: 242: {
+;main.c: 243: if(irStep == 0)
+	movf	((_irStep)),w	;volatile
+	btfss	status,2
+	goto	u1191
+	goto	u1190
+u1191:
+	goto	l2561
+u1190:
+	line	245
+	
+l2555:	
+;main.c: 244: {
+;main.c: 245: irStep = 1;
+	movlw	low(01h)
+	movwf	(_irStep)	;volatile
+	line	246
+	
+l2557:	
+;main.c: 246: if(ONFlag == 1)
+	btfss	(_ONFlag/8),(_ONFlag)&7	;volatile
+	goto	u1201
+	goto	u1200
+u1201:
+	goto	l551
+u1200:
+	line	248
+	
+l2559:	
+;main.c: 247: {
+;main.c: 248: ONFlag = 0;
+	bcf	(_ONFlag/8),(_ONFlag)&7	;volatile
+	line	249
+;main.c: 249: }
+	goto	l2561
+	line	250
+	
+l551:	
+	line	252
+;main.c: 250: else
+;main.c: 251: {
+;main.c: 252: ONFlag = 1;
+	bsf	(_ONFlag/8),(_ONFlag)&7	;volatile
+	line	255
+	
+l2561:	
+;main.c: 253: }
+;main.c: 254: }
+;main.c: 255: revZeroCount = 0;
+	clrf	(_revZeroCount)
+	line	256
+;main.c: 256: }
+	goto	l2569
+	line	259
+	
+l2563:	
+;main.c: 257: else
+;main.c: 258: {
+;main.c: 259: if(++revZeroCount > 1)
+	movlw	low(02h)
+	incf	(_revZeroCount),f
+	subwf	((_revZeroCount)),w
+	skipc
+	goto	u1211
+	goto	u1210
+u1211:
+	goto	l2569
+u1210:
+	line	261
+	
+l2565:	
+;main.c: 260: {
+;main.c: 261: revZeroCount = 1;
+	clrf	(_revZeroCount)
+	incf	(_revZeroCount),f
+	line	262
+	
+l2567:	
+;main.c: 262: irStep = 0;
+	clrf	(_irStep)	;volatile
+	line	267
+	
+l2569:	
+;main.c: 263: }
+;main.c: 264: }
+;main.c: 267: sendFlag = 1;
+	bsf	(_sendFlag/8),(_sendFlag)&7	;volatile
+	line	268
+;main.c: 268: checkCount = 0;
+	clrf	(_checkCount)
+	line	269
+;main.c: 269: revCount = 0;
+	clrf	(_revCount)
+	line	272
+	
+l555:	
 	return
 	opt stack 0
-GLOBAL	__end_of_Refurbish_Sfr
-	__end_of_Refurbish_Sfr:
-	signat	_Refurbish_Sfr,89
+GLOBAL	__end_of_checkIRKey
+	__end_of_checkIRKey:
+	signat	_checkIRKey,89
 	global	_KeyServer
 
 ;; *************** function _KeyServer *****************
 ;; Defined at:
-;;		line 166 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 172 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1252,12 +1397,12 @@ GLOBAL	__end_of_Refurbish_Sfr
 ;; This function uses a non-reentrant model
 ;;
 psect	text4,local,class=CODE,delta=2,merge=1,group=0
-	line	166
+	line	172
 global __ptext4
 __ptext4:	;psect for function _KeyServer
 psect	text4
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	166
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	172
 	global	__size_of_KeyServer
 	__size_of_KeyServer	equ	__end_of_KeyServer-_KeyServer
 	
@@ -1265,107 +1410,107 @@ _KeyServer:
 ;incstack = 0
 	opt	stack 4
 ; Regs used in _KeyServer: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	169
+	line	175
 	
-l2426:	
-;main.c: 168: static unsigned int KeyOldFlag = 0;
-;main.c: 169: unsigned int i = (unsigned int)((KeyFlag[1]<<8) | KeyFlag[0]);
+l2499:	
+;main.c: 174: static unsigned int KeyOldFlag = 0;
+;main.c: 175: unsigned int i = (unsigned int)((KeyFlag[1]<<8) | KeyFlag[0]);
 	movf	0+(_KeyFlag)+01h,w	;volatile
 	movwf	(KeyServer@i+1)
 	movf	(_KeyFlag),w	;volatile
 	movwf	(KeyServer@i)
-	line	170
+	line	176
 	
-l2428:	
-;main.c: 170: if(i)
+l2501:	
+;main.c: 176: if(i)
 	movf	((KeyServer@i)),w
 iorwf	((KeyServer@i+1)),w
 	btfsc	status,2
-	goto	u1021
-	goto	u1020
-u1021:
-	goto	l2450
-u1020:
-	line	173
+	goto	u1101
+	goto	u1100
+u1101:
+	goto	l2523
+u1100:
+	line	179
 	
-l2430:	
-;main.c: 171: {
-;main.c: 173: if(i != KeyOldFlag)
+l2503:	
+;main.c: 177: {
+;main.c: 179: if(i != KeyOldFlag)
 	movf	(KeyServer@KeyOldFlag+1),w
 	xorwf	(KeyServer@i+1),w
 	skipz
-	goto	u1035
+	goto	u1115
 	movf	(KeyServer@KeyOldFlag),w
 	xorwf	(KeyServer@i),w
-u1035:
+u1115:
 
 	skipnz
-	goto	u1031
-	goto	u1030
-u1031:
-	goto	l524
-u1030:
-	line	175
+	goto	u1111
+	goto	u1110
+u1111:
+	goto	l530
+u1110:
+	line	181
 	
-l2432:	
-;main.c: 174: {
-;main.c: 175: if(keyLockFlag)
+l2505:	
+;main.c: 180: {
+;main.c: 181: if(keyLockFlag)
 	btfss	(_keyLockFlag/8),(_keyLockFlag)&7	;volatile
-	goto	u1041
-	goto	u1040
-u1041:
-	goto	l2436
-u1040:
-	line	177
+	goto	u1121
+	goto	u1120
+u1121:
+	goto	l2509
+u1120:
+	line	183
 	
-l2434:	
-;main.c: 176: {
-;main.c: 177: doubleTouchFlag = 1;
+l2507:	
+;main.c: 182: {
+;main.c: 183: doubleTouchFlag = 1;
 	bsf	(_doubleTouchFlag/8),(_doubleTouchFlag)&7	;volatile
-	line	178
-;main.c: 178: return;
-	goto	l526
-	line	180
+	line	184
+;main.c: 184: return;
+	goto	l532
+	line	186
 	
-l2436:	
-;main.c: 179: }
-;main.c: 180: KeyOldFlag = i;
+l2509:	
+;main.c: 185: }
+;main.c: 186: KeyOldFlag = i;
 	movf	(KeyServer@i+1),w
 	movwf	(KeyServer@KeyOldFlag+1)
 	movf	(KeyServer@i),w
 	movwf	(KeyServer@KeyOldFlag)
-	line	181
-;main.c: 181: switch(i)
-	goto	l2448
-	line	184
-	
-l2438:	
-;main.c: 184: procKey1();
-	fcall	_procKey1
-	line	185
-;main.c: 185: break;
-	goto	l524
 	line	187
-	
-l2440:	
-;main.c: 187: procKey2();
-	fcall	_procKey2
-	line	188
-;main.c: 188: break;
-	goto	l524
-	line	189
-;main.c: 189: case 3:
-	
-l531:	
+;main.c: 187: switch(i)
+	goto	l2521
 	line	190
-;main.c: 190: doublePressFlag = 1;
-	bsf	(_doublePressFlag/8),(_doublePressFlag)&7	;volatile
+	
+l2511:	
+;main.c: 190: procKey1();
+	fcall	_procKey1
 	line	191
 ;main.c: 191: break;
-	goto	l524
-	line	181
+	goto	l530
+	line	193
 	
-l2448:	
+l2513:	
+;main.c: 193: procKey2();
+	fcall	_procKey2
+	line	194
+;main.c: 194: break;
+	goto	l530
+	line	195
+;main.c: 195: case 3:
+	
+l537:	
+	line	196
+;main.c: 196: doublePressFlag = 1;
+	bsf	(_doublePressFlag/8),(_doublePressFlag)&7	;volatile
+	line	197
+;main.c: 197: break;
+	goto	l530
+	line	187
+	
+l2521:	
 	; Switch on 2 bytes has been partitioned into a top level switch of size 1, and 1 sub-switches
 ; Switch size 1, requested type "space"
 ; Number of cases is 1, Range of values is 0 to 0
@@ -1381,11 +1526,11 @@ l2448:
 	opt asmopt_off
 	xorlw	0^0	; case 0
 	skipnz
-	goto	l2800
-	goto	l524
+	goto	l2905
+	goto	l530
 	opt asmopt_pop
 	
-l2800:	
+l2905:	
 ; Switch size 1, requested type "space"
 ; Number of cases is 5, Range of values is 1 to 8
 ; switch strategies available:
@@ -1400,71 +1545,71 @@ l2800:
 	opt asmopt_off
 	xorlw	1^0	; case 1
 	skipnz
-	goto	l2438
+	goto	l2511
 	xorlw	2^1	; case 2
 	skipnz
-	goto	l2440
+	goto	l2513
 	xorlw	3^2	; case 3
 	skipnz
-	goto	l531
+	goto	l537
 	xorlw	4^3	; case 4
 	skipnz
-	goto	l2438
+	goto	l2511
 	xorlw	8^4	; case 8
 	skipnz
-	goto	l2440
-	goto	l524
+	goto	l2513
+	goto	l530
 	opt asmopt_pop
 
-	line	201
-	
-l524:	
-	line	202
-;main.c: 201: }
-;main.c: 202: keyLockFlag = 1;
-	bsf	(_keyLockFlag/8),(_keyLockFlag)&7	;volatile
-	line	203
-;main.c: 203: }
-	goto	l526
-	line	206
-	
-l2450:	
-;main.c: 204: else
-;main.c: 205: {
-;main.c: 206: KeyOldFlag = 0;
-	clrf	(KeyServer@KeyOldFlag)
-	clrf	(KeyServer@KeyOldFlag+1)
 	line	207
 	
-l2452:	
-;main.c: 207: keyLockFlag = 0;
-	bcf	(_keyLockFlag/8),(_keyLockFlag)&7	;volatile
+l530:	
 	line	208
+;main.c: 207: }
+;main.c: 208: keyLockFlag = 1;
+	bsf	(_keyLockFlag/8),(_keyLockFlag)&7	;volatile
+	line	209
+;main.c: 209: }
+	goto	l532
+	line	212
 	
-l2454:	
-;main.c: 208: if(doubleTouchFlag)
-	btfss	(_doubleTouchFlag/8),(_doubleTouchFlag)&7	;volatile
-	goto	u1051
-	goto	u1050
-u1051:
-	goto	l2458
-u1050:
-	line	211
-	
-l2456:	
-;main.c: 209: {
-;main.c: 211: ONFlag = !ONFlag;
-	movlw	1<<((_ONFlag)&7)
-	xorwf	((_ONFlag)/8),f
+l2523:	
+;main.c: 210: else
+;main.c: 211: {
+;main.c: 212: KeyOldFlag = 0;
+	clrf	(KeyServer@KeyOldFlag)
+	clrf	(KeyServer@KeyOldFlag+1)
 	line	213
 	
-l2458:	
-;main.c: 212: }
-;main.c: 213: doubleTouchFlag = 0;
-	bcf	(_doubleTouchFlag/8),(_doubleTouchFlag)&7	;volatile
-	line	215
+l2525:	
+;main.c: 213: keyLockFlag = 0;
+	bcf	(_keyLockFlag/8),(_keyLockFlag)&7	;volatile
+	line	214
 	
-l526:	
+l2527:	
+;main.c: 214: if(doubleTouchFlag)
+	btfss	(_doubleTouchFlag/8),(_doubleTouchFlag)&7	;volatile
+	goto	u1131
+	goto	u1130
+u1131:
+	goto	l2531
+u1130:
+	line	217
+	
+l2529:	
+;main.c: 215: {
+;main.c: 217: ONFlag = !ONFlag;
+	movlw	1<<((_ONFlag)&7)
+	xorwf	((_ONFlag)/8),f
+	line	219
+	
+l2531:	
+;main.c: 218: }
+;main.c: 219: doubleTouchFlag = 0;
+	bcf	(_doubleTouchFlag/8),(_doubleTouchFlag)&7	;volatile
+	line	221
+	
+l532:	
 	return
 	opt stack 0
 GLOBAL	__end_of_KeyServer
@@ -1474,7 +1619,7 @@ GLOBAL	__end_of_KeyServer
 
 ;; *************** function _procKey2 *****************
 ;; Defined at:
-;;		line 126 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 130 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1507,12 +1652,12 @@ GLOBAL	__end_of_KeyServer
 ;; This function uses a non-reentrant model
 ;;
 psect	text5,local,class=CODE,delta=2,merge=1,group=0
-	line	126
+	line	130
 global __ptext5
 __ptext5:	;psect for function _procKey2
 psect	text5
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	126
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	130
 	global	__size_of_procKey2
 	__size_of_procKey2	equ	__end_of_procKey2-_procKey2
 	
@@ -1520,77 +1665,86 @@ _procKey2:
 ;incstack = 0
 	opt	stack 4
 ; Regs used in _procKey2: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	128
+	line	132
 	
-l2212:	
-;main.c: 128: pwmFlag = 1;
+l2273:	
+;main.c: 132: if(ONFlag == 0)
+	btfsc	(_ONFlag/8),(_ONFlag)&7	;volatile
+	goto	u741
+	goto	u740
+u741:
+	goto	l512
+u740:
+	goto	l513
+	line	133
+	
+l512:	
+	line	134
+;main.c: 134: pwmFlag = 1;
 	bsf	(_pwmFlag/8),(_pwmFlag)&7	;volatile
-	line	129
-;main.c: 129: ONFlag = 1;
-	bsf	(_ONFlag/8),(_ONFlag)&7	;volatile
-	line	130
+	line	135
 	
-l2214:	
-;main.c: 130: if(++pwm1Step > 5)
+l2277:	
+;main.c: 135: if(++pwm1Step > 5)
 	movlw	low(06h)
 	incf	(_pwm1Step),f
 	subwf	((_pwm1Step)),w
 	skipc
-	goto	u671
-	goto	u670
-u671:
-	goto	l2230
-u670:
-	line	131
+	goto	u751
+	goto	u750
+u751:
+	goto	l2293
+u750:
+	line	136
 	
-l2216:	
-;main.c: 131: pwm1Step = 1;
+l2279:	
+;main.c: 136: pwm1Step = 1;
 	clrf	(_pwm1Step)
 	incf	(_pwm1Step),f
-	goto	l2230
-	line	135
+	goto	l2293
+	line	140
 	
-l2218:	
-;main.c: 135: modea();
+l2281:	
+;main.c: 140: modea();
 	fcall	_modea
-	line	136
-;main.c: 136: break;
-	goto	l515
-	line	138
-	
-l2220:	
-;main.c: 138: modeb();
-	fcall	_modeb
-	line	139
-;main.c: 139: break;
-	goto	l515
 	line	141
+;main.c: 141: break;
+	goto	l513
+	line	143
 	
-l2222:	
-;main.c: 141: modec();
-	fcall	_modec
-	line	142
-;main.c: 142: break;
-	goto	l515
+l2283:	
+;main.c: 143: modeb();
+	fcall	_modeb
 	line	144
+;main.c: 144: break;
+	goto	l513
+	line	146
 	
-l2224:	
-;main.c: 144: moded();
-	fcall	_moded
-	line	145
-;main.c: 145: break;
-	goto	l515
+l2285:	
+;main.c: 146: modec();
+	fcall	_modec
 	line	147
+;main.c: 147: break;
+	goto	l513
+	line	149
 	
-l2226:	
-;main.c: 147: modee();
+l2287:	
+;main.c: 149: moded();
+	fcall	_moded
+	line	150
+;main.c: 150: break;
+	goto	l513
+	line	152
+	
+l2289:	
+;main.c: 152: modee();
 	fcall	_modee
-	line	148
-;main.c: 148: break;
-	goto	l515
-	line	132
+	line	153
+;main.c: 153: break;
+	goto	l513
+	line	137
 	
-l2230:	
+l2293:	
 	movf	(_pwm1Step),w
 	; Switch size 1, requested type "space"
 ; Number of cases is 5, Range of values is 1 to 5
@@ -1603,31 +1757,31 @@ l2230:
 
 	addlw	-1
 	skipc
-goto l515
+goto l513
 	movwf fsr
 	movlw	5
 	subwf	fsr,w
 skipnc
-goto l515
-movlw high(S2802)
+goto l513
+movlw high(S2907)
 movwf pclath
-	movlw low(S2802)
+	movlw low(S2907)
 	addwf fsr,w
 	movwf pc
 psect	swtext1,local,class=CONST,delta=2
 global __pswtext1
 __pswtext1:
-S2802:
-	ljmp	l2218
-	ljmp	l2220
-	ljmp	l2222
-	ljmp	l2224
-	ljmp	l2226
+S2907:
+	ljmp	l2281
+	ljmp	l2283
+	ljmp	l2285
+	ljmp	l2287
+	ljmp	l2289
 psect	text5
 
-	line	150
+	line	155
 	
-l515:	
+l513:	
 	return
 	opt stack 0
 GLOBAL	__end_of_procKey2
@@ -1637,7 +1791,7 @@ GLOBAL	__end_of_procKey2
 
 ;; *************** function _modee *****************
 ;; Defined at:
-;;		line 70 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 71 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1645,7 +1799,7 @@ GLOBAL	__end_of_procKey2
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg
+;;		wreg, status,2
 ;; Tracked objects:
 ;;		On entry : 300/0
 ;;		On exit  : 300/0
@@ -1665,33 +1819,34 @@ GLOBAL	__end_of_procKey2
 ;; This function uses a non-reentrant model
 ;;
 psect	text6,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
-	line	70
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
+	line	71
 global __ptext6
 __ptext6:	;psect for function _modee
 psect	text6
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
-	line	70
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
+	line	71
 	global	__size_of_modee
 	__size_of_modee	equ	__end_of_modee-_modee
 	
 _modee:	
 ;incstack = 0
 	opt	stack 4
-; Regs used in _modee: [wreg]
-	line	72
+; Regs used in _modee: [wreg+status,2]
+	line	73
 	
-l2150:	
-;pwm.c: 72: PWMD1L = 94;
+l2207:	
+;pwm.c: 73: PWMD1L = 94;
 	movlw	low(05Eh)
 	movwf	(24)	;volatile
-	line	73
-;pwm.c: 73: PWMCON0 = 0x23;
-	movlw	low(023h)
-	movwf	(19)	;volatile
 	line	74
 	
-l1005:	
+l2209:	
+;pwm.c: 74: PWMD01H = 0;
+	clrf	(28)	;volatile
+	line	75
+	
+l1012:	
 	return
 	opt stack 0
 GLOBAL	__end_of_modee
@@ -1701,7 +1856,7 @@ GLOBAL	__end_of_modee
 
 ;; *************** function _moded *****************
 ;; Defined at:
-;;		line 64 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 65 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1709,7 +1864,7 @@ GLOBAL	__end_of_modee
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg
+;;		wreg, status,2
 ;; Tracked objects:
 ;;		On entry : 300/0
 ;;		On exit  : 300/0
@@ -1729,32 +1884,33 @@ GLOBAL	__end_of_modee
 ;; This function uses a non-reentrant model
 ;;
 psect	text7,local,class=CODE,delta=2,merge=1,group=0
-	line	64
+	line	65
 global __ptext7
 __ptext7:	;psect for function _moded
 psect	text7
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
-	line	64
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
+	line	65
 	global	__size_of_moded
 	__size_of_moded	equ	__end_of_moded-_moded
 	
 _moded:	
 ;incstack = 0
 	opt	stack 4
-; Regs used in _moded: [wreg]
-	line	66
+; Regs used in _moded: [wreg+status,2]
+	line	67
 	
-l2148:	
-;pwm.c: 66: PWMD1L = 62;
+l2203:	
+;pwm.c: 67: PWMD1L = 62;
 	movlw	low(03Eh)
 	movwf	(24)	;volatile
-	line	67
-;pwm.c: 67: PWMCON0 = 0x23;
-	movlw	low(023h)
-	movwf	(19)	;volatile
 	line	68
 	
-l1002:	
+l2205:	
+;pwm.c: 68: PWMD01H = 0;
+	clrf	(28)	;volatile
+	line	69
+	
+l1009:	
 	return
 	opt stack 0
 GLOBAL	__end_of_moded
@@ -1764,7 +1920,7 @@ GLOBAL	__end_of_moded
 
 ;; *************** function _modec *****************
 ;; Defined at:
-;;		line 58 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 58 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1772,7 +1928,7 @@ GLOBAL	__end_of_moded
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		wreg
+;;		wreg, status,2
 ;; Tracked objects:
 ;;		On entry : 300/0
 ;;		On exit  : 300/0
@@ -1796,7 +1952,7 @@ psect	text8,local,class=CODE,delta=2,merge=1,group=0
 global __ptext8
 __ptext8:	;psect for function _modec
 psect	text8
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	58
 	global	__size_of_modec
 	__size_of_modec	equ	__end_of_modec-_modec
@@ -1804,10 +1960,10 @@ psect	text8
 _modec:	
 ;incstack = 0
 	opt	stack 4
-; Regs used in _modec: [wreg]
+; Regs used in _modec: [wreg+status,2]
 	line	60
 	
-l2146:	
+l2199:	
 ;pwm.c: 60: PWMD1L = 31;
 	movlw	low(01Fh)
 	movwf	(24)	;volatile
@@ -1817,7 +1973,12 @@ l2146:
 	movwf	(19)	;volatile
 	line	62
 	
-l999:	
+l2201:	
+;pwm.c: 62: PWMD01H = 0;
+	clrf	(28)	;volatile
+	line	63
+	
+l1006:	
 	return
 	opt stack 0
 GLOBAL	__end_of_modec
@@ -1827,7 +1988,7 @@ GLOBAL	__end_of_modec
 
 ;; *************** function _modeb *****************
 ;; Defined at:
-;;		line 52 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 52 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1859,7 +2020,7 @@ psect	text9,local,class=CODE,delta=2,merge=1,group=0
 global __ptext9
 __ptext9:	;psect for function _modeb
 psect	text9
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	52
 	global	__size_of_modeb
 	__size_of_modeb	equ	__end_of_modeb-_modeb
@@ -1870,18 +2031,18 @@ _modeb:
 ; Regs used in _modeb: [wreg]
 	line	54
 	
-l2142:	
+l2195:	
 ;pwm.c: 54: PWMCON0 = 0x21;
 	movlw	low(021h)
 	movwf	(19)	;volatile
 	line	55
 	
-l2144:	
+l2197:	
 ;pwm.c: 55: PORTB&=~(1<<7);
 	bcf	(6)+(7/8),(7)&7	;volatile
 	line	56
 	
-l996:	
+l1003:	
 	return
 	opt stack 0
 GLOBAL	__end_of_modeb
@@ -1891,7 +2052,7 @@ GLOBAL	__end_of_modeb
 
 ;; *************** function _modea *****************
 ;; Defined at:
-;;		line 46 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 46 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1923,7 +2084,7 @@ psect	text10,local,class=CODE,delta=2,merge=1,group=0
 global __ptext10
 __ptext10:	;psect for function _modea
 psect	text10
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	46
 	global	__size_of_modea
 	__size_of_modea	equ	__end_of_modea-_modea
@@ -1934,18 +2095,18 @@ _modea:
 ; Regs used in _modea: [wreg+status,2]
 	line	48
 	
-l2138:	
+l2191:	
 ;pwm.c: 48: PWMD1L = 125;
 	movlw	low(07Dh)
 	movwf	(24)	;volatile
 	line	49
 	
-l2140:	
+l2193:	
 ;pwm.c: 49: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	50
 	
-l993:	
+l1000:	
 	return
 	opt stack 0
 GLOBAL	__end_of_modea
@@ -1955,7 +2116,7 @@ GLOBAL	__end_of_modea
 
 ;; *************** function _procKey1 *****************
 ;; Defined at:
-;;		line 98 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 101 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1988,13 +2149,13 @@ GLOBAL	__end_of_modea
 ;; This function uses a non-reentrant model
 ;;
 psect	text11,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	98
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	101
 global __ptext11
 __ptext11:	;psect for function _procKey1
 psect	text11
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	98
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	101
 	global	__size_of_procKey1
 	__size_of_procKey1	equ	__end_of_procKey1-_procKey1
 	
@@ -2002,77 +2163,86 @@ _procKey1:
 ;incstack = 0
 	opt	stack 4
 ; Regs used in _procKey1: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	100
+	line	103
 	
-l2188:	
-;main.c: 100: pwmFlag = 1;
+l2247:	
+;main.c: 103: if(ONFlag == 0)
+	btfsc	(_ONFlag/8),(_ONFlag)&7	;volatile
+	goto	u721
+	goto	u720
+u721:
+	goto	l500
+u720:
+	goto	l501
+	line	104
+	
+l500:	
+	line	105
+;main.c: 105: pwmFlag = 1;
 	bsf	(_pwmFlag/8),(_pwmFlag)&7	;volatile
-	line	101
-;main.c: 101: ONFlag = 1;
-	bsf	(_ONFlag/8),(_ONFlag)&7	;volatile
-	line	102
+	line	106
 	
-l2190:	
-;main.c: 102: if(++pwm0Step > 4)
-	movlw	low(05h)
+l2251:	
+;main.c: 106: if(++pwm0Step > 5)
+	movlw	low(06h)
 	incf	(_pwm0Step),f
 	subwf	((_pwm0Step)),w
 	skipc
-	goto	u661
-	goto	u660
-u661:
-	goto	l2206
-u660:
-	line	103
-	
-l2192:	
-;main.c: 103: pwm0Step = 1;
-	clrf	(_pwm0Step)
-	incf	(_pwm0Step),f
-	goto	l2206
+	goto	u731
+	goto	u730
+u731:
+	goto	l2267
+u730:
 	line	107
 	
-l2194:	
-;main.c: 107: mode1();
-	fcall	_mode1
-	line	108
-;main.c: 108: break;
-	goto	l504
-	line	110
-	
-l2196:	
-;main.c: 110: mode2();
-	fcall	_mode2
+l2253:	
+;main.c: 107: pwm0Step = 1;
+	clrf	(_pwm0Step)
+	incf	(_pwm0Step),f
+	goto	l2267
 	line	111
-;main.c: 111: break;
-	goto	l504
-	line	113
 	
-l2198:	
-;main.c: 113: mode3();
-	fcall	_mode3
+l2255:	
+;main.c: 111: mode1();
+	fcall	_mode1
+	line	112
+;main.c: 112: break;
+	goto	l501
 	line	114
-;main.c: 114: break;
-	goto	l504
-	line	116
 	
-l2200:	
-;main.c: 116: mode4();
-	fcall	_mode4
+l2257:	
+;main.c: 114: mode2();
+	fcall	_mode2
+	line	115
+;main.c: 115: break;
+	goto	l501
 	line	117
-;main.c: 117: break;
-	goto	l504
-	line	119
 	
-l2202:	
-;main.c: 119: mode5();
-	fcall	_mode5
+l2259:	
+;main.c: 117: mode3();
+	fcall	_mode3
+	line	118
+;main.c: 118: break;
+	goto	l501
 	line	120
-;main.c: 120: break;
-	goto	l504
-	line	104
 	
-l2206:	
+l2261:	
+;main.c: 120: mode4();
+	fcall	_mode4
+	line	121
+;main.c: 121: break;
+	goto	l501
+	line	123
+	
+l2263:	
+;main.c: 123: mode5();
+	fcall	_mode5
+	line	124
+;main.c: 124: break;
+	goto	l501
+	line	108
+	
+l2267:	
 	movf	(_pwm0Step),w
 	; Switch size 1, requested type "space"
 ; Number of cases is 5, Range of values is 1 to 5
@@ -2085,31 +2255,31 @@ l2206:
 
 	addlw	-1
 	skipc
-goto l504
+goto l501
 	movwf fsr
 	movlw	5
 	subwf	fsr,w
 skipnc
-goto l504
-movlw high(S2804)
+goto l501
+movlw high(S2909)
 movwf pclath
-	movlw low(S2804)
+	movlw low(S2909)
 	addwf fsr,w
 	movwf pc
 psect	swtext2,local,class=CONST,delta=2
 global __pswtext2
 __pswtext2:
-S2804:
-	ljmp	l2194
-	ljmp	l2196
-	ljmp	l2198
-	ljmp	l2200
-	ljmp	l2202
+S2909:
+	ljmp	l2255
+	ljmp	l2257
+	ljmp	l2259
+	ljmp	l2261
+	ljmp	l2263
 psect	text11
 
-	line	123
+	line	127
 	
-l504:	
+l501:	
 	return
 	opt stack 0
 GLOBAL	__end_of_procKey1
@@ -2119,7 +2289,7 @@ GLOBAL	__end_of_procKey1
 
 ;; *************** function _mode5 *****************
 ;; Defined at:
-;;		line 40 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 40 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2147,12 +2317,12 @@ GLOBAL	__end_of_procKey1
 ;; This function uses a non-reentrant model
 ;;
 psect	text12,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	40
 global __ptext12
 __ptext12:	;psect for function _mode5
 psect	text12
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	40
 	global	__size_of_mode5
 	__size_of_mode5	equ	__end_of_mode5-_mode5
@@ -2163,18 +2333,18 @@ _mode5:
 ; Regs used in _mode5: [wreg+status,2]
 	line	42
 	
-l2134:	
+l2187:	
 ;pwm.c: 42: PWMD0L = 125;
 	movlw	low(07Dh)
 	movwf	(23)	;volatile
 	line	43
 	
-l2136:	
+l2189:	
 ;pwm.c: 43: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	44
 	
-l990:	
+l997:	
 	return
 	opt stack 0
 GLOBAL	__end_of_mode5
@@ -2184,7 +2354,7 @@ GLOBAL	__end_of_mode5
 
 ;; *************** function _mode4 *****************
 ;; Defined at:
-;;		line 34 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 34 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2216,7 +2386,7 @@ psect	text13,local,class=CODE,delta=2,merge=1,group=0
 global __ptext13
 __ptext13:	;psect for function _mode4
 psect	text13
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	34
 	global	__size_of_mode4
 	__size_of_mode4	equ	__end_of_mode4-_mode4
@@ -2227,18 +2397,18 @@ _mode4:
 ; Regs used in _mode4: [wreg+status,2]
 	line	36
 	
-l2130:	
+l2183:	
 ;pwm.c: 36: PWMD0L = 71;
 	movlw	low(047h)
 	movwf	(23)	;volatile
 	line	37
 	
-l2132:	
+l2185:	
 ;pwm.c: 37: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	38
 	
-l987:	
+l994:	
 	return
 	opt stack 0
 GLOBAL	__end_of_mode4
@@ -2248,7 +2418,7 @@ GLOBAL	__end_of_mode4
 
 ;; *************** function _mode3 *****************
 ;; Defined at:
-;;		line 28 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 28 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2280,7 +2450,7 @@ psect	text14,local,class=CODE,delta=2,merge=1,group=0
 global __ptext14
 __ptext14:	;psect for function _mode3
 psect	text14
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	28
 	global	__size_of_mode3
 	__size_of_mode3	equ	__end_of_mode3-_mode3
@@ -2291,18 +2461,18 @@ _mode3:
 ; Regs used in _mode3: [wreg+status,2]
 	line	30
 	
-l2126:	
+l2179:	
 ;pwm.c: 30: PWMD0L = 20;
 	movlw	low(014h)
 	movwf	(23)	;volatile
 	line	31
 	
-l2128:	
+l2181:	
 ;pwm.c: 31: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	32
 	
-l984:	
+l991:	
 	return
 	opt stack 0
 GLOBAL	__end_of_mode3
@@ -2312,7 +2482,7 @@ GLOBAL	__end_of_mode3
 
 ;; *************** function _mode2 *****************
 ;; Defined at:
-;;		line 22 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 22 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2344,7 +2514,7 @@ psect	text15,local,class=CODE,delta=2,merge=1,group=0
 global __ptext15
 __ptext15:	;psect for function _mode2
 psect	text15
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	22
 	global	__size_of_mode2
 	__size_of_mode2	equ	__end_of_mode2-_mode2
@@ -2355,18 +2525,18 @@ _mode2:
 ; Regs used in _mode2: [wreg+status,2]
 	line	24
 	
-l2122:	
+l2175:	
 ;pwm.c: 24: PWMD0L = 12;
 	movlw	low(0Ch)
 	movwf	(23)	;volatile
 	line	25
 	
-l2124:	
+l2177:	
 ;pwm.c: 25: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	26
 	
-l981:	
+l988:	
 	return
 	opt stack 0
 GLOBAL	__end_of_mode2
@@ -2376,7 +2546,7 @@ GLOBAL	__end_of_mode2
 
 ;; *************** function _mode1 *****************
 ;; Defined at:
-;;		line 16 in file "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+;;		line 16 in file "C:\Users\mxy\Desktop\keytest2\pwm.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2408,7 +2578,7 @@ psect	text16,local,class=CODE,delta=2,merge=1,group=0
 global __ptext16
 __ptext16:	;psect for function _mode1
 psect	text16
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\pwm.c"
+	file	"C:\Users\mxy\Desktop\keytest2\pwm.c"
 	line	16
 	global	__size_of_mode1
 	__size_of_mode1	equ	__end_of_mode1-_mode1
@@ -2419,18 +2589,18 @@ _mode1:
 ; Regs used in _mode1: [wreg+status,2]
 	line	18
 	
-l2118:	
+l2171:	
 ;pwm.c: 18: PWMD0L = 1;
 	movlw	low(01h)
 	movwf	(23)	;volatile
 	line	19
 	
-l2120:	
+l2173:	
 ;pwm.c: 19: PWMD01H = 0;
 	clrf	(28)	;volatile
 	line	20
 	
-l978:	
+l985:	
 	return
 	opt stack 0
 GLOBAL	__end_of_mode1
@@ -2440,7 +2610,7 @@ GLOBAL	__end_of_mode1
 
 ;; *************** function _Init_System *****************
 ;; Defined at:
-;;		line 23 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 24 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2451,7 +2621,7 @@ GLOBAL	__end_of_mode1
 ;;		wreg, status,2
 ;; Tracked objects:
 ;;		On entry : B00/0
-;;		On exit  : 300/100
+;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
 ;;      Params:         0       0       0       0
@@ -2468,13 +2638,13 @@ GLOBAL	__end_of_mode1
 ;; This function uses a non-reentrant model
 ;;
 psect	text17,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	23
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	24
 global __ptext17
 __ptext17:	;psect for function _Init_System
 psect	text17
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	23
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	24
 	global	__size_of_Init_System
 	__size_of_Init_System	equ	__end_of_Init_System-_Init_System
 	
@@ -2482,69 +2652,101 @@ _Init_System:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _Init_System: [wreg+status,2]
-	line	25
-	
-l1882:	
-# 25 "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-nop ;# 
 	line	26
-# 26 "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+	
+l1907:	
+# 26 "C:\Users\mxy\Desktop\keytest2\main.c"
+nop ;# 
+	line	27
+# 27 "C:\Users\mxy\Desktop\keytest2\main.c"
 clrwdt ;# 
 psect	text17
-	line	27
-	
-l1884:	
-;main.c: 27: INTCON = 0;
-	clrf	(11)	;volatile
 	line	28
 	
-l1886:	
-;main.c: 28: OSCCON = 0X71;
+l1909:	
+;main.c: 28: INTCON = 0;
+	clrf	(11)	;volatile
+	line	29
+	
+l1911:	
+;main.c: 29: OSCCON = 0X71;
 	movlw	low(071h)
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	movwf	(136)^080h	;volatile
-	line	29
+	line	30
 	
-l1888:	
-;main.c: 29: OPTION_REG = 0;
+l1913:	
+;main.c: 30: OPTION_REG = 0;
 	clrf	(129)^080h	;volatile
-	line	36
-;main.c: 36: PIE1 = 2;
-	movlw	low(02h)
+	line	34
+	
+l1915:	
+;main.c: 34: WPUB = 0x00;
 	bcf	status, 5	;RP0=0, select bank0
+	clrf	(8)	;volatile
+	line	35
+	
+l1917:	
+;main.c: 35: WPDB = 0x00;
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(135)^080h	;volatile
+	line	36
+	
+l1919:	
+;main.c: 36: WPUA = 0x00;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(7)	;volatile
+	line	38
+	
+l1921:	
+;main.c: 38: PIE1 = 2;
+	movlw	low(02h)
 	movwf	(13)	;volatile
-	line	37
-;main.c: 37: PR2 = 250;
+	line	39
+	
+l1923:	
+;main.c: 39: PR2 = 250;
 	movlw	low(0FAh)
 	bsf	status, 5	;RP0=1, select bank1
 	movwf	(145)^080h	;volatile
-	line	38
-;main.c: 38: T2CON = 4;
+	line	40
+	
+l1925:	
+;main.c: 40: T2CON = 4;
 	movlw	low(04h)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(18)	;volatile
-	line	39
-	
-l1890:	
-;main.c: 39: TRISA = 0x00;
+	line	41
+;main.c: 41: TRISA = 0x00;
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(133)^080h	;volatile
-	line	40
-	
-l1892:	
-;main.c: 40: TRISB = 0x04;
-	movlw	low(04h)
-	movwf	(134)^080h	;volatile
 	line	42
 	
-l1894:	
-;main.c: 42: INTCON = 0XC0;
-	movlw	low(0C0h)
-	movwf	(11)	;volatile
+l1927:	
+;main.c: 42: TRISB = 0x07;
+	movlw	low(07h)
+	movwf	(134)^080h	;volatile
 	line	43
 	
-l489:	
+l1929:	
+;main.c: 43: PORTB = 0x00;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(6)	;volatile
+	line	44
+	
+l1931:	
+;main.c: 44: PORTA = 0x00;
+	clrf	(5)	;volatile
+	line	45
+	
+l1933:	
+;main.c: 45: INTCON = 0XC0;
+	movlw	low(0C0h)
+	movwf	(11)	;volatile
+	line	46
+	
+l493:	
 	return
 	opt stack 0
 GLOBAL	__end_of_Init_System
@@ -2564,7 +2766,7 @@ GLOBAL	__end_of_Init_System
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, btemp+1, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 300/0
+;;		On entry : 0/0
 ;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
@@ -2604,59 +2806,59 @@ _CheckTouchKey:
 ; Regs used in _CheckTouchKey: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
 	line	497
 	
-l2678:	
+l2783:	
 ;CheckTouchKey.c: 497: if(!b_kover)
 	btfsc	(_b_kover/8),(_b_kover)&7	;volatile
-	goto	u1341
-	goto	u1340
-u1341:
-	goto	l1176
-u1340:
+	goto	u1471
+	goto	u1470
+u1471:
+	goto	l1183
+u1470:
 	line	500
 	
-l2680:	
+l2785:	
 ;CheckTouchKey.c: 498: {
 ;CheckTouchKey.c: 500: GetTouchKeyValue();
 	fcall	_GetTouchKeyValue
 	line	501
 	
-l2682:	
+l2787:	
 ;CheckTouchKey.c: 501: if(++KeyCounter >= 8)
 	movlw	low(08h)
 	bcf	status, 5	;RP0=0, select bank0
 	incf	(_KeyCounter),f
 	subwf	((_KeyCounter)),w
 	skipc
-	goto	u1351
-	goto	u1350
-u1351:
-	goto	l2712
-u1350:
+	goto	u1481
+	goto	u1480
+u1481:
+	goto	l2817
+u1480:
 	line	503
 	
-l2684:	
+l2789:	
 ;CheckTouchKey.c: 502: {
 ;CheckTouchKey.c: 503: KeyCounter = 0;
 	clrf	(_KeyCounter)
 	line	504
 	
-l2686:	
+l2791:	
 ;CheckTouchKey.c: 504: b_kover = 1;
 	bsf	(_b_kover/8),(_b_kover)&7	;volatile
-	goto	l2712
+	goto	l2817
 	line	507
 	
-l1176:	
+l1183:	
 ;CheckTouchKey.c: 507: else if(!b_kover1)
 	btfsc	(_b_kover1/8),(_b_kover1)&7	;volatile
-	goto	u1361
-	goto	u1360
-u1361:
-	goto	l2706
-u1360:
+	goto	u1491
+	goto	u1490
+u1491:
+	goto	l2811
+u1490:
 	line	510
 	
-l2688:	
+l2793:	
 ;CheckTouchKey.c: 508: {
 ;CheckTouchKey.c: 510: CheckOnceResult();
 	fcall	_CheckOnceResult
@@ -2665,55 +2867,55 @@ l2688:
 	fcall	_TurnKeyFlags
 	line	514
 	
-l2690:	
+l2795:	
 ;CheckTouchKey.c: 514: b_kover1 = 1;
 	bsf	(_b_kover1/8),(_b_kover1)&7	;volatile
 	line	520
 	
-l2692:	
+l2797:	
 ;CheckTouchKey.c: 520: if(b_kerr || KeyCounter > KeyValidNumber)
 	btfsc	(_b_kerr/8),(_b_kerr)&7	;volatile
-	goto	u1371
-	goto	u1370
-u1371:
-	goto	l2696
-u1370:
+	goto	u1501
+	goto	u1500
+u1501:
+	goto	l2801
+u1500:
 	
-l2694:	
+l2799:	
 	movlw	low(02h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	subwf	(_KeyCounter),w
 	skipc
-	goto	u1381
-	goto	u1380
-u1381:
-	goto	l2704
-u1380:
+	goto	u1511
+	goto	u1510
+u1511:
+	goto	l2809
+u1510:
 	line	522
 	
-l2696:	
+l2801:	
 ;CheckTouchKey.c: 521: {
 ;CheckTouchKey.c: 522: KeyStopClear();
 	fcall	_KeyStopClear
 	line	523
 	
-l2698:	
+l2803:	
 ;CheckTouchKey.c: 523: b_kerr = 0;
 	bcf	(_b_kerr/8),(_b_kerr)&7	;volatile
 	line	524
 	
-l2700:	
+l2805:	
 ;CheckTouchKey.c: 524: b_kover = 0;
 	bcf	(_b_kover/8),(_b_kover)&7	;volatile
 	line	525
 	
-l2702:	
+l2807:	
 ;CheckTouchKey.c: 525: b_kover1 = 0;
 	bcf	(_b_kover1/8),(_b_kover1)&7	;volatile
 	line	527
 	
-l2704:	
+l2809:	
 ;CheckTouchKey.c: 526: }
 ;CheckTouchKey.c: 527: KeyCounter = 0;
 	bcf	status, 5	;RP0=0, select bank0
@@ -2721,10 +2923,10 @@ l2704:
 	clrf	(_KeyCounter)
 	line	528
 ;CheckTouchKey.c: 528: }
-	goto	l2712
+	goto	l2817
 	line	532
 	
-l2706:	
+l2811:	
 ;CheckTouchKey.c: 529: else
 ;CheckTouchKey.c: 530: {
 ;CheckTouchKey.c: 532: CheckKeyOldValue();
@@ -2734,23 +2936,23 @@ l2706:
 	fcall	_ClearResSum
 	line	536
 	
-l2708:	
+l2813:	
 ;CheckTouchKey.c: 536: b_kover = 0;
 	bcf	(_b_kover/8),(_b_kover)&7	;volatile
 	line	537
 	
-l2710:	
+l2815:	
 ;CheckTouchKey.c: 537: b_kover1 = 0;
 	bcf	(_b_kover1/8),(_b_kover1)&7	;volatile
 	line	540
 	
-l2712:	
+l2817:	
 ;CheckTouchKey.c: 538: }
 ;CheckTouchKey.c: 540: CheckValidTime();
 	fcall	_CheckValidTime
 	line	541
 	
-l1184:	
+l1191:	
 	return
 	opt stack 0
 GLOBAL	__end_of_CheckTouchKey
@@ -2803,102 +3005,102 @@ _TurnKeyFlags:
 ; Regs used in _TurnKeyFlags: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	line	387
 	
-l2376:	
+l2447:	
 ;CheckTouchKey.c: 384: static unsigned char KeyHaveTimes = 0;
 ;CheckTouchKey.c: 385: static unsigned char KeyNoTimes = 0;
 ;CheckTouchKey.c: 387: if(KeyData[0] | KeyData[1])
 	movf	0+(_KeyData)+01h,w	;volatile
 	iorwf	(_KeyData),w	;volatile
 	btfsc	status,2
-	goto	u941
-	goto	u940
-u941:
-	goto	l2402
-u940:
+	goto	u1021
+	goto	u1020
+u1021:
+	goto	l2473
+u1020:
 	line	389
 	
-l2378:	
+l2449:	
 ;CheckTouchKey.c: 388: {
 ;CheckTouchKey.c: 389: KeyNoTimes = 0;
 	clrf	(TurnKeyFlags@KeyNoTimes)
 	line	391
 	
-l2380:	
+l2451:	
 ;CheckTouchKey.c: 391: if(KeyData[0] == KeyOldData[0] && KeyData[1] == KeyOldData[1])
 	movf	(_KeyData),w	;volatile
 	xorwf	(_KeyOldData),w	;volatile
 	skipz
-	goto	u951
-	goto	u950
-u951:
-	goto	l1157
-u950:
+	goto	u1031
+	goto	u1030
+u1031:
+	goto	l1164
+u1030:
 	
-l2382:	
+l2453:	
 	movf	0+(_KeyData)+01h,w	;volatile
 	xorwf	0+(_KeyOldData)+01h,w	;volatile
 	skipz
-	goto	u961
-	goto	u960
-u961:
-	goto	l1157
-u960:
+	goto	u1041
+	goto	u1040
+u1041:
+	goto	l1164
+u1040:
 	line	393
 	
-l2384:	
+l2455:	
 	movlw	low(02h)
 	incf	(TurnKeyFlags@KeyHaveTimes),f
 	subwf	((TurnKeyFlags@KeyHaveTimes)),w
 	skipc
-	goto	u971
-	goto	u970
-u971:
-	goto	l1164
-u970:
+	goto	u1051
+	goto	u1050
+u1051:
+	goto	l1171
+u1050:
 	line	395
 	
-l2386:	
+l2457:	
 ;CheckTouchKey.c: 394: {
 ;CheckTouchKey.c: 395: KeyHaveTimes = 0;
 	clrf	(TurnKeyFlags@KeyHaveTimes)
 	line	396
 	
-l2388:	
+l2459:	
 ;CheckTouchKey.c: 396: KeyFlag[0] = KeyData[0];
 	movf	(_KeyData),w	;volatile
 	movwf	(_KeyFlag)	;volatile
 	line	397
 	
-l2390:	
+l2461:	
 ;CheckTouchKey.c: 397: KeyFlag[1] = KeyData[1];
 	movf	0+(_KeyData)+01h,w	;volatile
 	movwf	0+(_KeyFlag)+01h	;volatile
 	line	401
 	
-l2392:	
+l2463:	
 ;CheckTouchKey.c: 400: {
 ;CheckTouchKey.c: 401: if(!b_kclr)
 	btfsc	(_b_kclr/8),(_b_kclr)&7	;volatile
-	goto	u981
-	goto	u980
-u981:
-	goto	l1161
-u980:
+	goto	u1061
+	goto	u1060
+u1061:
+	goto	l1168
+u1060:
 	line	403
 	
-l2394:	
+l2465:	
 ;CheckTouchKey.c: 402: {
 ;CheckTouchKey.c: 403: b_kclr = 1;
 	bsf	(_b_kclr/8),(_b_kclr)&7	;volatile
 	line	404
 	
-l2396:	
+l2467:	
 ;CheckTouchKey.c: 404: KeyClearIn();
 	fcall	_KeyClearIn
-	goto	l1164
+	goto	l1171
 	line	409
 	
-l1157:	
+l1164:	
 	line	411
 ;CheckTouchKey.c: 409: else
 ;CheckTouchKey.c: 410: {
@@ -2906,7 +3108,7 @@ l1157:
 	bcf	(_b_kclr/8),(_b_kclr)&7	;volatile
 	line	412
 	
-l2398:	
+l2469:	
 ;CheckTouchKey.c: 412: KeyOldData[0] = KeyData[0];
 	movf	(_KeyData),w	;volatile
 	movwf	(_KeyOldData)	;volatile
@@ -2916,20 +3118,20 @@ l2398:
 	movwf	0+(_KeyOldData)+01h	;volatile
 	line	414
 	
-l2400:	
+l2471:	
 ;CheckTouchKey.c: 414: KeyHaveTimes = 0;
 	clrf	(TurnKeyFlags@KeyHaveTimes)
-	goto	l1164
+	goto	l1171
 	line	415
 	
-l1161:	
+l1168:	
 	line	416
 ;CheckTouchKey.c: 415: }
 ;CheckTouchKey.c: 416: }
-	goto	l1164
+	goto	l1171
 	line	419
 	
-l2402:	
+l2473:	
 ;CheckTouchKey.c: 417: else
 ;CheckTouchKey.c: 418: {
 ;CheckTouchKey.c: 419: KeyHaveTimes = 0;
@@ -2942,20 +3144,20 @@ l2402:
 	clrf	0+(_KeyOldData)+01h	;volatile
 	line	423
 	
-l2404:	
+l2475:	
 ;CheckTouchKey.c: 423: if(++KeyNoTimes >=2)
 	movlw	low(02h)
 	incf	(TurnKeyFlags@KeyNoTimes),f
 	subwf	((TurnKeyFlags@KeyNoTimes)),w
 	skipc
-	goto	u991
-	goto	u990
-u991:
-	goto	l1164
-u990:
+	goto	u1071
+	goto	u1070
+u1071:
+	goto	l1171
+u1070:
 	line	425
 	
-l2406:	
+l2477:	
 ;CheckTouchKey.c: 424: {
 ;CheckTouchKey.c: 425: KeyNoTimes = 0;
 	clrf	(TurnKeyFlags@KeyNoTimes)
@@ -2967,12 +3169,12 @@ l2406:
 	clrf	0+(_KeyFlag)+01h	;volatile
 	line	429
 	
-l2408:	
+l2479:	
 ;CheckTouchKey.c: 429: b_kclr = 0;
 	bcf	(_b_kclr/8),(_b_kclr)&7	;volatile
 	line	432
 	
-l1164:	
+l1171:	
 	return
 	opt stack 0
 GLOBAL	__end_of_TurnKeyFlags
@@ -3026,48 +3228,48 @@ _KeyClearIn:
 ; Regs used in _KeyClearIn: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	line	91
 	
-l2152:	
+l2211:	
 ;CheckTouchKey.c: 90: unsigned char cnt;
 ;CheckTouchKey.c: 91: for(cnt=0;cnt < KeyTotalNumber;cnt++)
 	clrf	(KeyClearIn@cnt)
 	line	93
 	
-l2158:	
+l2217:	
 ;CheckTouchKey.c: 92: {
 ;CheckTouchKey.c: 93: if(!KeyIsIn(cnt))
 	movf	(KeyClearIn@cnt),w
 	fcall	_KeyIsIn
 	xorlw	0
 	skipz
-	goto	u621
-	goto	u620
-u621:
-	goto	l2162
-u620:
+	goto	u681
+	goto	u680
+u681:
+	goto	l2221
+u680:
 	line	95
 	
-l2160:	
+l2219:	
 ;CheckTouchKey.c: 94: {
 ;CheckTouchKey.c: 95: KeyClearOne(cnt);
 	movf	(KeyClearIn@cnt),w
 	fcall	_KeyClearOne
 	line	91
 	
-l2162:	
+l2221:	
 	incf	(KeyClearIn@cnt),f
 	
-l2164:	
+l2223:	
 	movlw	low(02h)
 	subwf	(KeyClearIn@cnt),w
 	skipc
-	goto	u631
-	goto	u630
-u631:
-	goto	l2158
-u630:
+	goto	u691
+	goto	u690
+u691:
+	goto	l2217
+u690:
 	line	98
 	
-l1075:	
+l1082:	
 	return
 	opt stack 0
 GLOBAL	__end_of_KeyClearIn
@@ -3120,7 +3322,7 @@ _KeyStopClear:
 ; Regs used in _KeyStopClear: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	line	110
 	
-l2236:	
+l2307:	
 ;CheckTouchKey.c: 109: unsigned char i;
 ;CheckTouchKey.c: 110: KeyFlag[0] = 0;
 	bcf	status, 5	;RP0=0, select bank0
@@ -3134,7 +3336,7 @@ l2236:
 	clrf	(KeyStopClear@i)
 	line	114
 	
-l2242:	
+l2313:	
 ;CheckTouchKey.c: 113: {
 ;CheckTouchKey.c: 114: KeyResSum[i] = 0;
 	clrc
@@ -3147,27 +3349,27 @@ l2242:
 	clrf	indf
 	line	115
 	
-l2244:	
+l2315:	
 ;CheckTouchKey.c: 115: KeyClearOne(i);
 	movf	(KeyStopClear@i),w
 	fcall	_KeyClearOne
 	line	112
 	
-l2246:	
+l2317:	
 	incf	(KeyStopClear@i),f
 	
-l2248:	
+l2319:	
 	movlw	low(02h)
 	subwf	(KeyStopClear@i),w
 	skipc
-	goto	u681
-	goto	u680
-u681:
-	goto	l2242
-u680:
+	goto	u761
+	goto	u760
+u761:
+	goto	l2313
+u760:
 	line	117
 	
-l1080:	
+l1087:	
 	return
 	opt stack 0
 GLOBAL	__end_of_KeyStopClear
@@ -3188,7 +3390,7 @@ GLOBAL	__end_of_KeyStopClear
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, btemp+1, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 300/0
+;;		On entry : 0/0
 ;;		On exit  : A00/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
@@ -3221,24 +3423,25 @@ _GetTouchKeyValue:
 ; Regs used in _GetTouchKeyValue: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
 	line	182
 	
-l2250:	
+l2321:	
 ;CheckTouchKey.c: 182: unsigned char cnt = 0,temp;
 	clrf	(GetTouchKeyValue@cnt)
 	line	184
 ;CheckTouchKey.c: 184: do
 	
-l1097:	
+l1104:	
 	line	186
 ;CheckTouchKey.c: 185: {
 ;CheckTouchKey.c: 186: KEYCON0 = 0;
 	bsf	status, 5	;RP0=1, select bank1
+	bcf	status, 6	;RP1=0, select bank1
 	clrf	(146)^080h	;volatile
 	line	187
 ;CheckTouchKey.c: 187: KEYCON1 = 0;
 	clrf	(147)^080h	;volatile
 	line	194
 	
-l2252:	
+l2323:	
 ;CheckTouchKey.c: 194: KEYCON0 = Table_KeyCap[cnt];
 	movf	(GetTouchKeyValue@cnt),w
 	addlw	low((((_Table_KeyCap)-__stringbase)|8000h))
@@ -3247,7 +3450,7 @@ l2252:
 	movwf	(146)^080h	;volatile
 	line	195
 	
-l2254:	
+l2325:	
 ;CheckTouchKey.c: 195: KEYCON1 = Table_KeyChannel[cnt];
 	movf	(GetTouchKeyValue@cnt),w
 	addlw	low((((_Table_KeyChannel)-__stringbase)|8000h))
@@ -3256,7 +3459,7 @@ l2254:
 	movwf	(147)^080h	;volatile
 	line	196
 	
-l2256:	
+l2327:	
 ;CheckTouchKey.c: 196: KEYCON0 |= 0x1;
 	bsf	(146)^080h+(0/8),(0)&7	;volatile
 	line	198
@@ -3264,21 +3467,21 @@ l2256:
 	clrf	(GetTouchKeyValue@temp)
 	line	199
 ;CheckTouchKey.c: 199: while(!(KEYCON0&0x80))
-	goto	l1098
+	goto	l1105
 	
-l1099:	
+l1106:	
 	line	201
 ;CheckTouchKey.c: 200: {
 ;CheckTouchKey.c: 201: if(0 == (--temp))
 	decfsz	(GetTouchKeyValue@temp),f
-	goto	u691
-	goto	u690
-u691:
-	goto	l1098
-u690:
+	goto	u771
+	goto	u770
+u771:
+	goto	l1105
+u770:
 	line	203
 	
-l2258:	
+l2329:	
 ;CheckTouchKey.c: 202: {
 ;CheckTouchKey.c: 203: KeyCounter = 255;
 	movlw	low(0FFh)
@@ -3286,23 +3489,23 @@ l2258:
 	movwf	(_KeyCounter)
 	line	204
 	
-l2260:	
+l2331:	
 ;CheckTouchKey.c: 204: ClearResSum();
 	fcall	_ClearResSum
-	goto	l1101
+	goto	l1108
 	line	207
 	
-l1098:	
+l1105:	
 	line	199
 	btfss	(146)^080h,(7)&7	;volatile
-	goto	u701
-	goto	u700
-u701:
-	goto	l1099
-u700:
+	goto	u781
+	goto	u780
+u781:
+	goto	l1106
+u780:
 	line	209
 	
-l2264:	
+l2335:	
 ;CheckTouchKey.c: 206: }
 ;CheckTouchKey.c: 207: }
 ;CheckTouchKey.c: 209: KeyResSum[cnt] += (unsigned int)((KEYDATAH<<8) | KEYDATAL);
@@ -3324,19 +3527,19 @@ l2264:
 	decf	fsr0,f
 	line	210
 	
-l2266:	
+l2337:	
 	movlw	low(02h)
 	incf	(GetTouchKeyValue@cnt),f
 	subwf	((GetTouchKeyValue@cnt)),w
 	skipc
-	goto	u711
-	goto	u710
-u711:
-	goto	l1097
-u710:
+	goto	u791
+	goto	u790
+u791:
+	goto	l1104
+u790:
 	line	211
 	
-l1101:	
+l1108:	
 	return
 	opt stack 0
 GLOBAL	__end_of_GetTouchKeyValue
@@ -3390,12 +3593,12 @@ _ClearResSum:
 ; Regs used in _ClearResSum: [wreg-fsr0h+status,2+status,0]
 	line	128
 	
-l2166:	
+l2225:	
 ;CheckTouchKey.c: 128: unsigned char cnt = 0;
 	clrf	(ClearResSum@cnt)
 	line	131
 	
-l2168:	
+l2227:	
 ;CheckTouchKey.c: 130: {
 ;CheckTouchKey.c: 131: KeyResSum[cnt] = 0;
 	clrc
@@ -3408,19 +3611,19 @@ l2168:
 	clrf	indf
 	line	132
 	
-l2170:	
+l2229:	
 	movlw	low(02h)
 	incf	(ClearResSum@cnt),f
 	subwf	((ClearResSum@cnt)),w
 	skipc
-	goto	u641
-	goto	u640
-u641:
-	goto	l2168
-u640:
+	goto	u701
+	goto	u700
+u701:
+	goto	l2227
+u700:
 	line	133
 	
-l1085:	
+l1092:	
 	return
 	opt stack 0
 GLOBAL	__end_of_ClearResSum
@@ -3473,20 +3676,20 @@ _CheckValidTime:
 ; Regs used in _CheckValidTime: [wreg+status,2+status,0]
 	line	473
 	
-l2410:	
+l2481:	
 ;CheckTouchKey.c: 472: {
 ;CheckTouchKey.c: 473: if(KeyFlag[0] | KeyFlag[1])
 	movf	0+(_KeyFlag)+01h,w	;volatile
 	iorwf	(_KeyFlag),w	;volatile
 	btfsc	status,2
-	goto	u1001
-	goto	u1000
-u1001:
-	goto	l2416
-u1000:
+	goto	u1081
+	goto	u1080
+u1081:
+	goto	l2487
+u1080:
 	line	475
 	
-l2412:	
+l2483:	
 	incf	(CheckValidTime@validtime),f
 	skipnz
 	incf	(CheckValidTime@validtime+1),f
@@ -3496,26 +3699,26 @@ l2412:
 	skipnz
 	subwf	((CheckValidTime@validtime)),w
 	skipc
-	goto	u1011
-	goto	u1010
-u1011:
-	goto	l1173
-u1010:
+	goto	u1091
+	goto	u1090
+u1091:
+	goto	l1180
+u1090:
 	line	477
 	
-l2414:	
+l2485:	
 ;CheckTouchKey.c: 476: {
 ;CheckTouchKey.c: 477: b_kerr = 1;
 	bsf	(_b_kerr/8),(_b_kerr)&7	;volatile
 	line	478
 	
-l2416:	
+l2487:	
 ;CheckTouchKey.c: 478: validtime = 0;
 	clrf	(CheckValidTime@validtime)
 	clrf	(CheckValidTime@validtime+1)
 	line	486
 	
-l1173:	
+l1180:	
 	return
 	opt stack 0
 GLOBAL	__end_of_CheckValidTime
@@ -3540,7 +3743,7 @@ GLOBAL	__end_of_CheckValidTime
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 300/0
+;;		On entry : 0/0
 ;;		On exit  : B00/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
@@ -3575,8 +3778,10 @@ _CheckOnceResult:
 ; Regs used in _CheckOnceResult: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	line	223
 	
-l2610:	
+l2715:	
 ;CheckTouchKey.c: 223: unsigned char cnt = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
 	clrf	(CheckOnceResult@cnt)
 	line	231
 ;CheckTouchKey.c: 224: unsigned char KeyDown;
@@ -3594,7 +3799,7 @@ l2610:
 	clrf	(_KeyMaxSub)
 	line	238
 	
-l2612:	
+l2717:	
 ;CheckTouchKey.c: 237: {
 ;CheckTouchKey.c: 238: flag = Table_KeyFalg[((unsigned char)(cnt&0x7))];
 	movf	(CheckOnceResult@cnt),w
@@ -3605,27 +3810,27 @@ l2612:
 	movwf	(CheckOnceResult@flag)
 	line	240
 	
-l2614:	
+l2719:	
 ;CheckTouchKey.c: 240: KeyResSum[cnt] >>= 3;
 	clrc
 	rlf	(CheckOnceResult@cnt),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
 	movwf	fsr0
 	movlw	03h
-u1215:
+u1345:
 	incf	fsr0,f
 	clrc
 	bcf	status, 7	;select IRP bank0
 	rrf	indf,f
 	decf	fsr0,f
 	rrf	indf,f
-u1210:
+u1340:
 	addlw	-1
 	skipz
-	goto	u1215
+	goto	u1345
 	line	241
 	
-l2616:	
+l2721:	
 ;CheckTouchKey.c: 241: KeyResTemp = KeyResSum[cnt];
 	clrc
 	rlf	(CheckOnceResult@cnt),w
@@ -3638,7 +3843,7 @@ l2616:
 	movwf	(CheckOnceResult@KeyResTemp+1)
 	line	242
 	
-l2618:	
+l2723:	
 ;CheckTouchKey.c: 242: KeyDown = Table_KeyDown[cnt];
 	movf	(CheckOnceResult@cnt),w
 	addlw	low((((_Table_KeyDown)-__stringbase)|8000h))
@@ -3647,13 +3852,13 @@ l2618:
 	movwf	(CheckOnceResult@KeyDown)
 	line	244
 	
-l2620:	
+l2725:	
 ;CheckTouchKey.c: 244: KeyValue = KeyResTemp + KeyDown;
 	movf	(CheckOnceResult@KeyDown),w
 	movwf	(CheckOnceResult@KeyValue)
 	clrf	(CheckOnceResult@KeyValue+1)
 	
-l2622:	
+l2727:	
 	movf	(CheckOnceResult@KeyResTemp),w
 	addwf	(CheckOnceResult@KeyValue),f
 	skipnc
@@ -3662,20 +3867,20 @@ l2622:
 	addwf	(CheckOnceResult@KeyValue+1),f
 	line	246
 	
-l2624:	
+l2729:	
 ;CheckTouchKey.c: 246: if(!KeyIsIn(cnt))
 	movf	(CheckOnceResult@cnt),w
 	fcall	_KeyIsIn
 	xorlw	0
 	skipz
-	goto	u1221
-	goto	u1220
-u1221:
-	goto	l2654
-u1220:
+	goto	u1351
+	goto	u1350
+u1351:
+	goto	l2759
+u1350:
 	line	249
 	
-l2626:	
+l2731:	
 ;CheckTouchKey.c: 247: {
 ;CheckTouchKey.c: 249: OldValue = KeyOldValue2[cnt];
 	clrc
@@ -3702,19 +3907,19 @@ l2626:
 	movf	1+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@KeyValue+1),w
 	skipz
-	goto	u1235
+	goto	u1365
 	movf	0+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@KeyValue),w
-u1235:
+u1365:
 	skipnc
-	goto	u1231
-	goto	u1230
-u1231:
-	goto	l2630
-u1230:
+	goto	u1361
+	goto	u1360
+u1361:
+	goto	l2735
+u1360:
 	line	253
 	
-l2628:	
+l2733:	
 ;CheckTouchKey.c: 252: {
 ;CheckTouchKey.c: 253: KeyResTemp = KeyReference[cnt] - KeyResTemp;
 	clrc
@@ -3736,26 +3941,26 @@ l2628:
 	movwf	1+(CheckOnceResult@KeyResTemp)
 	line	254
 ;CheckTouchKey.c: 254: }
-	goto	l2638
+	goto	l2743
 	line	255
 	
-l2630:	
+l2735:	
 ;CheckTouchKey.c: 255: else if ((OldValue > KeyValue) && (KeyOldValue1[cnt] > KeyValue))
 	movf	(CheckOnceResult@OldValue+1),w
 	subwf	(CheckOnceResult@KeyValue+1),w
 	skipz
-	goto	u1245
+	goto	u1375
 	movf	(CheckOnceResult@OldValue),w
 	subwf	(CheckOnceResult@KeyValue),w
-u1245:
+u1375:
 	skipnc
-	goto	u1241
-	goto	u1240
-u1241:
-	goto	l2676
-u1240:
+	goto	u1371
+	goto	u1370
+u1371:
+	goto	l2781
+u1370:
 	
-l2632:	
+l2737:	
 	clrc
 	rlf	(CheckOnceResult@cnt),w
 	addlw	low(_KeyOldValue1|((0x0)<<8))&0ffh
@@ -3768,19 +3973,19 @@ l2632:
 	movf	1+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@KeyValue+1),w
 	skipz
-	goto	u1255
+	goto	u1385
 	movf	0+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@KeyValue),w
-u1255:
+u1385:
 	skipnc
-	goto	u1251
-	goto	u1250
-u1251:
-	goto	l2676
-u1250:
+	goto	u1381
+	goto	u1380
+u1381:
+	goto	l2781
+u1380:
 	line	257
 	
-l2634:	
+l2739:	
 ;CheckTouchKey.c: 256: {
 ;CheckTouchKey.c: 257: KeyReference[cnt] = OldValue;
 	clrc
@@ -3794,7 +3999,7 @@ l2634:
 	movwf	indf
 	line	258
 	
-l2636:	
+l2741:	
 ;CheckTouchKey.c: 258: KeyResTemp = OldValue - KeyResTemp;
 	movf	(CheckOnceResult@KeyResTemp),w
 	subwf	(CheckOnceResult@OldValue),w
@@ -3807,7 +4012,7 @@ l2636:
 	line	265
 ;CheckTouchKey.c: 259: }
 	
-l2638:	
+l2743:	
 ;CheckTouchKey.c: 263: }
 ;CheckTouchKey.c: 265: KeyUpShake[cnt] = 0;
 	movf	(CheckOnceResult@cnt),w
@@ -3816,29 +4021,29 @@ l2638:
 	clrf	indf
 	line	269
 	
-l2640:	
+l2745:	
 ;CheckTouchKey.c: 268: {
 ;CheckTouchKey.c: 269: if(KeyResTemp >> 8)
 	movf	(0+(CheckOnceResult@KeyResTemp)+01h),w
 	btfsc	status,2
-	goto	u1261
-	goto	u1260
-u1261:
-	goto	l2644
-u1260:
+	goto	u1391
+	goto	u1390
+u1391:
+	goto	l2749
+u1390:
 	line	271
 	
-l2642:	
+l2747:	
 ;CheckTouchKey.c: 270: {
 ;CheckTouchKey.c: 271: KeyDown = 0xFF;
 	movlw	low(0FFh)
 	movwf	(CheckOnceResult@KeyDown)
 	line	272
 ;CheckTouchKey.c: 272: }
-	goto	l1115
+	goto	l1122
 	line	275
 	
-l2644:	
+l2749:	
 ;CheckTouchKey.c: 273: else
 ;CheckTouchKey.c: 274: {
 ;CheckTouchKey.c: 275: KeyDown = KeyResTemp & 0xFF;
@@ -3846,28 +4051,28 @@ l2644:
 	movwf	(CheckOnceResult@KeyDown)
 	line	276
 	
-l1115:	
+l1122:	
 	line	278
 ;CheckTouchKey.c: 276: }
 ;CheckTouchKey.c: 278: if(KeyMaxSub < KeyDown)
 	movf	(CheckOnceResult@KeyDown),w
 	subwf	(_KeyMaxSub),w
 	skipnc
-	goto	u1271
-	goto	u1270
-u1271:
-	goto	l2650
-u1270:
+	goto	u1401
+	goto	u1400
+u1401:
+	goto	l2755
+u1400:
 	line	280
 	
-l2646:	
+l2751:	
 ;CheckTouchKey.c: 279: {
 ;CheckTouchKey.c: 280: KeyMaxSub = KeyDown;
 	movf	(CheckOnceResult@KeyDown),w
 	movwf	(_KeyMaxSub)
 	line	281
 	
-l2648:	
+l2753:	
 ;CheckTouchKey.c: 281: KeyHave(cnt,flag);
 	movf	(CheckOnceResult@flag),w
 	movwf	(KeyHave@flag)
@@ -3876,18 +4081,18 @@ l2648:
 	fcall	_KeyHave
 	line	282
 ;CheckTouchKey.c: 282: }
-	goto	l2676
+	goto	l2781
 	line	285
 	
-l2650:	
+l2755:	
 ;CheckTouchKey.c: 283: else
 ;CheckTouchKey.c: 284: {
 ;CheckTouchKey.c: 285: KeyCounter++;
 	incf	(_KeyCounter),f
-	goto	l2676
+	goto	l2781
 	line	298
 	
-l2654:	
+l2759:	
 ;CheckTouchKey.c: 294: else
 ;CheckTouchKey.c: 295: {
 ;CheckTouchKey.c: 298: if(KeyReference[cnt]+1 < KeyValue)
@@ -3912,20 +4117,20 @@ l2654:
 	movf	(CheckOnceResult@KeyValue+1),w
 	subwf	1+(??_CheckOnceResult+2)+0,w
 	skipz
-	goto	u1285
+	goto	u1415
 	movf	(CheckOnceResult@KeyValue),w
 	subwf	0+(??_CheckOnceResult+2)+0,w
-u1285:
+u1415:
 	skipnc
-	goto	u1281
-	goto	u1280
-u1281:
-	goto	l2660
-u1280:
-	goto	l2676
+	goto	u1411
+	goto	u1410
+u1411:
+	goto	l2765
+u1410:
+	goto	l2781
 	line	302
 	
-l2660:	
+l2765:	
 ;CheckTouchKey.c: 302: else if((KeyOldValue2[cnt]+KeyDown<KeyResTemp) || (KeyOldValue1[cnt]+KeyDown<KeyResTemp))
 	clrc
 	rlf	(CheckOnceResult@cnt),w
@@ -3946,18 +4151,18 @@ l2660:
 	movf	(CheckOnceResult@KeyResTemp+1),w
 	subwf	1+(??_CheckOnceResult+2)+0,w
 	skipz
-	goto	u1295
+	goto	u1425
 	movf	(CheckOnceResult@KeyResTemp),w
 	subwf	0+(??_CheckOnceResult+2)+0,w
-u1295:
+u1425:
 	skipc
-	goto	u1291
-	goto	u1290
-u1291:
-	goto	l2664
-u1290:
+	goto	u1421
+	goto	u1420
+u1421:
+	goto	l2769
+u1420:
 	
-l2662:	
+l2767:	
 	clrc
 	rlf	(CheckOnceResult@cnt),w
 	addlw	low(_KeyOldValue1|((0x0)<<8))&0ffh
@@ -3977,19 +4182,19 @@ l2662:
 	movf	(CheckOnceResult@KeyResTemp+1),w
 	subwf	1+(??_CheckOnceResult+2)+0,w
 	skipz
-	goto	u1305
+	goto	u1435
 	movf	(CheckOnceResult@KeyResTemp),w
 	subwf	0+(??_CheckOnceResult+2)+0,w
-u1305:
+u1435:
 	skipnc
-	goto	u1301
-	goto	u1300
-u1301:
-	goto	l2668
-u1300:
+	goto	u1431
+	goto	u1430
+u1431:
+	goto	l2773
+u1430:
 	line	304
 	
-l2664:	
+l2769:	
 ;CheckTouchKey.c: 303: {
 ;CheckTouchKey.c: 304: if(++KeyUpShake[cnt] > 8)
 	movf	(CheckOnceResult@cnt),w
@@ -3999,24 +4204,24 @@ l2664:
 	movlw	low(09h)
 	subwf	(indf),w
 	skipc
-	goto	u1311
-	goto	u1310
-u1311:
-	goto	l1121
-u1310:
+	goto	u1441
+	goto	u1440
+u1441:
+	goto	l1128
+u1440:
 	line	306
 	
-l2666:	
+l2771:	
 ;CheckTouchKey.c: 305: {
 ;CheckTouchKey.c: 306: KeyClearOne(cnt);
 	movf	(CheckOnceResult@cnt),w
 	fcall	_KeyClearOne
 	line	307
 ;CheckTouchKey.c: 307: continue;
-	goto	l2676
+	goto	l2781
 	line	312
 	
-l2668:	
+l2773:	
 ;CheckTouchKey.c: 310: else
 ;CheckTouchKey.c: 311: {
 ;CheckTouchKey.c: 312: KeyUpShake[cnt] = 0;
@@ -4024,25 +4229,25 @@ l2668:
 	addlw	low(_KeyUpShake|((0x0)<<8))&0ffh
 	movwf	fsr0
 	clrf	indf
-	goto	l2672
+	goto	l2777
 	line	313
 	
-l1121:	
+l1128:	
 	line	319
 	
-l2672:	
+l2777:	
 ;CheckTouchKey.c: 319: else if(!(KeyData[0] | KeyData[1]))
 	movf	0+(_KeyData)+01h,w	;volatile
 	iorwf	(_KeyData),w	;volatile
 	btfss	status,2
-	goto	u1321
-	goto	u1320
-u1321:
-	goto	l2676
-u1320:
+	goto	u1451
+	goto	u1450
+u1451:
+	goto	l2781
+u1450:
 	line	321
 	
-l2674:	
+l2779:	
 ;CheckTouchKey.c: 320: {
 ;CheckTouchKey.c: 321: KeyHave(cnt,flag);
 	movf	(CheckOnceResult@flag),w
@@ -4052,21 +4257,21 @@ l2674:
 	fcall	_KeyHave
 	line	324
 	
-l2676:	
+l2781:	
 	movlw	low(02h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	incf	(CheckOnceResult@cnt),f
 	subwf	((CheckOnceResult@cnt)),w
 	skipc
-	goto	u1331
-	goto	u1330
-u1331:
-	goto	l2612
-u1330:
+	goto	u1461
+	goto	u1460
+u1461:
+	goto	l2717
+u1460:
 	line	325
 	
-l1131:	
+l1138:	
 	return
 	opt stack 0
 GLOBAL	__end_of_CheckOnceResult
@@ -4122,43 +4327,43 @@ _KeyHave:
 	movwf	(KeyHave@cnt)
 	line	144
 	
-l2172:	
+l2231:	
 ;CheckTouchKey.c: 144: KeyCounter++;
 	incf	(_KeyCounter),f
 	line	148
 	
-l2174:	
+l2233:	
 ;CheckTouchKey.c: 147: {
 ;CheckTouchKey.c: 148: KeyData[0] = 0;
 	clrf	(_KeyData)	;volatile
 	line	149
 	
-l2176:	
+l2235:	
 ;CheckTouchKey.c: 149: KeyData[1] = 0;
 	clrf	0+(_KeyData)+01h	;volatile
 	line	150
 	
-l2178:	
+l2237:	
 ;CheckTouchKey.c: 150: if(cnt&0x8)
 	btfss	(KeyHave@cnt),(3)&7
-	goto	u651
-	goto	u650
-u651:
-	goto	l2182
-u650:
+	goto	u711
+	goto	u710
+u711:
+	goto	l2241
+u710:
 	line	152
 	
-l2180:	
+l2239:	
 ;CheckTouchKey.c: 151: {
 ;CheckTouchKey.c: 152: KeyData[1] = flag;
 	movf	(KeyHave@flag),w
 	movwf	0+(_KeyData)+01h	;volatile
 	line	153
 ;CheckTouchKey.c: 153: }
-	goto	l1094
+	goto	l1101
 	line	156
 	
-l2182:	
+l2241:	
 ;CheckTouchKey.c: 154: else
 ;CheckTouchKey.c: 155: {
 ;CheckTouchKey.c: 156: KeyData[0] = flag;
@@ -4166,7 +4371,7 @@ l2182:
 	movwf	(_KeyData)	;volatile
 	line	170
 	
-l1094:	
+l1101:	
 	return
 	opt stack 0
 GLOBAL	__end_of_KeyHave
@@ -4223,7 +4428,7 @@ _KeyClearOne:
 	movwf	(KeyClearOne@cnt)
 	line	82
 	
-l2116:	
+l2169:	
 ;CheckTouchKey.c: 82: KeyOldValue0[cnt] = 0;
 	clrc
 	rlf	(KeyClearOne@cnt),w
@@ -4262,7 +4467,7 @@ l2116:
 	clrf	indf
 	line	86
 	
-l1069:	
+l1076:	
 	return
 	opt stack 0
 GLOBAL	__end_of_KeyClearOne
@@ -4284,7 +4489,7 @@ GLOBAL	__end_of_KeyClearOne
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 300/0
+;;		On entry : 0/0
 ;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
@@ -4317,13 +4522,15 @@ _CheckKeyOldValue:
 ; Regs used in _CheckKeyOldValue: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	line	338
 	
-l2336:	
+l2407:	
 ;CheckTouchKey.c: 337: static unsigned char counter = 0;
 ;CheckTouchKey.c: 338: unsigned char cnt = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
 	clrf	(CheckKeyOldValue@cnt)
 	line	342
 	
-l2338:	
+l2409:	
 ;CheckTouchKey.c: 339: unsigned int KeyResTemp;
 ;CheckTouchKey.c: 340: unsigned int KeyOldTemp;
 ;CheckTouchKey.c: 342: if(++counter < 4)
@@ -4331,20 +4538,20 @@ l2338:
 	incf	(CheckKeyOldValue@counter),f
 	subwf	((CheckKeyOldValue@counter)),w
 	skipnc
-	goto	u851
-	goto	u850
-u851:
-	goto	l2342
-u850:
-	goto	l1137
+	goto	u931
+	goto	u930
+u931:
+	goto	l2413
+u930:
+	goto	l1144
 	line	344
 	
-l2342:	
+l2413:	
 ;CheckTouchKey.c: 344: counter = 0;
 	clrf	(CheckKeyOldValue@counter)
 	line	348
 	
-l2344:	
+l2415:	
 ;CheckTouchKey.c: 347: {
 ;CheckTouchKey.c: 348: KeyResTemp = KeyResSum[cnt];
 	clrc
@@ -4359,20 +4566,20 @@ l2344:
 	movwf	(CheckKeyOldValue@KeyResTemp+1)
 	line	349
 	
-l2346:	
+l2417:	
 ;CheckTouchKey.c: 349: if(!KeyIsIn(cnt))
 	movf	(CheckKeyOldValue@cnt),w
 	fcall	_KeyIsIn
 	xorlw	0
 	skipz
-	goto	u861
-	goto	u860
-u861:
-	goto	l1139
-u860:
+	goto	u941
+	goto	u940
+u941:
+	goto	l1146
+u940:
 	line	352
 	
-l2348:	
+l2419:	
 ;CheckTouchKey.c: 350: {
 ;CheckTouchKey.c: 352: KeyOldTemp = KeyOldValue0[cnt] - KeyResTemp;
 	clrc
@@ -4386,7 +4593,7 @@ l2348:
 	movf	indf,w
 	movwf	(CheckKeyOldValue@KeyOldTemp+1)
 	
-l2350:	
+l2421:	
 	movf	(CheckKeyOldValue@KeyResTemp),w
 	subwf	(CheckKeyOldValue@KeyOldTemp),f
 	movf	(CheckKeyOldValue@KeyResTemp+1),w
@@ -4395,7 +4602,7 @@ l2350:
 	subwf	(CheckKeyOldValue@KeyOldTemp+1),f
 	line	353
 	
-l2352:	
+l2423:	
 ;CheckTouchKey.c: 353: if(KeyOldTemp <= 1 || KeyOldTemp >= -1)
 	movlw	0
 	subwf	(CheckKeyOldValue@KeyOldTemp+1),w
@@ -4403,26 +4610,26 @@ l2352:
 	skipnz
 	subwf	(CheckKeyOldValue@KeyOldTemp),w
 	skipc
-	goto	u871
-	goto	u870
-u871:
-	goto	l2356
-u870:
+	goto	u951
+	goto	u950
+u951:
+	goto	l2427
+u950:
 	
-l2354:	
+l2425:	
 		incf	((CheckKeyOldValue@KeyOldTemp)),w
 	skipz
-	goto	u881
+	goto	u961
 	incf	((CheckKeyOldValue@KeyOldTemp+1)),w
 	btfss	status,2
-	goto	u881
-	goto	u880
-u881:
-	goto	l1139
-u880:
+	goto	u961
+	goto	u960
+u961:
+	goto	l1146
+u960:
 	line	355
 	
-l2356:	
+l2427:	
 ;CheckTouchKey.c: 354: {
 ;CheckTouchKey.c: 355: KeyOldTemp = KeyOldValue1[cnt] - KeyResTemp;
 	clrc
@@ -4435,7 +4642,7 @@ l2356:
 	movf	indf,w
 	movwf	(CheckKeyOldValue@KeyOldTemp+1)
 	
-l2358:	
+l2429:	
 	movf	(CheckKeyOldValue@KeyResTemp),w
 	subwf	(CheckKeyOldValue@KeyOldTemp),f
 	movf	(CheckKeyOldValue@KeyResTemp+1),w
@@ -4444,7 +4651,7 @@ l2358:
 	subwf	(CheckKeyOldValue@KeyOldTemp+1),f
 	line	356
 	
-l2360:	
+l2431:	
 ;CheckTouchKey.c: 356: if(KeyOldTemp <= 1 || KeyOldTemp >= -1)
 	movlw	0
 	subwf	(CheckKeyOldValue@KeyOldTemp+1),w
@@ -4452,26 +4659,26 @@ l2360:
 	skipnz
 	subwf	(CheckKeyOldValue@KeyOldTemp),w
 	skipc
-	goto	u891
-	goto	u890
-u891:
-	goto	l2364
-u890:
+	goto	u971
+	goto	u970
+u971:
+	goto	l2435
+u970:
 	
-l2362:	
+l2433:	
 		incf	((CheckKeyOldValue@KeyOldTemp)),w
 	skipz
-	goto	u901
+	goto	u981
 	incf	((CheckKeyOldValue@KeyOldTemp+1)),w
 	btfss	status,2
-	goto	u901
-	goto	u900
-u901:
-	goto	l1139
-u900:
+	goto	u981
+	goto	u980
+u981:
+	goto	l1146
+u980:
 	line	358
 	
-l2364:	
+l2435:	
 ;CheckTouchKey.c: 357: {
 ;CheckTouchKey.c: 358: KeyOldTemp = KeyOldValue2[cnt] - KeyResTemp;
 	clrc
@@ -4484,7 +4691,7 @@ l2364:
 	movf	indf,w
 	movwf	(CheckKeyOldValue@KeyOldTemp+1)
 	
-l2366:	
+l2437:	
 	movf	(CheckKeyOldValue@KeyResTemp),w
 	subwf	(CheckKeyOldValue@KeyOldTemp),f
 	movf	(CheckKeyOldValue@KeyResTemp+1),w
@@ -4493,7 +4700,7 @@ l2366:
 	subwf	(CheckKeyOldValue@KeyOldTemp+1),f
 	line	359
 	
-l2368:	
+l2439:	
 ;CheckTouchKey.c: 359: if(KeyOldTemp <= 1 || KeyOldTemp >= -1)
 	movlw	0
 	subwf	(CheckKeyOldValue@KeyOldTemp+1),w
@@ -4501,26 +4708,26 @@ l2368:
 	skipnz
 	subwf	(CheckKeyOldValue@KeyOldTemp),w
 	skipc
-	goto	u911
-	goto	u910
-u911:
-	goto	l2372
-u910:
+	goto	u991
+	goto	u990
+u991:
+	goto	l2443
+u990:
 	
-l2370:	
+l2441:	
 		incf	((CheckKeyOldValue@KeyOldTemp)),w
 	skipz
-	goto	u921
+	goto	u1001
 	incf	((CheckKeyOldValue@KeyOldTemp+1)),w
 	btfss	status,2
-	goto	u921
-	goto	u920
-u921:
-	goto	l1139
-u920:
+	goto	u1001
+	goto	u1000
+u1001:
+	goto	l1146
+u1000:
 	line	361
 	
-l2372:	
+l2443:	
 ;CheckTouchKey.c: 360: {
 ;CheckTouchKey.c: 361: KeyReference[cnt] = KeyResTemp;
 	clrc
@@ -4534,7 +4741,7 @@ l2372:
 	movwf	indf
 	line	365
 	
-l1139:	
+l1146:	
 	line	368
 ;CheckTouchKey.c: 362: }
 ;CheckTouchKey.c: 363: }
@@ -4593,19 +4800,19 @@ l1139:
 	movwf	indf
 	line	371
 	
-l2374:	
+l2445:	
 	movlw	low(02h)
 	incf	(CheckKeyOldValue@cnt),f
 	subwf	((CheckKeyOldValue@cnt)),w
 	skipc
-	goto	u931
-	goto	u930
-u931:
-	goto	l2344
-u930:
+	goto	u1011
+	goto	u1010
+u1011:
+	goto	l2415
+u1010:
 	line	372
 	
-l1137:	
+l1144:	
 	return
 	opt stack 0
 GLOBAL	__end_of_CheckKeyOldValue
@@ -4663,7 +4870,7 @@ _KeyIsIn:
 	movwf	(KeyIsIn@cnt)
 	line	60
 	
-l2104:	
+l2157:	
 ;CheckTouchKey.c: 60: unsigned char i = Table_KeyFalg[((unsigned char)(cnt&0x7))];
 	movf	(KeyIsIn@cnt),w
 	andlw	07h
@@ -4673,17 +4880,17 @@ l2104:
 	movwf	(KeyIsIn@i)
 	line	62
 	
-l2106:	
+l2159:	
 ;CheckTouchKey.c: 62: if(cnt&0x8)
 	btfss	(KeyIsIn@cnt),(3)&7
-	goto	u611
-	goto	u610
-u611:
-	goto	l2110
-u610:
+	goto	u671
+	goto	u670
+u671:
+	goto	l2163
+u670:
 	line	64
 	
-l2108:	
+l2161:	
 ;CheckTouchKey.c: 63: {
 ;CheckTouchKey.c: 64: i &= KeyFlag[1];
 	bcf	status, 5	;RP0=0, select bank0
@@ -4692,10 +4899,10 @@ l2108:
 	andwf	(KeyIsIn@i),f
 	line	65
 ;CheckTouchKey.c: 65: }
-	goto	l2112
+	goto	l2165
 	line	68
 	
-l2110:	
+l2163:	
 ;CheckTouchKey.c: 66: else
 ;CheckTouchKey.c: 67: {
 ;CheckTouchKey.c: 68: i &= KeyFlag[0];
@@ -4705,13 +4912,13 @@ l2110:
 	andwf	(KeyIsIn@i),f
 	line	70
 	
-l2112:	
+l2165:	
 ;CheckTouchKey.c: 69: }
 ;CheckTouchKey.c: 70: return i;
 	movf	(KeyIsIn@i),w
 	line	71
 	
-l1066:	
+l1073:	
 	return
 	opt stack 0
 GLOBAL	__end_of_KeyIsIn
@@ -4721,7 +4928,7 @@ GLOBAL	__end_of_KeyIsIn
 
 ;; *************** function _Isr_Timer *****************
 ;; Defined at:
-;;		line 260 in file "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+;;		line 278 in file "C:\Users\mxy\Desktop\keytest2\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -4748,13 +4955,13 @@ GLOBAL	__end_of_KeyIsIn
 ;; This function uses a non-reentrant model
 ;;
 psect	text30,local,class=CODE,delta=2,merge=1,group=0
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	260
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	278
 global __ptext30
 __ptext30:	;psect for function _Isr_Timer
 psect	text30
-	file	"C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
-	line	260
+	file	"C:\Users\mxy\Desktop\keytest2\main.c"
+	line	278
 	global	__size_of_Isr_Timer
 	__size_of_Isr_Timer	equ	__end_of_Isr_Timer-_Isr_Timer
 	
@@ -4776,112 +4983,112 @@ interrupt_function:
 	movwf	(??_Isr_Timer+1)
 	ljmp	_Isr_Timer
 psect	text30
-	line	262
+	line	280
 	
-i1l2502:	
-;main.c: 262: if(TMR2IF)
+i1l2607:	
+;main.c: 280: if(TMR2IF)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	btfss	(97/8),(97)&7	;volatile
-	goto	u111_21
-	goto	u111_20
-u111_21:
-	goto	i1l2522
-u111_20:
-	line	264
+	goto	u127_21
+	goto	u127_20
+u127_21:
+	goto	i1l2627
+u127_20:
+	line	282
 	
-i1l2504:	
-;main.c: 263: {
-;main.c: 264: TMR2IF = 0;
+i1l2609:	
+;main.c: 281: {
+;main.c: 282: TMR2IF = 0;
 	bcf	(97/8),(97)&7	;volatile
-	line	266
+	line	284
 	
-i1l2506:	
-;main.c: 266: if(++MainTime >= 32)
+i1l2611:	
+;main.c: 284: if(++MainTime >= 32)
 	movlw	low(020h)
 	incf	(_MainTime),f	;volatile
 	subwf	((_MainTime)),w	;volatile
 	skipc
-	goto	u112_21
-	goto	u112_20
-u112_21:
-	goto	i1l2512
-u112_20:
-	line	268
+	goto	u128_21
+	goto	u128_20
+u128_21:
+	goto	i1l2617
+u128_20:
+	line	286
 	
-i1l2508:	
-;main.c: 267: {
-;main.c: 268: MainTime = 0;
+i1l2613:	
+;main.c: 285: {
+;main.c: 286: MainTime = 0;
 	clrf	(_MainTime)	;volatile
-	line	269
+	line	287
 	
-i1l2510:	
-;main.c: 269: B_MainLoop = 1;
+i1l2615:	
+;main.c: 287: B_MainLoop = 1;
 	bsf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
-	line	272
+	line	290
 	
-i1l2512:	
-;main.c: 270: }
-;main.c: 272: if(pwmTime < 12 && sendFlag)
+i1l2617:	
+;main.c: 288: }
+;main.c: 290: if(pwmTime < 12 && sendFlag)
 	movlw	low(0Ch)
 	subwf	(_pwmTime),w	;volatile
 	skipnc
-	goto	u113_21
-	goto	u113_20
-u113_21:
-	goto	i1l554
-u113_20:
+	goto	u129_21
+	goto	u129_20
+u129_21:
+	goto	i1l562
+u129_20:
 	
-i1l2514:	
+i1l2619:	
 	btfss	(_sendFlag/8),(_sendFlag)&7	;volatile
-	goto	u114_21
-	goto	u114_20
-u114_21:
-	goto	i1l554
-u114_20:
-	line	273
+	goto	u130_21
+	goto	u130_20
+u130_21:
+	goto	i1l562
+u130_20:
+	line	291
 	
-i1l2516:	
-;main.c: 273: PORTA&=~(1<<3);
+i1l2621:	
+;main.c: 291: PORTA&=~(1<<3);
 	bcf	(5)+(3/8),(3)&7	;volatile
-	goto	i1l2518
-	line	274
+	goto	i1l2623
+	line	292
 	
-i1l554:	
-	line	275
-;main.c: 274: else
-;main.c: 275: PORTA|=(1<<3);
+i1l562:	
+	line	293
+;main.c: 292: else
+;main.c: 293: PORTA|=(1<<3);
 	bsf	(5)+(3/8),(3)&7	;volatile
-	line	276
+	line	294
 	
-i1l2518:	
-;main.c: 276: if(++pwmTime >= 44)
+i1l2623:	
+;main.c: 294: if(++pwmTime >= 44)
 	movlw	low(02Ch)
 	incf	(_pwmTime),f	;volatile
 	subwf	((_pwmTime)),w	;volatile
 	skipc
-	goto	u115_21
-	goto	u115_20
-u115_21:
-	goto	i1l558
-u115_20:
-	line	278
+	goto	u131_21
+	goto	u131_20
+u131_21:
+	goto	i1l566
+u131_20:
+	line	296
 	
-i1l2520:	
-;main.c: 277: {
-;main.c: 278: pwmTime = 0;
+i1l2625:	
+;main.c: 295: {
+;main.c: 296: pwmTime = 0;
 	clrf	(_pwmTime)	;volatile
-	goto	i1l558
-	line	283
+	goto	i1l566
+	line	301
 	
-i1l2522:	
-;main.c: 281: else
-;main.c: 282: {
-;main.c: 283: PIR1 = 0;
+i1l2627:	
+;main.c: 299: else
+;main.c: 300: {
+;main.c: 301: PIR1 = 0;
 	clrf	(12)	;volatile
-	line	286
+	line	304
 	
-i1l558:	
+i1l566:	
 	movf	(??_Isr_Timer+1),w
 	movwf	pclath
 	swapf	(??_Isr_Timer+0)^0FFFFFF80h,w

@@ -1,17 +1,17 @@
 
-# 1 "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+# 1 "C:\Users\mxy\Desktop\keytest2\main.c"
 
-# 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
+# 26 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
 
 extern double __fpnormalize(double);
 
 
-# 13 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
+# 13 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
 #pragma intrinsic(__builtin_software_breakpoint)
 extern void __builtin_software_breakpoint(void);
 
-# 16 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\SC8F2852.h"
+# 16 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\SC8F2852.h"
 volatile unsigned char INDF @ 0x000;
 volatile unsigned char TMR0 @ 0x001;
 volatile unsigned char PCL @ 0x002;
@@ -289,7 +289,7 @@ volatile bit GODONE @ ((unsigned)&ADCON0*8)+1;
 volatile bit ADON @ ((unsigned)&ADCON0*8)+0;
 
 
-# 27 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc.h"
+# 27 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\sc.h"
 #pragma intrinsic(__nop)
 extern void __nop(void);
 
@@ -306,7 +306,7 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 8 "C:\Users\hhmm6\Desktop\scm\keytest2\pwm.h"
+# 8 "C:\Users\mxy\Desktop\keytest2\pwm.h"
 void initPWM();
 void mode1();
 void mode2();
@@ -320,7 +320,7 @@ void moded();
 void modee();
 
 
-# 12 "C:\Users\hhmm6\Desktop\scm\keytest2\Touch_Kscan_Library.h"
+# 12 "C:\Users\mxy\Desktop\keytest2\Touch_Kscan_Library.h"
 #pragma warning disable 752,759
 
 # 18
@@ -364,15 +364,16 @@ const unsigned char KeyValidNumber = 1;
 
 const unsigned char WaterModeSel = 1;
 
-# 5 "C:\Users\hhmm6\Desktop\scm\keytest2\main.c"
+# 5 "C:\Users\mxy\Desktop\keytest2\main.c"
 volatile unsigned char MainTime;
 volatile unsigned char pwmTime;
 volatile unsigned char irStep = 0;
 unsigned char revCount = 0;
+unsigned char revZeroCount = 0;
 unsigned char checkCount = 0;
 unsigned char pwm0Step = 1;
 unsigned char pwm1Step = 1;
-
+unsigned int timeCount = 0;
 
 volatile bit sendFlag;
 volatile bit B_MainLoop;
@@ -391,21 +392,27 @@ INTCON = 0;
 OSCCON = 0X71;
 OPTION_REG = 0;
 
-# 36
+
+
+WPUB = 0x00;
+WPDB = 0x00;
+WPUA = 0x00;
+
 PIE1 = 2;
 PR2 = 250;
 T2CON = 4;
 TRISA = 0x00;
-TRISB = 0x04;
-
+TRISB = 0x07;
+PORTB = 0x00;
+PORTA = 0x00;
 INTCON = 0XC0;
 }
 
-# 49
+# 52
 void Refurbish_Sfr()
 {
 
-# 87
+# 90
 OPTION_REG = 0;
 
 
@@ -419,9 +426,10 @@ T2CON = 4;
 
 void procKey1()
 {
+if(ONFlag == 0)
+return;
 pwmFlag = 1;
-ONFlag = 1;
-if(++pwm0Step > 4)
+if(++pwm0Step > 5)
 pwm0Step = 1;
 switch(pwm0Step)
 {
@@ -447,8 +455,9 @@ break;
 
 void procKey2()
 {
+if(ONFlag == 0)
+return;
 pwmFlag = 1;
-ONFlag = 1;
 if(++pwm1Step > 5)
 pwm1Step = 1;
 switch(pwm1Step)
@@ -474,13 +483,14 @@ break;
 
 void startPWM()
 {
-pwm0Step--;
-pwm1Step--;
+--pwm0Step;
+--pwm1Step;
+initPWM();
 procKey1();
 procKey2();
 }
 
-# 166
+# 172
 void KeyServer()
 {
 static unsigned int KeyOldFlag = 0;
@@ -537,33 +547,45 @@ void checkIRKey()
 if(((PORTB) >> (2)&1))
 {
 revCount++;
-irStep = 2;
 }
 
-if(checkCount > 3 && revCount > 2)
+if(checkCount > 10 && irStep)
 {
 sendFlag = 0;
-if(irStep == 0)
-{
-if(ONFlag = 1)
-ONFlag = 0;
-else
-ONFlag = 1;
-irStep = 1;
-}
 }
 else
 {
 sendFlag = 1;
-if(irStep)
+}
+
+if(++checkCount >= 20)
 {
-irStep = 0;
+if(revCount > 2)
+{
+if(irStep == 0)
+{
+irStep = 1;
+if(ONFlag == 1)
+{
+ONFlag = 0;
+}
+else
+{
 ONFlag = 1;
 }
 }
-
-if(++checkCount >= 30)
+revZeroCount = 0;
+}
+else
 {
+if(++revZeroCount > 1)
+{
+revZeroCount = 1;
+irStep = 0;
+}
+}
+
+
 sendFlag = 1;
 checkCount = 0;
 revCount = 0;
@@ -571,7 +593,7 @@ revCount = 0;
 
 }
 
-# 260
+# 278
 void interrupt Isr_Timer()
 {
 if(TMR2IF)
@@ -600,31 +622,36 @@ PIR1 = 0;
 }
 }
 
-# 291
+# 309
 void main()
 {
+PORTB = 0x00;
+PORTA = 0x00;
 Init_System();
 sendFlag = 1;
-initPWM();
+
 while(1)
 {
+asm("clrwdt");
 if(B_MainLoop)
 {
 B_MainLoop = 0;
-asm("clrwdt");
-Refurbish_Sfr();
+
 CheckTouchKey();
 KeyServer();
-
-if(ONFlag && pwmFlag == 0)
+checkIRKey();
+if(ONFlag)
 {
 startPWM();
 }
-else if(ONFlag == 0 && pwmFlag == 1)
+else
 {
 PWMCON0 = 0;
-pwmFlag = 0;
+PORTB &= 0x7F;
+PORTA &= 0xDF;
 }
+
+# 350
 }
 }
 }

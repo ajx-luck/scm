@@ -58,7 +58,7 @@ extern volatile unsigned char KeyFlag[2];
 //未设定的通道默认为C_KCHS0
 const unsigned char Table_KeyChannel[] = {
 	C_KCHS0,		//按键1对应触摸通道
-	C_KCHS1			//按键2对应触摸通道
+	C_KCHS1		//按键2对应触摸通道
 };
 
 //内部并联电容选择,用来调整长短线,以最长的线为0,适当调大短线的值,范围:C_KCAP0至C_KCAP7
