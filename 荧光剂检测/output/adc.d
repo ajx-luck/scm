@@ -1,0 +1,1 @@
+ adc.d  adc.p1:  C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/adc.c C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/adc.h

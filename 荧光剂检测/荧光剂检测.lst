@@ -1,0 +1,578 @@
+---- C:\mcuproject\scm\荧光剂检测\main.c ----------------------------------------------------------------------
+1:                #include "adc.h"
+2:                
+3:                typedef unsigned char uint8;
+4:                typedef unsigned int uint16;
+5:                
+6:                //---------定义全局变量--------------
+7:                uint8	intCount = 0;
+8:                uint8	intFlag = 0;
+9:                char numArray[10] = {0x3F, 0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x67};
+10:               
+11:               //---------定义方法------------------
+12:               void initConfig();
+13:               void Sleep_Mode();
+14:               
+15:               void interrupt Timer0_Isr() {
+16:                   if (T0IF) 
+  00E3    1D0B    SNZB	0xB,2
+  00E4    28F1    JP	0xF1
+17:               	{
+18:                       
+19:               		//---------------------------------------
+20:                       TMR0 += 155;        //重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+  00E5    309B    LDIA	0x9B
+  00E6    1283    CLRB	0x3,5
+  00E7    1303    CLRB	0x3,6
+  00E8    0781    ADDR	0x1
+21:                       //---------------------------------------
+22:               		if(++intCount >= 100)
+  00E9    3064    LDIA	0x64
+  00EA    0AFB    INCR	0x7B
+  00EB    027B    SUBA	0x7B
+  00EC    1C03    SNZB	0x3,0
+  00ED    28F0    JP	0xF0
+23:               		{
+24:               			intFlag = 1;
+  00EE    01A6    CLR	0x26
+  00EF    0AA6    INCR	0x26
+25:               		}	
+26:                       
+27:               		T0IF = 0;            //清中断标志位	
+  00F0    110B    CLRB	0xB,2
+28:                   }
+29:               
+30:                   if (RBIF) {
+  00F1    180B    SZB	0xB,0
+31:                       RBIF = 0;            //清中断标志
+  00F2    100B    CLRB	0xB,0
+  00F3    0871    LD	A,0x71
+  00F4    008A    LD	0xA,A
+  00F5    0E70    SWAPA	0x70
+  00F6    0083    LD	0x3,A
+  00F7    0EFE    SWAPR	0x7E
+  00F8    0E7E    SWAPA	0x7E
+  00F9    0009    RETI
+32:                   }
+33:               }
+34:               
+35:               
+36:               void main()
+37:               {
+38:               	initConfig();
+  0013    20A8    CALL	0xA8
+39:               	for(;;)
+  0014    0064    CLRWDT
+40:               	{
+41:               		asm("clrwdt");
+42:               		if(intFlag == 0)
+  0015    1283    CLRB	0x3,5
+  0016    1303    CLRB	0x3,6
+  0017    0826    LD	A,0x26
+  0018    1903    SZB	0x3,2
+  0019    2814    JP	0x14
+  001A    3002    LDIA	0x2
+43:               			continue;
+44:               		intFlag = 0;
+  001B    01A6    CLR	0x26
+45:               		TRISA = 0x02;
+  001C    1683    SETB	0x3,5
+  001D    0085    LD	0x5,A
+46:               		ANSEL = 0x02;
+  001E    1703    SETB	0x3,6
+  001F    0088    LD	0x8,A
+47:               		uint16 res = ADC_Result(0x0F);
+  0020    300F    LDIA	0xF
+  0021    2050    CALL	0x50
+  0022    0873    LD	A,0x73
+  0023    1283    CLRB	0x3,5
+  0024    00A5    LD	0x25,A
+  0025    0872    LD	A,0x72
+  0026    00A4    LD	0x24,A
+48:               		uint16 av = 6000/res;		//1.2*10000/2 = 6000放大一万倍，再除以2获得某一个刻度的电压值
+  0027    0825    LD	A,0x25
+  0028    00F3    LD	0x73,A
+  0029    0824    LD	A,0x24
+  002A    00F2    LD	0x72,A
+  002B    3070    LDIA	0x70
+  002C    00F4    LD	0x74,A
+  002D    3017    LDIA	0x17
+  002E    00F5    LD	0x75,A
+  002F    207E    CALL	0x7E
+  0030    0873    LD	A,0x73
+  0031    00A1    LD	0x21,A
+  0032    0872    LD	A,0x72
+  0033    00A0    LD	0x20,A
+49:               		uint16 res2 = 0;
+50:               		DelayXms(50);
+  0034    3032    LDIA	0x32
+  0035    20FA    CALL	0xFA
+51:               		res2 = ADC_Result(0x01);
+  0036    3001    LDIA	0x1
+  0037    2050    CALL	0x50
+  0038    0873    LD	A,0x73
+  0039    1283    CLRB	0x3,5
+  003A    00A3    LD	0x23,A
+  003B    0872    LD	A,0x72
+  003C    00A2    LD	0x22,A
+52:               		res = res2 * av;
+  003D    0823    LD	A,0x23
+  003E    00F3    LD	0x73,A
+  003F    0822    LD	A,0x22
+  0040    00F2    LD	0x72,A
+  0041    0821    LD	A,0x21
+  0042    00F5    LD	0x75,A
+  0043    0820    LD	A,0x20
+  0044    00F4    LD	0x74,A
+  0045    20CA    CALL	0xCA
+  0046    0873    LD	A,0x73
+  0047    00A5    LD	0x25,A
+  0048    0872    LD	A,0x72
+  0049    00A4    LD	0x24,A
+53:               		if(res > 29000)
+  004A    3071    LDIA	0x71
+  004B    0225    SUBA	0x25
+  004C    3049    LDIA	0x49
+  004D    1903    SZB	0x3,2
+  004E    0224    SUBA	0x24
+  004F    2814    JP	0x14
+54:               		{
+55:               			res2 = 0;
+56:               		}
+57:               	}
+58:               }
+59:               
+60:               
+61:               void initConfig()
+62:               {
+63:               	PORTA = 0x00;
+  00A8    0185    CLR	0x5
+64:                   PORTB = 0x00;
+  00A9    0186    CLR	0x6
+65:                   PORTC = 0x00;
+  00AA    0187    CLR	0x7
+66:               	TRISA = 0;
+  00AB    1683    SETB	0x3,5
+  00AC    0185    CLR	0x5
+67:                   TRISB = 0;
+  00AD    0186    CLR	0x6
+68:                   TRISC = 0;
+  00AE    0187    CLR	0x7
+69:                   WPUA = 0x00;
+  00AF    1703    SETB	0x3,6
+  00B0    018E    CLR	0xE
+70:                   WPUB = 0x00;
+  00B1    1303    CLRB	0x3,6
+  00B2    0195    CLR	0x15
+71:                   WPUC = 0x00;
+  00B3    1703    SETB	0x3,6
+  00B4    018F    CLR	0xF
+72:               	WPUE = 0x00;
+  00B5    1283    CLRB	0x3,5
+  00B6    019A    CLR	0x1A
+73:                   PORTA = 0x00;
+  00B7    1303    CLRB	0x3,6
+  00B8    0185    CLR	0x5
+74:                   PORTB = 0x00;
+  00B9    0186    CLR	0x6
+75:                   PORTC = 0x00;
+  00BA    0187    CLR	0x7
+76:                   IOCB = 0x00;
+  00BB    1683    SETB	0x3,5
+  00BC    0196    CLR	0x16
+  00BD    0000    NOP
+  00BE    0064    CLRWDT
+77:               
+78:               	
+79:               	asm("nop");
+80:                   asm("clrwdt");
+81:                   INTCON = 0;                    //系统初始化
+  00BF    018B    CLR	0xB
+82:                   OSCCON = 0X71;                //配置振荡为8M,开 WDT
+  00C0    3071    LDIA	0x71
+  00C1    1683    SETB	0x3,5
+  00C2    1303    CLRB	0x3,6
+  00C3    008F    LD	0xF,A
+83:                   OPTION_REG = 0x00;        //Timer0使用内部时钟Focs/4，预分频比为1:2
+  00C4    0181    CLR	0x1
+84:               	
+85:                   TMR0 = 0;                //赋予初始值
+  00C5    1283    CLRB	0x3,5
+  00C6    0181    CLR	0x1
+86:                   INTCON = 0xE0;            //允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
+  00C7    30E0    LDIA	0xE0
+  00C8    008B    LD	0xB,A
+  00C9    0008    RET
+87:               }
+88:               
+89:               
+90:               void Sleep_Mode() {
+91:                   INTCON = 0;
+92:               
+93:                   OPTION_REG = 0;
+94:               
+95:                   TRISA = 0B00000000;        //关闭所有输出
+96:                   PORTA = 0B01000001;
+97:                   WPUA = 0B00000000;
+98:               
+99:                   TRISB = 0B00100100;
+100:                  PORTB = 0B01000000;
+101:              
+102:              	TRISC = 0B00000000;
+103:                  PORTC = 0B00000011;
+104:                  WPUB = 0B00100000;         //RB5 上拉
+105:              	
+106:              
+107:                  IOCB = 0B00100100;            //允许RB5 RB2的IO口电平变化中断
+108:                  RBIE = 1;                    //允许PORTB电平变化中断
+109:                  GIE = 0;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
+110:              
+111:                  ADCON0 = 0;                    //关闭所有模块
+112:              
+113:                  OSCCON = 0X70;                //配置振荡为16M,关闭WDT
+114:              	
+115:                  PORTB;                        //读PORTB值并锁存	
+116:              			
+117:                  asm("clrwdt");
+118:              
+119:                  asm("sleep");                //进入休眠模式
+120:              
+121:                  asm("nop");
+122:              	
+123:              	
+124:              
+125:              
+126:              }
+---- C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\Umul16.c ----------------------------------------------------------------------
+1:                // 16 x 16 bit multiplication with 16 bit result
+2:                #ifdef _PIC18
+3:                #define _Has_hardware_multiply 1
+4:                #else
+5:                #define _Has_hardware_multiply 0
+6:                #endif
+7:                
+8:                #if defined(_PIC14E) || defined(_PIC14EX) || defined(_PIC18)
+9:                #define _Has_large_call_stack 1
+10:               #else
+11:               #define _Has_large_call_stack 0
+12:               #endif
+13:               
+14:               unsigned int
+15:               __wmul(unsigned int multiplier, unsigned int multiplicand)
+  00CA    01F6    CLR	0x76
+  00CB    01F7    CLR	0x77
+  00CC    1C72    SNZB	0x72,0
+  00CD    28D4    JP	0xD4
+  00CE    0874    LD	A,0x74
+  00CF    07F6    ADDR	0x76
+  00D0    1803    SZB	0x3,0
+  00D1    0AF7    INCR	0x77
+  00D2    0875    LD	A,0x75
+  00D3    07F7    ADDR	0x77
+  00D4    1003    CLRB	0x3,0
+  00D5    0DF4    RLCR	0x74
+  00D6    0DF5    RLCR	0x75
+  00D7    1003    CLRB	0x3,0
+  00D8    0CF3    RRCR	0x73
+  00D9    0CF2    RRCR	0x72
+  00DA    0872    LD	A,0x72
+  00DB    0473    ORA	0x73
+  00DC    1D03    SNZB	0x3,2
+  00DD    28CC    JP	0xCC
+  00DE    0877    LD	A,0x77
+  00DF    00F3    LD	0x73,A
+  00E0    0876    LD	A,0x76
+  00E1    00F2    LD	0x72,A
+  00E2    0008    RET
+16:               {
+17:                       unsigned int product;
+18:               
+19:               #if _Has_hardware_multiply || _Has_large_call_stack
+20:               
+21:               #define LOWBYTE(x)  (*(unsigned char *)(&x))
+22:               #define HIGHBYTE(x) (*(((unsigned char *)(&x))+1))
+23:               
+24:               	// optimized to allow use of the 8 x 8 bit hardware multiply instruction
+25:               /*
+26:               a 16-bit multiply can be decomposed into the sum of three 8-bit multiplies
+27:                      a  b
+28:               *      c  d
+29:               -----------
+30:                    |   bd
+31:                    |ad  0
+32:                    |bc  0
+33:               +  ac| 0  0 (we ignore this intermediate product
+34:                            because it does not affect the low 16 bits of the result)
+35:               ===========
+36:                */
+37:                       product =  LOWBYTE(multiplier) * LOWBYTE(multiplicand);
+38:                       product += (LOWBYTE(multiplier) * HIGHBYTE(multiplicand)) << 8;
+39:                       product += (HIGHBYTE(multiplier) * LOWBYTE(multiplicand)) << 8;
+40:               
+41:               #else
+42:               
+43:               	product = 0;
+44:               	do {
+45:               		if(multiplier & 1)
+46:               			product += multiplicand;
+47:               		multiplicand <<= 1;
+48:               		multiplier >>= 1;
+49:               	} while(multiplier != 0);
+50:               
+51:               #endif
+52:                       return product;
+53:               }
+---- C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\sources\common\lwdiv.c ----------------------------------------------------------------------
+1:                // word unsigned division
+2:                
+3:                unsigned int
+4:                #ifdef __PICC__
+5:                #warning TODO: update cgpic and this file to use the other prototype
+6:                __lwdiv(unsigned int divisor, unsigned int dividend)
+  007E    01F6    CLR	0x76
+  007F    01F7    CLR	0x77
+  0080    0872    LD	A,0x72
+  0081    0473    ORA	0x73
+  0082    1903    SZB	0x3,2
+  0083    28A3    JP	0xA3
+  0084    01F8    CLR	0x78
+  0085    0AF8    INCR	0x78
+  0086    1BF3    SZB	0x73,7
+  0087    288C    JP	0x8C
+  0088    1003    CLRB	0x3,0
+  0089    0DF2    RLCR	0x72
+  008A    0DF3    RLCR	0x73
+  008B    2885    JP	0x85
+  008C    1003    CLRB	0x3,0
+  008D    0DF6    RLCR	0x76
+  008E    0DF7    RLCR	0x77
+  008F    0873    LD	A,0x73
+  0090    0275    SUBA	0x75
+  0091    1D03    SNZB	0x3,2
+  0092    2895    JP	0x95
+  0093    0872    LD	A,0x72
+  0094    0274    SUBA	0x74
+  0095    1C03    SNZB	0x3,0
+  0096    289F    JP	0x9F
+  0097    0872    LD	A,0x72
+  0098    02F4    SUBR	0x74
+  0099    0873    LD	A,0x73
+  009A    1C03    SNZB	0x3,0
+  009B    03F5    DECR	0x75
+  009C    02F5    SUBR	0x75
+  009D    1476    SETB	0x76,0
+  009E    1003    CLRB	0x3,0
+  009F    0CF3    RRCR	0x73
+  00A0    0CF2    RRCR	0x72
+  00A1    0BF8    SZDECR	0x78
+  00A2    288C    JP	0x8C
+  00A3    0877    LD	A,0x77
+  00A4    00F3    LD	0x73,A
+  00A5    0876    LD	A,0x76
+  00A6    00F2    LD	0x72,A
+  00A7    0008    RET
+7:                #else
+8:                __lwdiv(unsigned int dividend, unsigned int divisor)
+9:                #endif
+10:               {
+11:               	unsigned int	quotient;
+12:               	unsigned char	counter;
+13:               
+14:               	quotient = 0;
+15:               	if(divisor != 0) {
+16:               		counter = 1;
+17:               		while((divisor & 0x8000) == 0) {
+18:               			divisor <<= 1;
+19:               			counter++;
+20:               		}
+21:               		do {
+22:               			quotient <<= 1;
+23:               			if(divisor <= dividend) {
+24:               				dividend -= divisor;
+25:               				quotient |= 1;
+26:               			}
+27:               			divisor >>= 1;
+28:               		} while(--counter != 0);
+29:               	}
+30:               	return quotient;
+31:               }
+---- C:\mcuproject\scm\荧光剂检测\adc.c ----------------------------------------------------------------------
+1:                #include "adc.h"
+2:                
+3:                /**********************************************************
+4:                函数名称：AD_Sample
+5:                函数功能：AD检测
+6:                入口参数：adch - 检测通道
+7:                出口参数：无 
+8:                备    注：采样通道需自行设置为模拟口
+9:                	      采样10次,取中间八次的平均值为采样结果存于adresult中
+10:               **********************************************************/
+11:               void ADC_Sample(unsigned char adch)
+12:               {
+13:               	static unsigned long adsum = 0;
+14:               	static unsigned int admin = 0,admax = 0;
+15:               	static unsigned char adtimes = 0;
+16:               	volatile unsigned int ad_temp;
+17:               	ADCON1 = 0;						//左对齐
+18:               	ADCON0 = 0X41 | (adch << 2);	//16分频
+19:               	asm("nop");
+20:               	asm("nop");
+21:               	GODONE = 1;						//开始转换
+22:               
+23:               	unsigned char i = 0;
+24:               	while(GODONE)
+25:               	{
+26:               		if(0 == (--i))
+27:               			return;
+28:               	}
+29:               	
+30:               	ad_temp=(ADRESH<<4)+(ADRESL>>4);	//计算12位AD值
+31:               	
+32:               	if(0 == admax)
+33:               	{
+34:               		admax = ad_temp;
+35:               		admin = ad_temp;
+36:               	}
+37:               	else if(ad_temp > admax)
+38:               		admax = ad_temp;				//AD采样最大值
+39:               	else if(ad_temp < admin)
+40:               		admin = ad_temp;				//AD采样最小值
+41:               	
+42:               	adsum += ad_temp;
+43:               	if(++adtimes >= 10)
+44:               	{
+45:               		adsum -= admax;
+46:               		adsum -= admin;
+47:               		
+48:               		adresult = adsum >> 3;		//8次平均值作为最终结果
+49:               		
+50:               		adsum = 0;
+51:               		admin = 0;
+52:               		admax = 0;
+53:               		adtimes = 0;
+54:               	}
+55:               }
+56:               
+57:               
+58:               //ADC右对齐采样
+59:               unsigned int ADC_Result(unsigned char adch)
+  0050    00F5    LD	0x75,A
+60:               {
+61:               	ADCON1 = 0x80;						//右对齐
+  0051    3080    LDIA	0x80
+  0052    1683    SETB	0x3,5
+  0053    1303    CLRB	0x3,6
+  0054    009F    LD	0x1F,A
+62:               	ADCON0 = 0X41 | (adch << 2);	//16分频
+  0055    0875    LD	A,0x75
+  0056    00F4    LD	0x74,A
+  0057    3001    LDIA	0x1
+  0058    1003    CLRB	0x3,0
+  0059    0DF4    RLCR	0x74
+  005A    3EFF    ADDIA	0xFF
+  005B    1003    CLRB	0x3,0
+  005C    1D03    SNZB	0x3,2
+  005D    2859    JP	0x59
+  005E    0D74    RLCA	0x74
+  005F    3841    ORIA	0x41
+  0060    1283    CLRB	0x3,5
+  0061    009F    LD	0x1F,A
+  0062    0000    NOP
+  0063    0000    NOP
+63:               	asm("nop");
+64:               	asm("nop");
+65:               	GODONE = 1;						//开始转换
+  0064    1283    CLRB	0x3,5
+  0065    1303    CLRB	0x3,6
+  0066    149F    SETB	0x1F,1
+66:               
+67:               	unsigned char i = 0;
+  0067    01F6    CLR	0x76
+68:               	while(GODONE)
+  0068    1C9F    SNZB	0x1F,1
+  0069    286F    JP	0x6F
+69:               	{
+70:               		if(0 == (--i))
+  006A    0BF6    SZDECR	0x76
+  006B    2868    JP	0x68
+71:               			return 0;				//转换超时
+  006C    01F2    CLR	0x72
+  006D    01F3    CLR	0x73
+  006E    0008    RET
+72:               	}
+73:               	unsigned int tempResult = ADRESH;
+  006F    081E    LD	A,0x1E
+  0070    00F7    LD	0x77,A
+  0071    01F8    CLR	0x78
+74:               	tempResult <<= 8;
+  0072    00F8    LD	0x78,A
+  0073    01F7    CLR	0x77
+75:               	tempResult += ADRESL;
+  0074    1683    SETB	0x3,5
+  0075    081E    LD	A,0x1E
+  0076    07F7    ADDR	0x77
+  0077    1803    SZB	0x3,0
+  0078    0AF8    INCR	0x78
+76:               	return tempResult;
+  0079    0878    LD	A,0x78
+  007A    00F3    LD	0x73,A
+  007B    0877    LD	A,0x77
+  007C    00F2    LD	0x72,A
+  007D    0008    RET
+77:               }
+78:               /***********************************************************
+79:               函数名称：DelayXms
+80:               函数功能：毫秒级非精准延时
+81:               入口参数：x - 延时时间
+82:               出口参数：
+83:               备    注：
+84:               ***********************************************************/
+85:               void DelayXms(unsigned char x)
+  00FA    00F2    LD	0x72,A
+86:               {
+87:               	unsigned char i,j;
+88:               	for(i=x;i>0;i--)
+  00FB    00F3    LD	0x73,A
+  00FC    0873    LD	A,0x73
+  00FD    1903    SZB	0x3,2
+  00FE    0008    RET
+89:               		for(j=153;j>0;j--);
+  00FF    3099    LDIA	0x99
+  0100    00F4    LD	0x74,A
+  0101    0BF4    SZDECR	0x74
+  0102    2901    JP	0x101
+  0103    03F3    DECR	0x73
+  0104    28FC    JP	0xFC
+90:               }
+91:               
+92:               //读取内部电压
+93:               unsigned char readVrefADC()
+94:               {
+95:               	DelayXms(1);
+96:               	ADC_Sample(0x0F);
+97:               	unsigned char result;
+98:               		
+99:               	result = ADC_Result(0x0F);
+100:              	return result;
+101:              }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    01F9    CLR	0x79
+  000C    01FA    CLR	0x7A
+  000D    01FB    CLR	0x7B
+  000E    1283    CLRB	0x3,5
+  000F    1303    CLRB	0x3,6
+  0010    01A6    CLR	0x26
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00FE    LD	0x7E,A
+  0005    0E03    SWAPA	0x3
+  0006    00F0    LD	0x70,A
+  0007    080A    LD	A,0xA
+  0008    00F1    LD	0x71,A
+  0009    28E3    JP	0xE3
+---- common_function ------------------------------------------------------------------
+  0011    0183    CLR	0x3
+  0012    2813    JP	0x13

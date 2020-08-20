@@ -1,0 +1,1 @@
+ number.d  number.p1:  C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/number.c C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/adc.h C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/number.h
