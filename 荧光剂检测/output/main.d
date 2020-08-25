@@ -1,1 +1,1 @@
- main.d  main.p1:  C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/main.c C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/adc.h
+ main.d  main.p1:  C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/main.c C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/adc.h C:/mcuproject/scm/Ó«¹â¼Á¼ì²â/number.h

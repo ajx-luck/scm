@@ -13,7 +13,14 @@ void showNubGewei(char num);
 void showNubGewei2(char index);
 void showNubShiwei(char num);
 void showNubShiwei2(char index);
-void showBaiwei();
+void showNubBaiwei(char num);
+void showNubBaiwei2(char index);
+void DP();
+void TITLE();
+void WU();
+void RUO();
+void ZHONG();
+void QIANG();
 
 void A1();
 void B1();
@@ -40,5 +47,10 @@ void F3();
 void G3();
 
 void delayms(u8t time);
+void setLow();
+void low4(char bai,char shi,char ge,char h6,char h123);
+void low3(char bai,char shi,char ge,char h5);
+void low2(char bai,char shi,char ge,char h4);
+void low1(char bai,char shi,char ge,char dp,char h3);
 
 #endif

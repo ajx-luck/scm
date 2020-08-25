@@ -8,11 +8,12 @@
 备    注：采样通道需自行设置为模拟口
 	      采样10次,取中间八次的平均值为采样结果存于adresult中
 **********************************************************/
-void ADC_Sample(unsigned char adch)
+//ADC左对齐采样
+unsigned int ADC_Sample(unsigned char adch)
 {
-	static unsigned long adsum = 0;
-	static unsigned int admin = 0,admax = 0;
-	static unsigned char adtimes = 0;
+	unsigned int adsum = 0;
+	unsigned int admin = 0,admax = 0;
+	unsigned char adtimes = 0;
 	volatile unsigned int ad_temp;
 	ADCON1 = 0;						//左对齐
 	ADCON0 = 0X41 | (adch << 2);	//16分频
@@ -28,31 +29,10 @@ void ADC_Sample(unsigned char adch)
 	}
 	
 	ad_temp=(ADRESH<<4)+(ADRESL>>4);	//计算12位AD值
+	return ad_temp;
 	
-	if(0 == admax)
-	{
-		admax = ad_temp;
-		admin = ad_temp;
-	}
-	else if(ad_temp > admax)
-		admax = ad_temp;				//AD采样最大值
-	else if(ad_temp < admin)
-		admin = ad_temp;				//AD采样最小值
-	
-	adsum += ad_temp;
-	if(++adtimes >= 10)
-	{
-		adsum -= admax;
-		adsum -= admin;
-		
-		adresult = adsum >> 3;		//8次平均值作为最终结果
-		
-		adsum = 0;
-		admin = 0;
-		admax = 0;
-		adtimes = 0;
-	}
 }
+
 
 
 //ADC右对齐采样
@@ -99,3 +79,4 @@ unsigned char readVrefADC()
 	result = ADC_Result(0x0F);
 	return result;
 }
+

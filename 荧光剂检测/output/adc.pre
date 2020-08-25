@@ -407,16 +407,16 @@ extern __bit __timeout;
 # 5 "C:\mcuproject\scm\Ó«¹â¼Á¼ì²â\adc.h"
 volatile unsigned int adresult;
 unsigned char readVrefADC();
-void ADC_Sample(unsigned char adch);
+unsigned int ADC_Sample(unsigned char adch);
 void DelayXms(unsigned char x);
 unsigned int ADC_Result(unsigned char adch);
 
-# 11 "C:\mcuproject\scm\Ó«¹â¼Á¼ì²â\adc.c"
-void ADC_Sample(unsigned char adch)
+# 12 "C:\mcuproject\scm\Ó«¹â¼Á¼ì²â\adc.c"
+unsigned int ADC_Sample(unsigned char adch)
 {
-static unsigned long adsum = 0;
-static unsigned int admin = 0,admax = 0;
-static unsigned char adtimes = 0;
+unsigned int adsum = 0;
+unsigned int admin = 0,admax = 0;
+unsigned char adtimes = 0;
 volatile unsigned int ad_temp;
 ADCON1 = 0;
 ADCON0 = 0X41 | (adch << 2);
@@ -432,31 +432,10 @@ return;
 }
 
 ad_temp=(ADRESH<<4)+(ADRESL>>4);
+return ad_temp;
 
-if(0 == admax)
-{
-admax = ad_temp;
-admin = ad_temp;
 }
-else if(ad_temp > admax)
-admax = ad_temp;
-else if(ad_temp < admin)
-admin = ad_temp;
 
-adsum += ad_temp;
-if(++adtimes >= 10)
-{
-adsum -= admax;
-adsum -= admin;
-
-adresult = adsum >> 3;
-
-adsum = 0;
-admin = 0;
-admax = 0;
-adtimes = 0;
-}
-}
 
 
 
@@ -480,7 +459,7 @@ tempResult += ADRESL;
 return tempResult;
 }
 
-# 85
+# 65
 void DelayXms(unsigned char x)
 {
 unsigned char i,j;
@@ -498,3 +477,4 @@ unsigned char result;
 result = ADC_Result(0x0F);
 return result;
 }
+
