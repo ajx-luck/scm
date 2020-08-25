@@ -187,9 +187,11 @@ void KeyServer()
 			switch(i)
 			{
 				case 1:
+				ONFlag = 1;
 				procKey1();
 				break;
 				case 2:
+				ONFlag = 1;
 				procKey2();
 				break;
 				case 3:
