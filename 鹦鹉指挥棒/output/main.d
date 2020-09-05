@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/ğĞğÄÖ¸»Ó°ô/main.c

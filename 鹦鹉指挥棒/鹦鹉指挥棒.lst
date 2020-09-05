@@ -1,0 +1,287 @@
+---- C:\mcuproject\scm\鹦鹉指挥棒\main.c ----------------------------------------------------------------------
+1:                #include <sc.h>
+2:                
+3:                #define getbit(x, y)   ((x) >> (y)&1)
+4:                volatile unsigned char irLeftStep = 0; //0为未遮挡 1遮挡  2消抖
+5:                volatile unsigned char irRightStep = 0; //0为未遮挡 1遮挡  2消抖
+6:                unsigned char	revLeftCount = 0;//收到的波形计数
+7:                unsigned char	revRightCount = 0;//收到的波形计数
+8:                unsigned char	revLeftZeroCount = 0;//未收到的波形计数
+9:                unsigned char	revRightZeroCount = 0;//未收到的波形计数
+10:               unsigned char	checkCount = 0;	//检测次数
+11:               volatile unsigned char pwmTime;
+12:               volatile bit	B_MainLoop;
+13:               volatile unsigned char MainTime;
+14:               
+15:               
+16:               void Init_System();
+17:               void checkIRKey();
+18:               
+19:               /***********************************************************
+20:               主循环
+21:               ***********************************************************/
+22:               void main()
+23:               {
+24:               	PORTB = 0x00;
+  0088    0185    CLR	0x5
+25:               	Init_System();
+  0089    2079    CALL	0x79
+26:               	while(1)
+  008A    0064    CLRWDT
+27:               	{
+28:               		CLRWDT();
+29:               		if(B_MainLoop)
+  008B    1C4C    SNZB	0x4C,0
+  008C    288A    JP	0x8A
+30:               		{
+31:               			B_MainLoop = 0;
+  008D    104C    CLRB	0x4C,0
+32:               			checkIRKey();
+  008E    2017    CALL	0x17
+  008F    288A    JP	0x8A
+33:               		}
+34:               	}
+35:               }
+36:               
+37:               //系统初始化
+38:               void Init_System()
+  0079    0000    NOP
+  007A    0064    CLRWDT
+39:               {
+40:               	asm("nop");
+41:               	asm("clrwdt");
+42:               	INTCON = 0;				//禁止中断
+  007B    0189    CLR	0x9
+43:               	OSCCON = 0X71;			//配置振荡为8M
+  007C    3071    LDIA	0x71
+  007D    0088    LD	0x8,A
+44:               	OPTION_REG = 0;
+  007E    0187    CLR	0x7
+45:               	
+46:               	//延时等待电源电压稳定
+47:               	//DelayXms(200);
+48:               	WPUB = 0x00;
+  007F    018D    CLR	0xD
+49:               	TMR0 = 5;				
+  0080    3005    LDIA	0x5
+  0081    0081    LD	0x1,A
+50:               	TRISB = 0x18;			//PB3、PB4为红外接收口
+  0082    3018    LDIA	0x18
+  0083    0086    LD	0x6,A
+51:               	PORTB = 0x00;
+  0084    0185    CLR	0x5
+52:               	INTCON = 0XC0;			//使能中断
+  0085    30C0    LDIA	0xC0
+  0086    0089    LD	0x9,A
+  0087    0008    RET
+53:               }
+54:               
+55:               //检测红外遮挡
+56:               void checkIRKey()
+57:               {
+58:               	if(getbit(PORTB, 4))
+  0017    0805    LD	A,0x5
+  0018    00CB    LD	0x4B,A
+  0019    3004    LDIA	0x4
+  001A    1003    CLRB	0x3,0
+  001B    0CCB    RRCR	0x4B
+  001C    3EFF    ADDIA	0xFF
+  001D    1D03    SNZB	0x3,2
+  001E    281A    JP	0x1A
+  001F    184B    SZB	0x4B,0
+59:               	{
+60:               		revLeftCount++;		//检测到遮挡了
+  0020    0AC6    INCR	0x46
+61:               	}
+62:               	
+63:               	if(getbit(PORTB, 3))
+  0021    0805    LD	A,0x5
+  0022    00CB    LD	0x4B,A
+  0023    1003    CLRB	0x3,0
+  0024    0CCB    RRCR	0x4B
+  0025    1003    CLRB	0x3,0
+  0026    0CCB    RRCR	0x4B
+  0027    1003    CLRB	0x3,0
+  0028    0CCB    RRCR	0x4B
+  0029    184B    SZB	0x4B,0
+64:               	{
+65:               		revRightCount++;		//检测到遮挡了
+  002A    0AC5    INCR	0x45
+66:               	}
+67:               	
+68:               	if(++checkCount >= 20)
+  002B    3014    LDIA	0x14
+  002C    0AC2    INCR	0x42
+  002D    0242    SUBA	0x42
+  002E    1C03    SNZB	0x3,0
+  002F    0008    RET
+69:               	{
+70:               		if(revLeftCount > 2)
+  0030    3003    LDIA	0x3
+  0031    0246    SUBA	0x46
+  0032    1C03    SNZB	0x3,0
+  0033    283B    JP	0x3B
+71:               		{
+72:               			if(irLeftStep == 0)
+  0034    0848    LD	A,0x48
+  0035    1D03    SNZB	0x3,2
+  0036    2839    JP	0x39
+73:               			{
+74:               				irLeftStep = 1;		//检测到遮挡了
+  0037    3001    LDIA	0x1
+  0038    00C8    LD	0x48,A
+75:               				
+76:               			}
+77:               			revLeftZeroCount = 0;		//重置
+  0039    01C4    CLR	0x44
+78:               		}
+  003A    2843    JP	0x43
+79:               		else
+80:               		{
+81:               			if(++revLeftZeroCount > 1)
+  003B    3002    LDIA	0x2
+  003C    0AC4    INCR	0x44
+  003D    0244    SUBA	0x44
+  003E    1C03    SNZB	0x3,0
+  003F    2843    JP	0x43
+82:               			{
+83:               				revLeftZeroCount = 1;
+  0040    01C4    CLR	0x44
+  0041    0AC4    INCR	0x44
+84:               				irLeftStep = 0;			//移开了
+  0042    01C8    CLR	0x48
+85:               			}
+86:               		}
+87:               		
+88:               		if(revRightCount > 2)
+  0043    3003    LDIA	0x3
+  0044    0245    SUBA	0x45
+  0045    1C03    SNZB	0x3,0
+  0046    284E    JP	0x4E
+89:               		{
+90:               			if(irRightStep == 0)
+  0047    0847    LD	A,0x47
+  0048    1D03    SNZB	0x3,2
+  0049    284C    JP	0x4C
+91:               			{
+92:               				irRightStep = 1;		//检测到遮挡了
+  004A    3001    LDIA	0x1
+  004B    00C7    LD	0x47,A
+93:               				
+94:               			}
+95:               			revRightZeroCount = 0;		//重置
+  004C    01C3    CLR	0x43
+96:               		}
+  004D    2856    JP	0x56
+97:               		else
+98:               		{
+99:               			if(++revRightZeroCount > 1)
+  004E    3002    LDIA	0x2
+  004F    0AC3    INCR	0x43
+  0050    0243    SUBA	0x43
+  0051    1C03    SNZB	0x3,0
+  0052    2856    JP	0x56
+100:              			{
+101:              				revRightZeroCount = 1;
+  0053    01C3    CLR	0x43
+  0054    0AC3    INCR	0x43
+102:              				irRightStep = 0;			//移开了
+  0055    01C7    CLR	0x47
+103:              			}
+104:              		}
+105:              
+106:              		
+107:              		//重置检测条件
+108:              		checkCount = 0;
+  0056    01C2    CLR	0x42
+109:              		revLeftCount = 0;
+  0057    01C6    CLR	0x46
+110:              		revRightCount = 0;
+  0058    01C5    CLR	0x45
+  0059    0008    RET
+111:              	}
+112:              		
+113:              }
+114:              
+115:              /***********************************************************
+116:              中断服务函数
+117:              ***********************************************************/
+118:              void interrupt Isr_Timer()
+119:              {
+120:              	if(T0IF)				//若只使能了一个中断源,可以略去判断
+  005A    1D09    SNZB	0x9,2
+  005B    2872    JP	0x72
+121:              	{
+122:              		T0IF = 0;
+  005C    1109    CLRB	0x9,2
+123:              		TMR0 += 5;
+  005D    3005    LDIA	0x5
+  005E    0781    ADDR	0x1
+124:              		if(++MainTime >= 32)
+  005F    3020    LDIA	0x20
+  0060    0AC0    INCR	0x40
+  0061    0240    SUBA	0x40
+  0062    1C03    SNZB	0x3,0
+  0063    2866    JP	0x66
+125:              		{
+126:              			MainTime = 0;
+  0064    01C0    CLR	0x40
+127:              			B_MainLoop = 1;
+  0065    144C    SETB	0x4C,0
+128:              		}
+129:              		//模拟pwm输出
+130:              		if(pwmTime < 12)
+  0066    300C    LDIA	0xC
+  0067    0241    SUBA	0x41
+  0068    1803    SZB	0x3,0
+  0069    286C    JP	0x6C
+131:              			PORTB &= 0xDF;
+  006A    1285    CLRB	0x5,5
+  006B    286D    JP	0x6D
+132:              		else
+133:              			PORTB |= 0x20;
+  006C    1685    SETB	0x5,5
+134:              		if(++pwmTime >= 44)
+  006D    302C    LDIA	0x2C
+  006E    0AC1    INCR	0x41
+  006F    0241    SUBA	0x41
+  0070    1803    SZB	0x3,0
+135:              		{
+136:              			pwmTime = 0;
+  0071    01C1    CLR	0x41
+  0072    084A    LD	A,0x4A
+  0073    008A    LD	0xA,A
+  0074    0E49    SWAPA	0x49
+  0075    0083    LD	0x3,A
+  0076    0ECE    SWAPR	0x4E
+  0077    0E4E    SWAPA	0x4E
+  0078    0009    RETI
+137:              		}
+138:              	}
+139:              
+140:              }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    01CC    CLR	0x4C
+  000C    01C0    CLR	0x40
+  000D    01C1    CLR	0x41
+  000E    01C2    CLR	0x42
+  000F    01C3    CLR	0x43
+  0010    01C4    CLR	0x44
+  0011    01C5    CLR	0x45
+  0012    01C6    CLR	0x46
+  0013    01C7    CLR	0x47
+  0014    01C8    CLR	0x48
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00CE    LD	0x4E,A
+  0005    0E03    SWAPA	0x3
+  0006    00C9    LD	0x49,A
+  0007    080A    LD	A,0xA
+  0008    00CA    LD	0x4A,A
+  0009    285A    JP	0x5A
+---- common_function ------------------------------------------------------------------
+  0015    0183    CLR	0x3
+  0016    2888    JP	0x88
