@@ -11,6 +11,7 @@ unsigned char	revLeftZeroCount = 0;//未收到的波形计数
 unsigned char	revRightZeroCount = 0;//未收到的波形计数
 unsigned char	checkCount = 0;	//检测次数
 unsigned int	waitTimeCount = 0;	//等待时间计数
+unsigned char	lowDealy = 0;
 unsigned char	workStep = 0;		//左到右 1	右到左2  上下同时 3
 volatile unsigned char pwmTime;
 volatile bit	B_MainLoop;
@@ -42,7 +43,15 @@ void main()
 
 void procesWork()
 {
-	
+	if(lowDealy > 0)
+	{
+		PORTB &= (~(0x01<<(workStep-1)));
+		if(--lowDealy == 0)
+		{
+			PORTB |= 0x07;
+			workStep = 0;
+		}
+	}
 
 }
 
@@ -69,12 +78,12 @@ void checkIRKey()
 {
 	if(getbit(PORTB, 4))
 	{
-		revLeftCount++;		//检测到遮挡了
+		revLeftCount++;		//检测到左边遮挡了
 	}
 	
 	if(getbit(PORTB, 3))
 	{
-		revRightCount++;		//检测到遮挡了
+		revRightCount++;		//检测到右边遮挡了
 	}
 	
 	if(waitTimeCount > 0)
