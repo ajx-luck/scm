@@ -1,17 +1,17 @@
 
-# 1 "C:\mcuproject\scm\鹦鹉指挥棒\main.c"
+# 1 "C:\Users\mxy\Desktop\新建文件夹\scm\鹦鹉指挥棒\main.c"
 
-# 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
+# 26 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
 
 extern double __fpnormalize(double);
 
 
-# 13 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
+# 13 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
 #pragma intrinsic(__builtin_software_breakpoint)
 extern void __builtin_software_breakpoint(void);
 
-# 10 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\SC8P1153.h"
+# 10 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\SC8P1153.h"
 volatile unsigned char INDF @0x0000;
 volatile unsigned char TMR0 @0x0001;
 volatile unsigned char PCL @0x0002;
@@ -185,7 +185,7 @@ volatile bit PWMS1 @ ((unsigned)&PWMCTR2*8)+1;
 volatile bit PWMS0 @ ((unsigned)&PWMCTR2*8)+0;
 
 
-# 27 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc.h"
+# 27 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\sc.h"
 #pragma intrinsic(__nop)
 extern void __nop(void);
 
@@ -202,7 +202,7 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 6 "C:\mcuproject\scm\鹦鹉指挥棒\main.c"
+# 6 "C:\Users\mxy\Desktop\新建文件夹\scm\鹦鹉指挥棒\main.c"
 volatile unsigned char irLeftStep = 0;
 volatile unsigned char irRightStep = 0;
 unsigned char revLeftCount = 0;
@@ -241,14 +241,19 @@ procesWork();
 
 void procesWork()
 {
-if(lowDealy > 0)
+
+if(workStep == 3)
 {
-if(--lowDealy == 0)
-{
-PORTB |= 0x07;
 workStep = 0;
 }
-PORTB &= (~(0x01<<(workStep-1)));
+if(lowDealy > 0)
+{
+
+if(--lowDealy == 0)
+{
+
+workStep = 0;
+}
 }
 
 }
@@ -266,20 +271,21 @@ OPTION_REG = 0;
 
 WPUB = 0x00;
 TMR0 = 5;
-TRISB = 0x18;
+TRISB = 0x06;
+PDCONB = 0x06;
 PORTB = 0x00;
-INTCON = 0XC0;
+INTCON = 0XA0;
 }
 
 
 void checkIRKey()
 {
-if(((PORTB) >> (4)&1))
+if(((PORTB) >> (1)&1))
 {
 revLeftCount++;
 }
 
-if(((PORTB) >> (3)&1))
+if(((PORTB) >> (2)&1))
 {
 revRightCount++;
 }
@@ -287,14 +293,14 @@ revRightCount++;
 if(waitTimeCount > 0)
 {
 waitTimeCount++;
-if(waitTimeCount > 20000)
+if(waitTimeCount > 375)
 {
 waitTimeCount = 0;
 }
 }
 if(++checkCount >= 20)
 {
-if(revLeftCount > 2)
+if(revLeftCount > 5)
 {
 if(irLeftStep == 0)
 {
@@ -305,6 +311,7 @@ waitTimeCount = 1;
 }
 else
 {
+lowDealy = 12;
 if(waitTimeCount > 30)
 {
 workStep = 2;
@@ -326,7 +333,7 @@ irLeftStep = 0;
 }
 }
 
-if(revRightCount > 2)
+if(revRightCount > 5)
 {
 if(irRightStep == 0)
 {
@@ -337,8 +344,10 @@ waitTimeCount = 1;
 }
 else
 {
+lowDealy = 12;
 if(waitTimeCount > 30)
 {
+
 workStep = 1;
 }
 else
@@ -368,7 +377,7 @@ revRightCount = 0;
 
 }
 
-# 176
+# 185
 void interrupt Isr_Timer()
 {
 if(T0IF)

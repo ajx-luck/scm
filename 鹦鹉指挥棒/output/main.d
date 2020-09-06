@@ -1,1 +1,1 @@
- main.d  main.p1:  C:/mcuproject/scm/鹦鹉指挥棒/main.c
+ main.d  main.p1:  C:/Users/mxy/Desktop/新建文件夹/scm/鹦鹉指挥棒/main.c

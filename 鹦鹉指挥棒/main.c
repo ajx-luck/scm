@@ -1,7 +1,7 @@
 #include <sc.h>
 
 #define getbit(x, y)   ((x) >> (y)&1)
-
+//间隔时间 30*8ms
 #define		MAXTIME		30
 volatile unsigned char irLeftStep = 0; //0为未遮挡 1遮挡  2消抖
 volatile unsigned char irRightStep = 0; //0为未遮挡 1遮挡  2消抖
@@ -43,12 +43,17 @@ void main()
 
 void procesWork()
 {
+	
+	if(workStep == 3)
+	{
+		workStep = 0;
+	}
 	if(lowDealy > 0)
 	{
-		PORTB &= (~(0x01<<(workStep-1)));
+		//PORTB &= (~(0x01<<(workStep-1)));
 		if(--lowDealy == 0)
 		{
-			PORTB |= 0x07;
+			//PORTB |= 0x07;
 			workStep = 0;
 		}
 	}
@@ -68,20 +73,21 @@ void Init_System()
 	//DelayXms(200);
 	WPUB = 0x00;
 	TMR0 = 5;				
-	TRISB = 0x18;			//PB3、PB4为红外接收口
+	TRISB = 0x06;			//PB3、PB4为红外接收口
+	PDCONB = 0x06;
 	PORTB = 0x00;
-	INTCON = 0XC0;			//使能中断
+	INTCON = 0XA0;			//使能中断
 }
 
 //检测红外遮挡
 void checkIRKey()
 {
-	if(getbit(PORTB, 4))
+	if(getbit(PORTB, 1))
 	{
 		revLeftCount++;		//检测到左边遮挡了
 	}
 	
-	if(getbit(PORTB, 3))
+	if(getbit(PORTB, 2))
 	{
 		revRightCount++;		//检测到右边遮挡了
 	}
@@ -89,14 +95,14 @@ void checkIRKey()
 	if(waitTimeCount > 0)
 	{
 		waitTimeCount++;
-		if(waitTimeCount > 20000)
+		if(waitTimeCount > 375)
 		{
 			waitTimeCount = 0;//超时
 		}
 	}
 	if(++checkCount >= 20)
 	{
-		if(revLeftCount > 2)
+		if(revLeftCount > 5)
 		{
 			if(irLeftStep == 0)
 			{
@@ -107,6 +113,7 @@ void checkIRKey()
 				}
 				else
 				{
+					lowDealy = 12;
 					if(waitTimeCount > MAXTIME)
 					{
 						workStep = 2;
@@ -128,7 +135,7 @@ void checkIRKey()
 			}
 		}
 		
-		if(revRightCount > 2)
+		if(revRightCount > 5)
 		{
 			if(irRightStep == 0)
 			{
@@ -139,8 +146,10 @@ void checkIRKey()
 				}
 				else
 				{
+					lowDealy = 12;
 					if(waitTimeCount > MAXTIME)
 					{
+
 						workStep = 1;
 					}
 					else
