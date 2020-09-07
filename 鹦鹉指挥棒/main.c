@@ -44,8 +44,12 @@ void main()
 void procesWork()
 {
 	
-	if(workStep == 3)
+	if(workStep > 0)
 	{
+		unsigned char tempC = (~(0x01<<(workStep+2)));
+		WPUB &= tempC;
+		TRISB &= tempC;
+		PORTB &= tempC;
 		workStep = 0;
 	}
 	if(lowDealy > 0)
@@ -53,7 +57,8 @@ void procesWork()
 		//PORTB &= (~(0x01<<(workStep-1)));
 		if(--lowDealy == 0)
 		{
-			//PORTB |= 0x07;
+			TRISB = 0x3E;			//PB1、PB2为红外接收口
+			WPUB = 0x38;			//PB3-PB5为输入上拉	
 			workStep = 0;
 		}
 	}
@@ -71,10 +76,10 @@ void Init_System()
 	
 	//延时等待电源电压稳定
 	//DelayXms(200);
-	WPUB = 0x00;
 	TMR0 = 5;				
-	TRISB = 0x06;			//PB3、PB4为红外接收口
+	TRISB = 0x3E;			//PB1、PB2为红外接收口
 	PDCONB = 0x06;
+	WPUB = 0x38;			//PB3-PB5为输入上拉	
 	PORTB = 0x00;
 	INTCON = 0XA0;			//使能中断
 }
@@ -195,9 +200,9 @@ void interrupt Isr_Timer()
 		}
 		//模拟pwm输出
 		if(pwmTime < 12)
-			PORTB &= 0xDF;
+			PORTB &= 0xFE;
 		else
-			PORTB |= 0x20;
+			PORTB |= 0x01;
 		if(++pwmTime >= 44)
 		{
 			pwmTime = 0;

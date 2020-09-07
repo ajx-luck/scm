@@ -1,17 +1,17 @@
 
-# 1 "C:\Users\mxy\Desktop\新建文件夹\scm\鹦鹉指挥棒\main.c"
+# 1 "C:\mcuproject\scm\鹦鹉指挥棒\main.c"
 
-# 26 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\htc.h"
+# 26 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\htc.h"
 extern const char __xc8_OPTIM_SPEED;
 
 extern double __fpnormalize(double);
 
 
-# 13 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
+# 13 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\xc8debug.h"
 #pragma intrinsic(__builtin_software_breakpoint)
 extern void __builtin_software_breakpoint(void);
 
-# 10 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\SC8P1153.h"
+# 10 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\SC8P1153.h"
 volatile unsigned char INDF @0x0000;
 volatile unsigned char TMR0 @0x0001;
 volatile unsigned char PCL @0x0002;
@@ -185,7 +185,7 @@ volatile bit PWMS1 @ ((unsigned)&PWMCTR2*8)+1;
 volatile bit PWMS0 @ ((unsigned)&PWMCTR2*8)+0;
 
 
-# 27 "F:\飞盛微电子\安装软件\中微单片机\SCMCU_IDE_V2.00.07\data\include\sc.h"
+# 27 "C:\工具\单片机学习资料\SC8P\SCMCU_IDE_V2.00.07\data\include\sc.h"
 #pragma intrinsic(__nop)
 extern void __nop(void);
 
@@ -202,7 +202,7 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 6 "C:\Users\mxy\Desktop\新建文件夹\scm\鹦鹉指挥棒\main.c"
+# 6 "C:\mcuproject\scm\鹦鹉指挥棒\main.c"
 volatile unsigned char irLeftStep = 0;
 volatile unsigned char irRightStep = 0;
 unsigned char revLeftCount = 0;
@@ -242,8 +242,12 @@ procesWork();
 void procesWork()
 {
 
-if(workStep == 3)
+if(workStep > 0)
 {
+unsigned char tempC = (~(0x01<<(workStep+2)));
+WPUB &= tempC;
+TRISB &= tempC;
+PORTB &= tempC;
 workStep = 0;
 }
 if(lowDealy > 0)
@@ -251,7 +255,8 @@ if(lowDealy > 0)
 
 if(--lowDealy == 0)
 {
-
+TRISB = 0x3E;
+WPUB = 0x38;
 workStep = 0;
 }
 }
@@ -269,10 +274,10 @@ OPTION_REG = 0;
 
 
 
-WPUB = 0x00;
 TMR0 = 5;
-TRISB = 0x06;
+TRISB = 0x3E;
 PDCONB = 0x06;
+WPUB = 0x38;
 PORTB = 0x00;
 INTCON = 0XA0;
 }
@@ -377,7 +382,7 @@ revRightCount = 0;
 
 }
 
-# 185
+# 190
 void interrupt Isr_Timer()
 {
 if(T0IF)
@@ -391,9 +396,9 @@ B_MainLoop = 1;
 }
 
 if(pwmTime < 12)
-PORTB &= 0xDF;
+PORTB &= 0xFE;
 else
-PORTB |= 0x20;
+PORTB |= 0x01;
 if(++pwmTime >= 44)
 {
 pwmTime = 0;
