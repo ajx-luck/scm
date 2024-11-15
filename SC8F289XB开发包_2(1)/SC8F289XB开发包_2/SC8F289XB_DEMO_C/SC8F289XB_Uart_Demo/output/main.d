@@ -1,0 +1,1 @@
+ main.d  main.p1:  F:/中微资料/SC8F289XB开发包/SC8F289XB_DEMO_C/SC8F289XB_Uart_Demo/main.c

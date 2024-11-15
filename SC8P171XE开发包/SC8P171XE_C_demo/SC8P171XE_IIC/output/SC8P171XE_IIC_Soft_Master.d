@@ -1,0 +1,1 @@
+ SC8P171XE_IIC_Soft_Master.d  SC8P171XE_IIC_Soft_Master.p1:  H:/MyDownloads/说明书&测试报告/开发包/SC8P171XE开发包/SC8P171XE_C_demo/SC8P171XE_IIC/SC8P171XE_IIC_Soft_Master.c

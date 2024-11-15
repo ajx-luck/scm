@@ -1,0 +1,119 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8P171XE开发包\SC8P171XE_ASM_demo\PWM_DEMO\SC8P171XE_PWM.asm ----------------------------------------------------------------------
+                                   1:     ;-------------------------------------------
+                                   2:     
+                                   3:     ;程序名称：PWM模式程序
+                                   4:     ;日期版本：2021/1/15 <V1.1>
+                                   5:     
+                                   6:     ;备注：以PWM作为示例
+                                   7:     
+                                   8:     ;*公司网址 www.mcu.com.cn
+                                   9:     ;					WWW.SCMCU.COM
+                                   10:    ;-------------------------------------------
+                                   11:    ;PWM周期 = [(PWMT)+1]*(1/Fosc)*(CLKD/V分频值)
+                                   12:    ;脉冲宽度 = (PWMDX(9:0)+1)*(1/Fosc)*(CLKD/V分频值)
+                                   13:    ;本程序计算示例：周期 = [(511)+1]*(1/8)*(1) 
+                                   14:    ;					  = 64us
+                                   15:    ;				 脉冲宽度 = (128*(1/8)*(1)
+                                   16:    ;						  = 16us
+                                   17:    
+                                   18:    #INCLUDE	SC8P1712E.H
+                                   19:    
+                                   20:    GPR0		EQU			?				;用于中断服务中保存ACC
+                                   21:    GPR1		EQU			?				;用于中断服务中保存STATUS
+                                   22:    WORK		EQU			?				;
+                                   23:    	B_MainLoop	EQU	WORK,0	;进入定时中断标志位
+                                   24:    DELAYCNT	EQU		?				;延时计数器
+                                   25:    PWMBUF		EQU		?
+                                   26:    
+                                   27:    ORG			0000H						
+  0000   2805   JP  0x5            28:    JP			START						
+                                   29:    ORG			0004H
+  0004   2835   JP  0x35           30:    JP			INT_SERVICE
+                                   31:    ;-------------------------------------------
+                                   32:    START:
+  0005   0000   NOP                33:    		NOP
+  0006   0064   CLRWDT             34:    		CLRWDT
+  0007   3000   LDIA  0x0          35:    		LDIA		00H
+                                   36:    		OPTION							;预分频器分配给TMR0
+  0008   0181   CLR  0x1           37:    		CLR			TMR0				;初始化TMR0
+  0009   0064   CLRWDT             38:    		CLRWDT
+                                   39:    		
+  000A   3070   LDIA  0x70         40:    		LDIA		070H				;8M内部时钟
+  000B   808F   LD  0x8F,A         41:    		LD			OSCCON,A
+                                   42:    		
+  000C   30FA   LDIA  0xFA         43:    		LDIA		.250				;赋初值
+  000D   8092   LD  0x92,A         44:    		LD			PR2,A
+                                   45:    		
+  000E   108C   CLRB  0xC,1        46:    		CLRB		PIR1,TMR2IF			;清中断标志位
+                                   47:    		
+  000F   3004   LDIA  0x4          48:    		LDIA		04H					;开启Timer2，预分频值为1，后分频比为1:1
+  0010   0092   LD  0x12,A         49:    		LD			T2CON,A
+                                   50:    		
+  0011   948C   SETB  0x8C,1       51:    		SETB		PIE1,TMR2IE			;允许Timer2中断
+  0012   30C0   LDIA  0xC0         52:    		LDIA		0C0H				;允许所有未被屏蔽的中断、外设中断
+  0013   008B   LD  0xB,A          53:    		LD			INTCON,A
+                                   54:    		
+  0014   3003   LDIA  0x3          55:    		LDIA		B'00000011'			;选择作为PWM的PB1,PB0口设为输入
+  0015   8086   LD  0x86,A         56:    		LD			TRISB,A
+                                   57:    		
+  0016   3004   LDIA  0x4          58:    		LDIA		B'00000100'			;PWM选择时钟源为Fosc/1,PWM0反向
+  0017   009B   LD  0x1B,A         59:    		LD			PWMCON,A
+  0018   30FF   LDIA  0xFF         60:    		LDIA		0FFH
+  0019   0099   LD  0x19,A         61:    		LD			PWMTL,A				;
+  001A   3001   LDIA  0x1          62:    		LDIA		01H
+  001B   009A   LD  0x1A,A         63:    		LD			PWMTH,A				;周期选择为01FF，则周期为（511+1）*1/8M=64uS，周期的时钟分频在PWMCON选择
+                                   64:    								
+  001C   301F   LDIA  0x1F         65:    		LDIA		01FH
+  001D   0096   LD  0x16,A         66:    		LD			PWMD0L,A			;选择PWM0脉宽为（31+1）*1/8M=4uS,则占空比为1/16
+  001E   307F   LDIA  0x7F         67:    		LDIA		07FH
+  001F   0097   LD  0x17,A         68:    		LD			PWMD1L,A			;选择PWM1脉宽为（127+1）*1/8M=16uS,则占空比为1/4
+  0020   3000   LDIA  0x0          69:    		LDIA		00H					;配置PWM脉宽高位
+  0021   0098   LD  0x18,A         70:    		LD			PWMD01H,A			;配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+                                   71:        
+  0022   110C   CLRB  0xC,2        72:    		CLRB		PIR1,PWMIF          ;清零PWMIF中断标志位
+  0023   3007   LDIA  0x7          73:    		LDIA		B'00000111'
+  0024   009B   LD  0x1B,A         74:    		LD			PWMCON,A			;PWM选择时钟源为Fosc/1,PWM0反向，允许PWM0,PWM1使能
+  0025   3000   LDIA  0x0          75:    		LDIA		00H
+  0026   8086   LD  0x86,A         76:    		LD			TRISB,A				;选择的PB1,PB0口设为输出
+                                   77:    MAIN:									;主程序
+  0027   1C22   SNZB  0x22,0       78:    		SNZB		B_MainLoop
+  0028   2827   JP  0x27           79:    		JP			MAIN
+  0029   1022   CLRB  0x22,0       80:    		CLRB		B_MainLoop
+  002A   0064   CLRWDT             81:    		CLRWDT
+  002B   0AA3   INCR  0x23         82:    		INCR		DELAYCNT
+  002C   3080   LDIA  0x80         83:    		LDIA		.128				;16mS对PWM0占空比加一
+  002D   0223   SUBA  0x23         84:    		SUBA		DELAYCNT
+  002E   1C03   SNZB  0x3,0        85:    		SNZB		STATUS,C
+  002F   2827   JP  0x27           86:    		JP			MAIN
+  0030   01A3   CLR  0x23          87:    		CLR			DELAYCNT
+  0031   0AA4   INCR  0x24         88:    		INCR		PWMBUF
+  0032   0824   LD  A,0x24         89:    		LD			A,PWMBUF
+  0033   0096   LD  0x16,A         90:    		LD			PWMD0L,A
+  0034   2827   JP  0x27           91:    		JP			MAIN
+                                   92:    ;-------------------------------------------
+                                   93:    
+                                   94:    
+                                   95:    ;-------------------------------------------
+                                   96:    ;函数名称：INT_SERVICE
+                                   97:    ;函数功能：中断服务
+                                   98:    ;入口参数：无
+                                   99:    ;出口参数：无
+                                   100:   ;		   
+                                   101:   ;备	   注：
+                                   102:   ;-------------------------------------------
+                                   103:   INT_SERVICE：
+                                   104:   INT_IN:
+  0035   00A0   LD  0x20,A         105:   		LD  		GPR0,A				;中断现场保护
+  0036   0EA0   SWAPR  0x20        106:   		SWAPR		GPR0
+  0037   0E03   SWAPA  0x3         107:   		SWAPA		STATUS
+  0038   00A1   LD  0x21,A         108:   		LD  		GPR1,A					
+                                   109:   INT_TMR2:
+  0039   108C   CLRB  0xC,1        110:   		CLRB		PIR1,TMR2IF			;清中断标志
+  003A   1422   SETB  0x22,0       111:   		SETB		B_MainLoop
+                                   112:   		
+                                   113:   INT_BACK:
+  003B   0E21   SWAPA  0x21        114:   		SWAPA		GPR1
+  003C   0083   LD  0x3,A          115:   		LD  		STATUS,A
+  003D   0E20   SWAPA  0x20        116:   		SWAPA		GPR0   				;中断返回
+  003E   0009   RETI               117:   		RETI 		
+---- H:\MyDownloads\IDE_RAR\SCMCU_IDE_V2.00.09_Beta3\SCMCU_IDE_V2.00.09_Beta3\mcu\Head\SC8P1712E.H ----------------------------------------------------------------------

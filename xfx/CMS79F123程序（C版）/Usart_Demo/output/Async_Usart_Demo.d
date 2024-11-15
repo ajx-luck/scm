@@ -1,0 +1,1 @@
+ Async_Usart_Demo.d  Async_Usart_Demo.p1:  C:/mcuproject/scm/xfx/CMS79F123³ÌÐò£¨C°æ£©/Usart_Demo/Async_Usart_Demo.c

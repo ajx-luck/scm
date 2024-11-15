@@ -1,0 +1,118 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8P171XE开发包\SC8P171XE_ASM_demo\SLEEP_DEMO\SC8P171XE_SLEEP.asm ----------------------------------------------------------------------
+                                   1:     ;-------------------------------------------
+                                   2:     
+                                   3:     ;程序名称：休眠模式及唤醒程序
+                                   4:     ;日期版本：2021/1/20 <V1.0>
+                                   5:     
+                                   6:     ;备注：在CONFIG配置中WDT已被禁止，休眠模式下利用PORTB电平变化唤醒 
+                                   7:     
+                                   8:     ;*公司网址 www.mcu.com.cn
+                                   9:     ;					WWW.SCMCU.COM
+                                   10:    ;-------------------------------------------
+                                   11:    
+                                   12:    #INCLUDE	SC8P1712E.H
+                                   13:    
+                                   14:    
+                                   15:    GPR0		EQU			?				;用于中断服务中保存ACC
+                                   16:    GPR1		EQU			?				;用于中断服务中保存FLAGS
+                                   17:    
+                                   18:    ORG			0000H						
+  0000   2805   JP  0x5            19:    JP			START						
+                                   20:    ORG			0004H
+  0004   282C   JP  0x2C           21:    JP			INT_SERVICE
+                                   22:    
+                                   23:    ;-------------------------------------------
+                                   24:    START:
+  0005   0000   NOP                25:    		NOP
+  0006   0064   CLRWDT             26:    		CLRWDT
+  0007   3000   LDIA  0x0          27:    		LDIA		00H
+                                   28:    		OPTION							;预分频器分配给TMR0
+  0008   0181   CLR  0x1           29:    		CLR			TMR0				;初始化TMR0
+  0009   0064   CLRWDT             30:    		CLRWDT
+                                   31:    		
+  000A   3070   LDIA  0x70         32:    		LDIA		070H				;8M内部时钟
+  000B   808F   LD  0x8F,A         33:    		LD			OSCCON,A
+                                   34:    		
+                                   35:    MAIN:									;主程序
+  000C   0064   CLRWDT             36:    		CLRWDT
+                                   37:    		
+  000D   200F   CALL  0xF          38:    		CALL		SLEEP_MODE
+                                   39:    		
+  000E   280C   JP  0xC            40:    		JP			MAIN
+                                   41:    ;-------------------------------------------
+                                   42:    
+                                   43:    ;-------------------------------------------
+                                   44:    ;函数名称：SLEEP_MODE
+                                   45:    ;函数功能：进入休眠模式
+                                   46:    ;入口参数：无
+                                   47:    ;出口参数：无
+                                   48:    ;		   
+                                   49:    ;备	   注：
+                                   50:    ;-------------------------------------------
+                                   51:    SLEEP_MODE:
+  000F   018B   CLR  0xB           52:    		CLR			INTCON
+  0010   8181   CLR  0x81          53:    		CLR			OPTION_REG
+                                   54:    		
+  0011   8193   CLR  0x93          55:    		CLR			ANSEL				;都为数字通道
+  0012   8194   CLR  0x94          56:    		CLR			ANSELH
+                                   57:    		
+  0013   8185   CLR  0x85          58:    		CLR			TRISA
+  0014   3004   LDIA  0x4          59:    		LDIA		B'00000100'			
+  0015   8086   LD  0x86,A         60:    		LD			TRISB,A
+                                   61:    				
+  0016   0187   CLR  0x7           62:    		CLR			WPUA
+  0017   3004   LDIA  0x4          63:    		LDIA		B'00000100'			;PORTB2上拉输入
+  0018   8095   LD  0x95,A         64:    		LD			WPUB,A
+                                   65:    				
+  0019   0185   CLR  0x5           66:    		CLR			PORTA				;关闭所有输出
+  001A   0186   CLR  0x6           67:    		CLR			PORTB
+                                   68:    			
+  001B   3004   LDIA  0x4          69:    		LDIA		B'00000100'			;允许RB2的IO口电平变化中断
+  001C   8096   LD  0x96,A         70:    		LD			IOCB,A
+  001D   158B   SETB  0xB,3        71:    		SETB		INTCON,RBIE			;允许PORTB电平变化中断
+  001E   178B   SETB  0xB,7        72:    		SETB		INTCON,GIE			;GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
+                                   73:    		
+  001F   019F   CLR  0x1F          74:    		CLR			ADCON0				;关闭所有模块
+  0020   819F   CLR  0x9F          75:    		CLR			ADCON1
+  0021   019B   CLR  0x1B          76:    		CLR			PWMCON
+  0022   818E   CLR  0x8E          77:    		CLR			PWMCON1
+  0023   8188   CLR  0x88          78:    		CLR			WDTCON				;关闭看门狗
+                                   79:    		
+  0024   0806   LD  A,0x6          80:    		LD			A,PORTB				;读PORTB值以锁存
+                                   81:    		
+  0025   0064   CLRWDT             82:    		CLRWDT
+  0026   0063   STOP               83:    		STOP							;进入休眠模式
+                                   84:    		
+  0027   0000   NOP                85:    		NOP
+  0028   0000   NOP                86:    		NOP								;休眠唤醒后响应完中断后从此处开始运行
+  0029   0064   CLRWDT             87:    		CLRWDT
+                                   88:    		
+  002A   9408   SETB  0x88,0       89:    		SETB		WDTCON,0			;重新使能看门狗
+                                   90:    SLEEP_MODE_BACK:
+  002B   0008   RET                91:    		RET
+                                   92:    ;-------------------------------------------
+                                   93:    ;函数名称：INT_SERVICE
+                                   94:    ;函数功能：中断服务
+                                   95:    ;入口参数：无
+                                   96:    ;出口参数：无
+                                   97:    ;		   
+                                   98:    ;备	   注：
+                                   99:    ;-------------------------------------------
+                                   100:   INT_SERVICE：
+                                   101:   INT_IN:
+  002C   00A0   LD  0x20,A         102:   		LD  		GPR0,A				;中断现场保护
+  002D   0EA0   SWAPR  0x20        103:   		SWAPR		GPR0
+  002E   0E03   SWAPA  0x3         104:   		SWAPA		STATUS
+  002F   00A1   LD  0x21,A         105:   		LD  		GPR1,A					
+                                   106:   INT_PB:
+  0030   100B   CLRB  0xB,0        107:   		CLRB		INTCON,RBIF			;清中断标志
+  0031   0806   LD  A,0x6          108:   		LD			A,PORTB				;读PB口寄存器状态
+  0032   30FF   LDIA  0xFF         109:   		LDIA		0FFH
+  0033   0685   XORR  0x5          110:   		XORR		PORTA
+                                   111:   		
+                                   112:   INT_BACK:
+  0034   0E21   SWAPA  0x21        113:   		SWAPA		GPR1
+  0035   0083   LD  0x3,A          114:   		LD  		STATUS,A
+  0036   0E20   SWAPA  0x20        115:   		SWAPA		GPR0   				;中断返回
+  0037   0009   RETI               116:   		RETI 				
+---- H:\MyDownloads\IDE_RAR\SCMCU_IDE_V2.00.09_Beta3\SCMCU_IDE_V2.00.09_Beta3\mcu\Head\SC8P1712E.H ----------------------------------------------------------------------

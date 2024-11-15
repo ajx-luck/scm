@@ -1,0 +1,537 @@
+---- C:\mcuproject\scm\UVC-4W - F2711\UVC-4W - F2711\USER_MAIN_PROGRAM－0605.asm ----------------------------------------------------------------------
+                                   1:     
+                                   2:     		#INCLUDE		SC8F2711B.H
+                                   3:     
+                                   4:     	;	#INCLUDE		"Touch_Kscan_Library.h"
+                                   5:     
+                                   6:     
+                                   7:     ;注意事项
+                                   8:     ;寄存器：KEYF、KEYF1、
+                                   9:     ;标志位：B_KEY_EN、B_KEY_LONG、B_KEY_UP、B_KEY_SLP、B_KEY_WAKE	
+                                   10:    ;为BANK0的空间，使用时需要注意页的切换
+                                   11:    
+                                   12:    ;**********************************************
+                                   13:    ;**********************************************
+                                   14:    
+                                   15:    GPR0		EQU 		0EH	        ;中断现场保护寄存器必须用BANK1,BANK0公用寄存器
+                                   16:    GPR1		EQU 		0FH         ;中断现场保护寄存器必须用BANK1,BANK0公用寄存器
+                                   17:    TCOUNT		EQU 		?			;系统计时，125US加1
+                                   18:    
+                                   19:    TIME		EQU			?
+                                   20:    WORK		EQU			?
+                                   21:    F_ONOFF		EQU			WORK,0
+                                   22:    F_W_EN      EQU         WORK,1      ;消毒工作状态
+                                   23:    F_L_EN      EQU         WORK,2      ;手电工作标志
+                                   24:    F_Y_EN      EQU         WORK,3      ;低电压标志
+                                   25:    
+                                   26:    KEY_VAL     EQU         ?
+                                   27:    S1_VAL      EQU         ?
+                                   28:    ;工作RAM
+                                   29:    TEMP            EQU			?           ;   
+                                   30:    ;C18             EQU		?
+                                   31:    ;S14             EQU		?
+                                   32:    ;R15             EQU		?
+                                   33:    ;B16             EQU		?
+                                   34:    S_STATUS        EQU		    ?
+                                   35:    G17             EQU			?
+                                   36:    COUNT       	EQU         ?
+                                   37:    MODE_V          EQU         ?
+                                   38:    ;KEYF_OLD		EQU			?
+                                   39:    
+                                   40:    ;TIME1			EQU			?			;休眠定时
+                                   41:    ;TIME2			EQU			?
+                                   42:    M1_VAL          EQU			?           ;模式值
+                                   43:    L1_VAL          EQU			?           ;力度值
+                                   44:    
+                                   45:    ;R14             EQU	    ?
+                                   46:    R16             EQU			?
+                                   47:    R17             EQU			?
+                                   48:    ;R1A             EQU		?
+                                   49:    
+                                   50:    CNT0            EQU			?
+                                   51:    CNT1            EQU			?
+                                   52:    CNT2            EQU			?
+                                   53:    CNT3            EQU			?
+                                   54:    CNT_L           EQU			?
+                                   55:    CNT_H           EQU			?
+                                   56:    CNT_a           EQU			?         ;BZ
+                                   57:    CNT_b           EQU			?         ;BZ
+                                   58:    CNT_c           EQU			?
+                                   59:    R2A             EQU			?
+                                   60:    R2B             EQU			?
+                                   61:    R2C             EQU			?
+                                   62:    ;R2D             EQU			?
+                                   63:    
+                                   64:    ;PWML			EQU			?			;存放语音TG2的PULSE
+                                   65:    ;TEMP_H			EQU			?			;临时寄存器
+                                   66:    ;TEMP_L			EQU			?
+                                   67:    ;SEC0		    EQU			?			;LED灯模式
+                                   68:    ;COLOR           EQU			?       ;灯的色值
+                                   69:    R20             EQU			?
+                                   70:    R21             EQU			?
+                                   71:    R22             EQU			?
+                                   72:    MM1             EQU			?
+                                   73:    MM2             EQU			?
+                                   74:    B               EQU			?
+                                   75:    DEL_10MS_L      EQU			?
+                                   76:    DEL_10MS_H      EQU			?
+                                   77:    MM1_SAVE        EQU			?
+                                   78:    ;KEY_TIME        EQU			?
+                                   79:    ;KEY_OPT         EQU			?
+                                   80:    ;KEY_PRE         EQU			?
+                                   81:    TIME_L          EQU			?
+                                   82:    TIME_H          EQU			?    
+                                   83:    RECNT           EQU			?
+                                   84:    RDATAL          EQU			?
+                                   85:    RDATAH          EQU			?
+                                   86:    RUSERL          EQU			?
+                                   87:    RUSERH          EQU			?
+                                   88:    RKEY            EQU			?
+                                   89:    OUT_            EQU			2
+                                   90:    IR              EQU         1
+                                   91:    ;--------------------------------------------
+                                   92:    ;工作RAM
+                                   93:    ;**************************************
+                                   94:    
+                                   95:    ;;********************************************************
+                                   96:    ;*********************************************************
+                                   97:    		ORG 		000H
+  0000   182E   JP  0x2E           98:       		JP  		START
+                                   99:    
+                                   100:   		ORG 		001H
+  0001   1811   JP  0x11           101:   		JP  		INT_SERVICE
+                                   102:   		
+                                   103:   		ORG         0010H
+  0010   182E   JP  0x2E           104:   		JP  		START
+                                   105:   ;--------------------------------------------
+                                   106:   INT_SERVICE:
+  0011   008E   LD  0xE,A          107:   		LD  		GPR0,A			;中断现场保护
+  0012   168E   SWAPR  0xE         108:   		SWAPR		GPR0
+  0013   1603   SWAPA  0x3         109:   		SWAPA		FLAGS
+  0014   008F   LD  0xF,A          110:   		LD  		GPR1,A		
+                                   111:   ;--------------------------------------------
+  0015   2203   CLRB  0x3,4        112:   		CLRB        FLAGS,4		    ;BANK0
+  0016   0192   CLR  0x12          113:   		CLR 		INT_FLAG
+  0017   12B0   INCR  0x30         114:   		INCR		TCOUNT		
+  0018   3005   SZB  0x5,0         115:   		SZB         P0,0    	
+  0019   1827   JP  0x27           116:   		JP          KEY_BACK_0
+  001A   3034   SZB  0x34,0        117:   		SZB         S1_VAL,0        ;是否长按没放开
+  001B   182A   JP  0x2A           118:   		JP          INT_BACK
+  001C   13BE   SZDECR  0x3E       119:   		SZDECR      CNT0            ;255*0.125=32MS
+  001D   182A   JP  0x2A           120:   		JP          INT_BACK
+  001E   12BF   INCR  0x3F         121:   		INCR        CNT1
+  001F   288C   LDIA  0x8C         122:   		LDIA        .140;.25        ;156*32=5S
+  0020   023F   SUBA  0x3F         123:   		SUBA        CNT1
+  0021   3403   SNZB  0x3,0        124:   		SNZB        FLAGS,C
+  0022   182A   JP  0x2A           125:   		JP          INT_BACK
+  0023   27B3   SETB  0x33,7       126:   		SETB        KEY_VAL,7
+  0024   2434   SETB  0x34,0       127:   		SETB        S1_VAL,0        ;有长按一次标志
+  0025   01C2   CLR  0x42          128:   		CLR         CNT_L
+  0026   182A   JP  0x2A           129:   		JP          INT_BACK	
+                                   130:   KEY_BACK_0:
+  0027   01BE   CLR  0x3E          131:           CLR         CNT0
+  0028   01BF   CLR  0x3F          132:   		CLR         CNT1
+  0029   01B4   CLR  0x34          133:   		CLR         S1_VAL		     ;可以再长按了      		        
+                                   134:   ;--------------------------------------------							
+                                   135:   INT_BACK:
+  002A   160F   SWAPA  0xF         136:   		SWAPA		GPR1
+  002B   0083   LD  0x3,A          137:   		LD  		FLAGS,A
+  002C   160E   SWAPA  0xE         138:   		SWAPA		GPR0			;中断返回
+  002D   0062   RETI               139:   		RETI
+                                   140:   ;********************************************
+                                   141:   
+                                   142:   ;********************************************
+                                   143:   ;********************************************
+                                   144:   
+                                   145:   ;********************************************
+                                   146:   START:
+  002E   0000   NOP                147:   		NOP
+  002F   0000   NOP                148:   		NOP
+  0030   0004   CLRWDT             149:   		CLRWDT								;上电清WDT（必要）
+                                   150:   ;-----------初始化I/O-----------------------;设置IO口的初始状态
+  0031   0185   CLR  0x5           151:   		CLR 		P0
+  0032   0186   CLR  0x6           152:   		CLR			P1
+  0033   2807   LDIA  0x7          153:   		LDIA		07H
+  0034   0087   LD  0x7,A          154:   		LD			P2,A
+                                   155:   		
+  0035   28A2   LDIA  0xA2         156:   		LDIA		B'10100010'     ;P0,6;P0,4输出,P0,5上拉输入
+  0036   008A   LD  0xA,A          157:   		LD  		P0CH,A	
+                                   158:   		
+  0037   28E8   LDIA  0xE8         159:   		LDIA		B'11101000'		;P0,0为按键,P0,1=SW,P02-OUT,P0,3=AD
+  0038   0089   LD  0x9,A          160:   		LD  		P0CL,A	  
+                                   161:   		     
+  0039   2882   LDIA  0x82         162:   		LDIA		B'10000010'     ;P1,6输出，P1,5，上拉输入,P1,4-OUT
+  003A   008C   LD  0xC,A          163:   		LD  		P1CH,A
+  003B   28AA   LDIA  0xAA         164:   		LDIA  		B'10101010'
+  003C   008B   LD  0xB,A          165:   		LD  		P1CL,A
+                                   166:   
+  003D   2892   LDIA  0x92         167:   		LDIA		B'10010010'		;P2.0编码输出
+  003E   008D   LD  0xD,A          168:   		LD  		P2C,A			;P2.2 为防水/抗干扰选择
+  003F   2107   CLRB  0x7,2        169:   		CLRB        P2,2
+  0040   0190   CLR  0x10          170:   		CLR         SYS_GEN
+  0041   0191   CLR  0x11          171:   		CLR         INT_EN
+  0042   2800   LDIA  0x0          172:   		LDIA        00H
+  0043   0002   OPTION             173:   		OPTION
+                                   174:   ;-----------清寄存器 BANK0--------------------------
+                                   175:   CLR_RAM:								;间接寻址清掉所有RAM
+  0044   2203   CLRB  0x3,4        176:   		CLRB        FLAGS,4             ;BANK0
+  0045   280F   LDIA  0xF          177:   		LDIA		0FH
+  0046   0084   LD  0x4,A          178:   		LD  		MP,A
+  0047   0004   CLRWDT             179:   		CLRWDT
+                                   180:   CLR_LOOP:
+                                   181:          
+  0048   1284   INCR  0x4          182:   		INCR		MP
+  0049   0180   CLR  0x0           183:   		CLR 		IAR
+  004A   287F   LDIA  0x7F         184:   		LDIA		07FH
+  004B   0204   SUBA  0x4          185:   		SUBA		MP
+  004C   3403   SNZB  0x3,0        186:   		SNZB		FLAGS,C
+  004D   1848   JP  0x48           187:   		JP  		CLR_LOOP
+                                   188:   		
+                                   189:   ;***************清寄存器 BANK1************************
+                                   190:   CLR_RAM_1:
+  004E   2603   SETB  0x3,4        191:           SETB        FLAGS,4             ;BANK1
+  004F   282F   LDIA  0x2F         192:   		LDIA		02FH
+  0050   0084   LD  0x4,A          193:   		LD  		MP,A
+  0051   0004   CLRWDT             194:   		CLRWDT
+                                   195:   CLR_LOOP_1:
+                                   196:   
+  0052   1284   INCR  0x4          197:   		INCR		MP
+  0053   0180   CLR  0x0           198:   		CLR 		IAR
+  0054   287F   LDIA  0x7F         199:   		LDIA		07FH
+  0055   0204   SUBA  0x4          200:   		SUBA		MP
+  0056   3403   SNZB  0x3,0        201:   		SNZB		FLAGS,C
+  0057   1852   JP  0x52           202:   		JP  		CLR_LOOP_1
+                                   203:   		
+  0058   0188   CLR  0x8           204:   		CLR         08H
+  0059   018E   CLR  0xE           205:   		CLR         0EH
+  005A   018F   CLR  0xF           206:   		CLR         0FH
+  005B   01A5   CLR  0x25          207:   		CLR         25H
+  005C   01A6   CLR  0x26          208:   		CLR         26H
+  005D   01A7   CLR  0x27          209:   		CLR         27H
+  005E   01AA   CLR  0x2A          210:   		CLR         2AH
+  005F   01AB   CLR  0x2B          211:   		CLR         2BH
+                                   212:   ;-------------上电延时-----------------------
+                                   213:   INIT_DELAY:
+  0060   2203   CLRB  0x3,4        214:           CLRB        FLAGS,4
+  0061   2800   LDIA  0x0          215:   		LDIA		.0
+  0062   00BE   LD  0x3E,A         216:   		LD  		CNT0,A
+                                   217:   INIT_LOOP:								;上电延时3*256*256*5/2=500MS
+  0063   0004   CLRWDT             218:   		CLRWDT
+  0064   13BE   SZDECR  0x3E       219:   		SZDECR	    CNT0
+  0065   1863   JP  0x63           220:   		JP  		INIT_LOOP
+                                   221:   ;---------------------------------------------
+  0066   18F8   JP  0xF8           222:           JP   		WORK_SLEPP
+                                   223:   ;-----------初始化RAM-------------------------
+                                   224:   INIT_RAM:
+  0067   2203   CLRB  0x3,4        225:           CLRB         FLAGS,4            ;BANK0
+  0068   019C   CLR  0x1C          226:    		CLR			 PWM8DATA
+  0069   019F   CLR  0x1F          227:   		CLR			 PWM10DATA
+  006A   01A3   CLR  0x23          228:   		CLR			 TABLE_SPL	        ;
+  006B   01A1   CLR  0x21          229:   		CLR			 BUZCON
+  006C   0193   CLR  0x13          230:   		CLR			 INT_EXT		    ;
+  006D   01A2   CLR  0x22          231:   		CLR			 TABLE_SPH	        ;
+                                   232:   
+  006E   2806   LDIA  0x6          233:   		LDIA		 .6
+  006F   0096   LD  0x16,A         234:   		LD  		 TMR1,A				; TMR1初值设定
+  0070   2880   LDIA  0x80         235:   		LDIA		 80H				; TMR1设定为定时器，分频比1：1
+  0071   0097   LD  0x17,A         236:   		LD  		 TMR1C,A
+  0072   2617   SETB  0x17,4       237:   		SETB		 TMR1C,4			; TMR1开启
+                                   238:   		
+  0073   2801   LDIA  0x1          239:   		LDIA		 01H
+  0074   0090   LD  0x10,A         240:   		LD  		 SYS_GEN,A			;中断使能，AD使能
+  0075   2808   LDIA  0x8          241:   		LDIA		 08H				;TMR1中断使能，其它中断关闭
+  0076   0091   LD  0x11,A         242:   		LD  		 INT_EN,A   
+  0077   188D   JP  0x8D           243:   		JP           M_LOOP   				
+                                   244:   ;*****************************************
+                                   245:   SD_QL:  ;打开手电
+  0078   2203   CLRB  0x3,4        246:           CLRB         FLAGS,4            ;BANK0 
+  0079   23B3   CLRB  0x33,7       247:   		CLRB         KEY_VAL,7
+  007A   01BA   CLR  0x3A          248:   	    CLR          M1_VAL
+  007B   01C6   CLR  0x46          249:   		CLR          CNT_c
+  007C   2432   SETB  0x32,0       250:   	    SETB         F_ONOFF
+  007D   20B3   CLRB  0x33,1       251:           CLRB         KEY_VAL,1
+  007E   2840   LDIA  0x40         252:   		LDIA         B'01000000'        ;P0,6
+  007F   0685   XORR  0x5          253:           XORR         P0                 ;手电
+  0080   188D   JP  0x8D           254:   		JP           M_LOOP
+                                   255:   ;*****************************************
+                                   256:   XD_QL:  ;打开消毒
+  0081   2203   CLRB  0x3,4        257:           CLRB         FLAGS,4            ;BANK0 
+  0082   2432   SETB  0x32,0       258:   		SETB         F_ONOFF
+  0083   20B3   CLRB  0x33,1       259:           CLRB         KEY_VAL,1
+  0084   23B3   CLRB  0x33,7       260:   		CLRB         KEY_VAL,7 
+  0085   01BA   CLR  0x3A          261:   		CLR          M1_VAL       
+  0086   2804   LDIA  0x4          262:   		LDIA         B'00000100'        ;P2,2
+  0087   0687   XORR  0x7          263:           XORR         P2                 ;消毒 
+  0088   3507   SNZB  0x7,2        264:   		SNZB         P2,2
+  0089   24B2   SETB  0x32,1       265:   		SETB         F_W_EN             ;消毒使能
+  008A   3107   SZB  0x7,2         266:   		SZB          P2,2
+  008B   20B2   CLRB  0x32,1       267:   		CLRB         F_W_EN 
+  008C   188D   JP  0x8D           268:   		JP           M_LOOP    	
+                                   269:   ;*****************************************		
+                                   270:   M_LOOP:		
+  008D   280F   LDIA  0xF          271:           LDIA         .15               ;如果有安键，就查询7.5S
+  008E   00C5   LD  0x45,A         272:   		LD           CNT_b,A		   ;15*0.5=7.5S
+                                   273:   DJ_01:
+  008F   2864   LDIA  0x64         274:     	    LDIA         100;              ;计时500MS  按第1次
+  0090   00C4   LD  0x44,A         275:   		LD           CNT_a,A
+  0091   2804   LDIA  0x4          276:   		LDIA         B'00000100'       ;P0,2测循环周期，500MS
+  0092   0685   XORR  0x5          277:   		XORR         P0
+                                   278:   DJ_02:;单击	
+  0093   01B0   CLR  0x30          279:           CLR 		 TCOUNT	
+                                   280:   	;	LDIA         B'00000100'       ;P0,2测循环周期，500MS
+                                   281:   	;	XORR         P0
+  0094   0938   CALL  0x138        282:   		CALL         DELAY5MS	
+  0095   33B3   SZB  0x33,7        283:   		SZB          KEY_VAL,7          ;有长按？
+  0096   1881   JP  0x81           284:   		JP           XD_QL		
+  0097   30B3   SZB  0x33,1        285:   		SZB          KEY_VAL,1
+  0098   189F   JP  0x9F           286:   		JP           SJ_02		
+  0099   343A   SNZB  0x3A,0       287:   		SNZB         M1_VAL,0           ;是否按了一次								
+  009A   18A4   JP  0xA4           288:   	    JP           M_LOOP1
+  009B   13C6   SZDECR  0x46       289:   		SZDECR       CNT_c              ;255*5=1.275S
+  009C   18A4   JP  0xA4           290:   		JP           M_LOOP1
+  009D   01BA   CLR  0x3A          291:   		CLR          M1_VAL             ;按键超时退出
+  009E   18A4   JP  0xA4           292:   		JP           M_LOOP1
+                                   293:   SJ_02: 
+  009F   20B3   CLRB  0x33,1       294:           CLRB         KEY_VAL,1	
+  00A0   12BA   INCR  0x3A         295:   		INCR         M1_VAL             ;双击计数
+  00A1   30BA   SZB  0x3A,1        296:   		SZB          M1_VAL,1           ;有双击短按？		
+  00A2   1878   JP  0x78           297:   		JP           SD_QL	
+  00A3   18A4   JP  0xA4           298:   		JP           M_LOOP1	
+                                   299:   M_LOOP1:	
+  00A4   12C1   INCR  0x41         300:           INCR         CNT3
+  00A5   3485   SNZB  0x5,1        301:   		SNZB         P0,1                ;斜了吗
+  00A6   18AF   JP  0xAF           302:   		JP           M_LOOP2
+  00A7   28C8   LDIA  0xC8         303:   		LDIA         200;40             ;40*5=200MS查询一次
+  00A8   0641   XORA  0x41         304:   		XORA         CNT3
+  00A9   3503   SNZB  0x3,2        305:   		SNZB         FLAGS,Z
+  00AA   18B2   JP  0xB2           306:   		JP           AD_TEST   	
+  00AB   30B2   SZB  0x32,1        307:   		SZB          F_W_EN             ;查询消毒状态是什么？
+  00AC   2107   CLRB  0x7,2        308:   		CLRB         P2,2
+  00AD   01C1   CLR  0x41          309:   		CLR          CNT3
+  00AE   18B2   JP  0xB2           310:   		JP           AD_TEST
+                                   311:   M_LOOP2:				
+  00AF   01C1   CLR  0x41          312:   		CLR          CNT3
+  00B0   2507   SETB  0x7,2        313:   		SETB         P2,2               ;消毒OFF
+  00B1   18B2   JP  0xB2           314:   		JP           AD_TEST
+                                   315:   AD_TEST:	       	
+  00B2   08CC   CALL  0xCC         316:   		CALL         Charge_0			
+  00B3   12C0   INCR  0x40         317:   		INCR         CNT2
+  00B4   2864   LDIA  0x64         318:   		LDIA         100                ;100*5MS=500MS
+  00B5   0640   XORA  0x40         319:   		XORA         CNT2
+  00B6   3103   SZB  0x3,2         320:   		SZB          FLAGS,Z
+  00B7   18BB   JP  0xBB           321:   		JP           XD_ON_01
+  00B8   35B2   SNZB  0x32,3       322:   		SNZB         F_Y_EN
+  00B9   2407   SETB  0x7,0        323:   		SETB         P2,0               ;红灯灭
+  00BA   18C1   JP  0xC1           324:   		JP           XD_BACK
+                                   325:   XD_ON_01:
+  00BB   01C0   CLR  0x40          326:   		CLR          CNT2               ;重新计数
+  00BC   2800   LDIA  0x0          327:   		LDIA         B'00000000'	
+  00BD   31B2   SZB  0x32,3        328:   		SZB          F_Y_EN
+  00BE   2801   LDIA  0x1          329:   		LDIA         B'00000001'        ;P2,0 红灯 是否闪
+  00BF   0687   XORR  0x7          330:   		XORR         P2
+  00C0   18C1   JP  0xC1           331:   		JP           XD_BACK				 			
+                                   332:   XD_BACK:
+  00C1   13C4   SZDECR  0x44       333:           SZDECR       CNT_a
+  00C2   1893   JP  0x93           334:   		JP           DJ_02              ;500MS
+                                   335:   	;	CLRB         KEY_VAL,1          ;
+  00C3   13C5   SZDECR  0x45       336:   		SZDECR       CNT_b
+  00C4   188F   JP  0x8F           337:   		JP           DJ_01              ;15*0.5=7.5S
+  00C5   01BA   CLR  0x3A          338:   		CLR          M1_VAL
+  00C6   30B2   SZB  0x32,1        339:           SZB          F_W_EN             ;是否在工作，消毒吗	
+  00C7   188D   JP  0x8D           340:           JP           M_LOOP	
+  00C8   3305   SZB  0x5,6         341:   		SZB          P0,6               ;手电亮吗
+  00C9   188D   JP  0x8D           342:   		JP           M_LOOP
+  00CA   2032   CLRB  0x32,0       343:   		CLRB         F_ONOFF
+  00CB   18F8   JP  0xF8           344:   		JP           WORK_SLEPP			
+                                   345:   ;*****************************************
+                                   346:   ;*****************************************
+                                   347:   Charge_0:        
+  00CC   2203   CLRB  0x3,4        348:           CLRB         FLAGS,4
+  00CD   0004   CLRWDT             349:   		CLRWDT
+  00CE   28E0   LDIA  0xE0         350:   		LDIA		 B'11100000'		 ;P0,3=AD
+  00CF   0089   LD  0x9,A          351:   		LD  		 P0CL,A
+  00D0   2490   SETB  0x10,1       352:   		SETB         SYS_GEN,ADC_EN      ;
+  00D1   08E8   CALL  0xE8         353:           CALL         Delay_125us
+  00D2   2830   LDIA  0x30         354:   		LDIA         B'00110000'         ;选择AN3为ad转换,P0,3
+  00D3   0095   LD  0x15,A         355:           LD           ADCON,A             
+  00D4   0000   NOP                356:           nop
+  00D5   0000   NOP                357:           nop
+                                   358:   		
+  00D6   2415   SETB  0x15,0       359:           SETB         ADCON,CONV          ;CONV下降沿开始转换
+  00D7   0000   NOP                360:           NOP
+  00D8   0000   NOP                361:   		NOP
+  00D9   0000   NOP                362:   		NOP
+  00DA   2015   CLRB  0x15,0       363:           CLRB         ADCON,CONV          ;开始转换
+                                   364:   AD_WAIT:
+  00DB   3595   SNZB  0x15,3       365:           SNZB         ADCON,EOC
+  00DC   18DB   JP  0xDB           366:   		JP           AD_WAIT
+  00DD   0000   NOP                367:   		NOP
+  00DE   1014   LD  A,0x14         368:   		LD           A,ADDATAH
+  00DF   3D56   SUBIA  0x56        369:   		SUBIA        .86;.148;                 ;约6.2V  ;256/3.3*/86 
+  00E0   3003   SZB  0x3,0         370:   		SZB          FLAGS,C
+  00E1   18E4   JP  0xE4           371:   		JP           SET_F1				
+                                   372:   SET_F0:
+  00E2   21B2   CLRB  0x32,3       373:           CLRB         F_Y_EN              ;清低6电压标志
+  00E3   18E6   JP  0xE6           374:   		JP           AD_BACK
+                                   375:   SET_F1:	
+  00E4   25B2   SETB  0x32,3       376:           SETB		 F_Y_EN	             ;设置低6电压标志	
+  00E5   18E6   JP  0xE6           377:           JP           AD_BACK
+                                   378:   AD_BACK:		
+  00E6   2090   CLRB  0x10,1       379:           CLRB         SYS_GEN,ADC_EN      ;关AD 
+  00E7   2900   RET  0x0           380:   	    RET 		 00H 		
+                                   381:   ;*************************************		
+                                   382:   Delay_125us:		
+  00E8   2814   LDIA  0x14         383:           LDIA        .20
+  00E9   00B8   LD  0x38,A         384:   		LD          COUNT,A
+                                   385:   D2:									
+  00EA   0004   CLRWDT             386:   		CLRWDT
+  00EB   13B8   SZDECR  0x38       387:   		SZDECR		COUNT
+  00EC   18EA   JP  0xEA           388:   		JP		    D2		
+  00ED   2900   RET  0x0           389:   		RET		    00H		
+                                   390:   		
+                                   391:   DELAY_50_MS:
+  00EE   2828   LDIA  0x28         392:           LDIA        40           ;20MS
+  00EF   00C7   LD  0x47,A         393:   		LD          R2A,A
+                                   394:   L0b:
+  00F0   28E6   LDIA  0xE6         395:           LDIA        230          ;
+  00F1   00C9   LD  0x49,A         396:           LD          R2C,A
+                                   397:   L0a:                   
+  00F2   0004   CLRWDT             398:           CLRWDT
+  00F3   13C9   SZDECR  0x49       399:           SZDECR      R2C
+  00F4   18F2   JP  0xF2           400:           JP          L0a
+  00F5   13C7   SZDECR  0x47       401:   		SZDECR      R2A
+  00F6   18F0   JP  0xF0           402:   		JP          L0b
+  00F7   2900   RET  0x0           403:   		RET		    00H
+                                   404:   				
+                                   405:   ;********************************************
+                                   406:   WORK_SLEPP:
+  00F8   3032   SZB  0x32,0        407:   		SZB			F_ONOFF
+  00F9   01B1   CLR  0x31          408:   		CLR			TIME
+  00FA   0004   CLRWDT             409:   		CLRWDT                          ;关机500MS系统进入休眠
+  00FB   12B1   INCR  0x31         410:   		INCR		TIME
+  00FC   2805   LDIA  0x5          411:   		LDIA		5					;2.5MS*200=500MS
+  00FD   0231   SUBA  0x31         412:   		SUBA		TIME
+  00FE   3403   SNZB  0x3,0        413:   		SNZB		FLAGS,C
+  00FF   18F8   JP  0xF8           414:           JP          WORK_SLEPP
+  0100   01B1   CLR  0x31          415:   		CLR			TIME
+                                   416:   		
+  0101   0191   CLR  0x11          417:   		CLR         INT_EN
+  0102   0190   CLR  0x10          418:   		CLR         SYS_GEN
+  0103   0183   CLR  0x3           419:           CLR         FLAGS
+  0104   01B3   CLR  0x33          420:   		CLR         KEY_VAL
+  0105   01B4   CLR  0x34          421:   		CLR         S1_VAL
+  0106   01C4   CLR  0x44          422:   		CLR         CNT_a
+  0107   01C5   CLR  0x45          423:   		CLR         CNT_b
+  0108   01C6   CLR  0x46          424:   		CLR         CNT_c
+  0109   01BE   CLR  0x3E          425:   		CLR         CNT0
+  010A   01BF   CLR  0x3F          426:   		CLR         CNT1
+  010B   01BC   CLR  0x3C          427:   		CLR         R16
+  010C   01BD   CLR  0x3D          428:   		CLR         R17
+  010D   2203   CLRB  0x3,4        429:   		CLRB        FLAGS,4            ;BANK0
+  010E   019C   CLR  0x1C          430:    		CLR			PWM8DATA
+  010F   019F   CLR  0x1F          431:   		CLR			PWM10DATA
+  0110   01A3   CLR  0x23          432:   		CLR			TABLE_SPL	        ;
+  0111   01A1   CLR  0x21          433:   		CLR			BUZCON
+  0112   0193   CLR  0x13          434:   		CLR			INT_EXT		    ;
+  0113   01A2   CLR  0x22          435:   		CLR			TABLE_SPH	        ;
+                                   436:   	;	CLR         MM1
+                                   437:   
+                                   438:   USER_ENTER_SLEEP:
+                                   439:   		;进入休眠前关掉所有功能模块,以降低休眠电流
+                                   440:   		
+  0114   0183   CLR  0x3           441:   		CLR         FLAGS
+  0115   01C4   CLR  0x44          442:   		CLR         CNT_a
+  0116   01C5   CLR  0x45          443:   		CLR         CNT_b
+  0117   0195   CLR  0x15          444:   		CLR			ADCON
+  0118   01A0   CLR  0x20          445:   		CLR			COMPCON
+  0119   01A1   CLR  0x21          446:   		CLR			BUZCON
+                                   447:   	;	CLR			KEY_C
+                                   448:   	;	CLR			KEY_C1
+  011A   019D   CLR  0x1D          449:   		CLR			PWM8CON
+  011B   019E   CLR  0x1E          450:   		CLR			PWM10CON
+                                   451:   	;	SNZB        P0,0
+                                   452:   	;	JP          USER_ENTER_SLEEP
+                                   453:   	;	CLR         WORK
+                                   454:   		
+                                   455:   		;进入休眠前,必须固定口线电平
+                                   456:   	;	CLRB 		P0,4
+  011C   2305   CLRB  0x5,6        457:   		CLRB		P0,6
+  011D   2385   CLRB  0x5,7        458:   		CLRB        P0,7
+                                   459:   	;	SETB        P2,2
+  011E   28AA   LDIA  0xAA         460:   		LDIA		B'10101010'     ;P0,6;P0,4输出,P0,5 AD
+  011F   008A   LD  0xA,A          461:   		LD  		P0CH,A	
+                                   462:   		
+  0120   28E8   LDIA  0xE8         463:   		LDIA		B'11101000'		;P0,0为按键,P0,1=SW OUT,P02-OUT,P0,3=AD
+  0121   0089   LD  0x9,A          464:   		LD  		P0CL,A	  
+                                   465:   		     
+  0122   2892   LDIA  0x92         466:   		LDIA		B'10010010'    ;P1,6输出，P1,5-不用,P1,4-OUT
+  0123   008C   LD  0xC,A          467:   		LD  		P1CH,A
+  0124   28AA   LDIA  0xAA         468:   		LDIA  		B'10101010'
+  0125   008B   LD  0xB,A          469:   		LD  		P1CL,A
+                                   470:   
+  0126   2892   LDIA  0x92         471:   		LDIA		B'10010010'		;P2.0编码输出
+  0127   008D   LD  0xD,A          472:   		LD  		P2C,A			;P2.2 为防水/抗干扰选择
+  0128   0185   CLR  0x5           473:   		CLR         P0
+  0129   0186   CLR  0x6           474:   		CLR         P1	
+  012A   280F   LDIA  0xF          475:   		LDIA		0FH
+  012B   0087   LD  0x7,A          476:   		LD			P2,A
+  012C   1005   LD  A,0x5          477:   		LD          A,P0            ;睡眠前读一下P0
+  012D   0004   CLRWDT             478:   		CLRWDT
+  012E   0003   STOP               479:   		STOP
+  012F   0004   CLRWDT             480:   		CLRWDT
+  0130   0183   CLR  0x3           481:   		CLR         FLAGS
+  0131   01BE   CLR  0x3E          482:   		CLR         CNT0 
+  0132   01BF   CLR  0x3F          483:   		CLR         CNT1		
+  0133   28E0   LDIA  0xE0         484:   		LDIA		B'11100000'		;P0,0为按键,P0,1=SW OUT,P02-OUT,P0,3=AD
+  0134   0089   LD  0x9,A          485:   		LD  		P0CL,A   
+                                   486:   KEY_START:	
+  0135   3005   SZB  0x5,0         487:           SZB         P0,0       
+  0136   1914   JP  0x114          488:   	    JP          USER_ENTER_SLEEP
+  0137   1867   JP  0x67           489:   		JP          INIT_RAM 
+                                   490:   ;********************************************
+                                   491:   	;	#INCLUDE    "INT_TMR1.ASM"
+                                   492:   		#INCLUDE    "KEY-01.ASM"
+                                   493:   ;********************************************
+                                   494:   		END
+                                   495:   
+---- C:\mcuproject\scm\SC8P171XE开发包\SCMCU_IDE_V2.00.09_Beta4\mcu\Head\SC8F2711B.H ----------------------------------------------------------------------
+---- C:\mcuproject\scm\SC8P171XE开发包\SCMCU_IDE_V2.00.09_Beta4\mcu\Head\SC8F271XB.H ----------------------------------------------------------------------
+---- C:\mcuproject\scm\UVC-4W - F2711\UVC-4W - F2711\KEY-01.ASM ----------------------------------------------------------------------
+                                   1:     ;S1_VAL,设特殊标志，
+                                   2:     ;1：S1_VAL,2，关机标志
+                                   3:     ;2：强度加到12, S1_VAL,0=1
+                                   4:     ;3：强度减到1.  S1_VAL,0=1
+                                   5:     ;4: 单按        S1_VAL,7=1
+                                   6:     ;************************************ 
+                                   7:     DELAY5MS:  
+  0138   0004   CLRWDT             8:             CLRWDT
+  0139   2828   LDIA  0x28         9:     		LDIA         .40             ;40*0.125=5MS  
+  013A   0630   XORA  0x30         10:    		XORA         TCOUNT
+  013B   3503   SNZB  0x3,2        11:    		SNZB         FLAGS,Z
+  013C   1938   JP  0x138          12:    		JP           DELAY5MS
+  013D   01B0   CLR  0x30          13:    		CLR 		 TCOUNT          ; 			   								        														
+                                   14:    K_SCAN:	         
+  013E   3405   SNZB  0x5,0        15:            SNZB         P0,0           ;按键开关
+  013F   1941   JP  0x141          16:            JP           KEY_1   	  									 
+  0140   194C   JP  0x14C          17:    		JP           KEY_OPEN		
+                                   18:    KEY_1:                              ;模式
+  0141   3033   SZB  0x33,0        19:            SZB          KEY_VAL,0
+  0142   194F   JP  0x14F          20:            JP           KEY_RET
+  0143   1042   LD  A,0x42         21:            LD           A,CNT_L
+  0144   3C02   XORIA  0x2         22:            XORIA        2              ;10MS
+  0145   3503   SNZB  0x3,2        23:            SNZB         FLAGS,Z
+  0146   194A   JP  0x14A          24:            JP           KEY_HOLD
+  0147   2433   SETB  0x33,0       25:    		SETB         KEY_VAL,0
+  0148   24B3   SETB  0x33,1       26:            SETB         KEY_VAL,1								     
+  0149   194F   JP  0x14F          27:            JP           KEY_RET		
+                                   28:    	   				
+                                   29:    KEY_HOLD:                 
+  014A   12C2   INCR  0x42         30:            INCR         CNT_L
+  014B   194F   JP  0x14F          31:            JP           KEY_RET
+                                   32:    KEY_OPEN:                           
+  014C   01B3   CLR  0x33          33:            CLR          KEY_VAL
+  014D   01C2   CLR  0x42          34:            CLR          CNT_L
+  014E   194F   JP  0x14F          35:            JP           KEY_RET		
+                                   36:    KEY_RET:     				  	 											
+  014F   2900   RET  0x0           37:    		RET		     00H
+                                   38:    ;**************************************		  	

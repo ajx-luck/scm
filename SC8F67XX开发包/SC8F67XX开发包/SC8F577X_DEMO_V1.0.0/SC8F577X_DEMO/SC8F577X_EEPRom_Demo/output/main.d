@@ -1,0 +1,1 @@
+ main.d  main.p1:  H:/MyDownloads/说明书&测试报告/开发包/SC8F577X开发包/SC8F577X_DEMO/SC8F577X_EEPRom_Demo/main.c

@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/SC8F67XX开发包/SC8F67XX开发包/SC8F577X_DEMO_V1.0.0/SC8F577X_DEMO/SC8F577X_Sleep_Demo/main.c

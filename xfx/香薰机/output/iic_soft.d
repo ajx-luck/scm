@@ -1,0 +1,1 @@
+ iic_soft.d  iic_soft.p1:  C:/mcuproject/scm/xfx/ÏãÞ¹»ú/iic_soft.c C:/mcuproject/scm/xfx/ÏãÞ¹»ú/iic_soft.h

@@ -1,0 +1,71 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8P171XE开发包\SC8P171XE_ASM_demo\IO_DEMO\SC8P171XE_IO.asm ----------------------------------------------------------------------
+                                   1:     ;-------------------------------------------
+                                   2:     
+                                   3:     ;程序名称：IO程序
+                                   4:     ;日期版本：2021/1/20 <V1.0>
+                                   5:     
+                                   6:     ;备注：
+                                   7:     
+                                   8:     ;*公司网址 www.mcu.com.cn
+                                   9:     ;					WWW.SCMCU.COM
+                                   10:    ;-------------------------------------------
+                                   11:    
+                                   12:    #INCLUDE	SC8P1712E.H
+                                   13:    
+                                   14:    
+                                   15:    POUT		EQU			PORTA,2			;定义RA2口 取名POUT
+                                   16:    PIN0		EQU			PORTA,0			;定义RA0口 取名PIN0
+                                   17:    PIN1		EQU			PORTA,1			;定义RA1口 取名PIN1
+                                   18:    
+                                   19:    ORG			0000H						
+  0000   2801   JP  0x1            20:    JP			START						
+                                   21:    
+                                   22:    ;-------------------------------------------
+                                   23:    START:
+  0001   0000   NOP                24:    		NOP
+  0002   0064   CLRWDT             25:    		CLRWDT
+  0003   3000   LDIA  0x0          26:    		LDIA		00H
+                                   27:    		OPTION							;预分频器分配给TMR0
+  0004   0181   CLR  0x1           28:    		CLR			TMR0				;初始化TMR0
+  0005   0064   CLRWDT             29:    		CLRWDT
+                                   30:    		
+  0006   3070   LDIA  0x70         31:    		LDIA		070H				;8M内部时钟
+  0007   808F   LD  0x8F,A         32:    		LD			OSCCON,A
+                                   33:    
+  0008   3003   LDIA  0x3          34:    		LDIA		B'00000011'			;配置上拉情况
+  0009   0087   LD  0x7,A          35:    		LD			WPUA,A
+  000A   3000   LDIA  0x0          36:    		LDIA		B'00000000'
+  000B   8095   LD  0x95,A         37:    		LD			WPUB,A
+                                   38:    				
+  000C   3003   LDIA  0x3          39:    		LDIA		B'00000011'			;配置IO状态
+  000D   8085   LD  0x85,A         40:    		LD			TRISA,A
+  000E   3000   LDIA  0x0          41:    		LDIA		B'00000000'
+  000F   8086   LD  0x86,A         42:    		LD			TRISB,A
+                                   43:    				
+                                   44:    MAIN:									;主程序
+  0010   0064   CLRWDT             45:    		CLRWDT
+                                   46:    
+                                   47:    PIN0_JUDGE:		
+  0011   1805   SZB  0x5,0         48:    		SZB			PIN0
+  0012   2814   JP  0x14           49:    		JP			PIN0_1
+  0013   2817   JP  0x17           50:    		JP			PIN0_0
+                                   51:    PIN0_1:
+  0014   30FF   LDIA  0xFF         52:    		LDIA		B'11111111'			;PIN0 = 1
+  0015   0686   XORR  0x6          53:    		XORR		PORTB
+  0016   2818   JP  0x18           54:    		JP			PIN1_JUDGE
+                                   55:    PIN0_0:									;PIN0 = 0
+  0017   0186   CLR  0x6           56:    		CLR			PORTB
+                                   57:    
+                                   58:    ;----------
+                                   59:    PIN1_JUDGE:		
+  0018   1885   SZB  0x5,1         60:    		SZB			PIN1
+  0019   281B   JP  0x1B           61:    		JP			PIN1_1
+  001A   281D   JP  0x1D           62:    		JP			PIN1_0
+                                   63:    PIN1_1:
+  001B   1505   SETB  0x5,2        64:    		SETB		POUT				;PIN1 = 1
+  001C   2810   JP  0x10           65:    		JP			MAIN
+                                   66:    PIN1_0:
+  001D   1105   CLRB  0x5,2        67:    		CLRB		POUT				;PIN1 = 0
+  001E   2810   JP  0x10           68:    		JP			MAIN
+                                   69:    ;-------------------------------------------
+---- H:\MyDownloads\IDE_RAR\SCMCU_IDE_V2.00.09_Beta3\SCMCU_IDE_V2.00.09_Beta3\mcu\Head\SC8P1712E.H ----------------------------------------------------------------------

@@ -1,0 +1,197 @@
+---- D:\Files\Desktop\资料\SC8F289XB开发包_2\SC8F289XB_DEMO_C\SC8F289XB_Pwm_Demo\SC8F289XB_Pwm_Demo.c ----------------------------------------------------------------------
+1:                
+2:                //CCP1 PWM模式参考程序
+3:                #include <sc.h>           		//调用单片机的头文件
+4:                
+5:                void Init_System();
+6:                
+7:                	
+8:                void main(void)            		//主函数,单片机开机后就是从这个函数开始运行
+  07C3    301F    LDIA	0x1F
+9:                {
+10:               	unsigned int delaycnt = 0;
+  07C4    01F0    CLR	0x70
+  07C5    01F1    CLR	0x71
+11:               	unsigned char pwmbuf = 0X1F;
+  07C6    00F2    LD	0x72,A
+12:               
+13:               	Init_System();
+  07C7    118A    CLRB	0xA,3
+  07C8    27B3    CALL	0x7B3
+  07C9    118A    CLRB	0xA,3
+14:               	
+15:               								//以下是对PWM功能初始化
+16:               		/************PWMCON1定义**************************
+17:               		Bit7~6 PWMIO_SEL[1:0]: PWM IO选择。
+18:               			11= PWM分配在A组，PWM0-RA0,PWM1-RA1,PWM2-RA2,PWM3-RA3,PWM4-RA4
+19:               			10= PWM分配在B组，PWM0-RA0,PWM1-RA1,PWM2-RA2,PWM3-RB2,PWM4-RB1
+20:               			01= PWM分配在C组，PWM0-RA5,PWM1-RB7,PWM2-RB6,PWM3-RB5,PWM4-RB4
+21:               			00= PWM分配在D组，PWM0-RB0,PWM1-RB1,PWM2-RB3,PWM3-RB4,PWM4-RB2
+22:               		Bit5 PWM2DTEN: PWM2死区使能位。
+23:               			1= 使能PWM2死区功能，PWM2和PWM3组成一对互补输出。
+24:               			0= 禁止PWM2死区功能。
+25:               		Bit4 PWM0DTEN: PWM0死区使能位。
+26:               			1= 使能PWM0死区功能，PWM0和PWM1组成一对互补输出。
+27:               			0= 禁止PWM0死区功能。
+28:               		Bit3~Bit2 未用。
+29:               		Bit1~Bit0 DT_DIV[1:0] 死区时钟源分频。
+30:               			11= FOSC/8
+31:               			10= FOSC/4
+32:               			01= FOSC/2
+33:               			00= FOSC/1
+34:               	**********************************************************************/
+35:               		PWMCON1 = 0B11010010;	//PWM选择A组，死区2禁止，死区1使能，死区时钟源为Fosc/4
+  07CA    30D2    LDIA	0xD2
+  07CB    0094    LD	0x14,A
+36:               		
+37:               		TRISA	= 0B00011111;	//选择的PA0~PA4口设为输入
+  07CC    301F    LDIA	0x1F
+  07CD    1683    SETB	0x3,5
+  07CE    0085    LD	0x5,A
+38:               		PWMTL = 0XFF;			//PWM 周期=[PWMT+1]*Tosc*(CLKDIV 分频值)
+  07CF    30FF    LDIA	0xFF
+  07D0    1283    CLRB	0x3,5
+  07D1    0095    LD	0x15,A
+39:               		PWMTH = 0;				//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
+  07D2    0196    CLR	0x16
+40:               		
+41:               		PWMD0L = 0X1F;			//脉冲宽度 = (PWMDx[9:0]+1)*TOSC*(CLKDIV 分频值)
+  07D3    301F    LDIA	0x1F
+  07D4    0097    LD	0x17,A
+42:               								//必须注意根据公式，即使占空比设为0仍有脉冲输出，如要输出低电平
+43:               								//需要关闭PWMEN，然后设为输出低
+44:               		PWMD1L = 0X7F;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
+  07D5    307F    LDIA	0x7F
+  07D6    0098    LD	0x18,A
+45:               		PWMD01H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+  07D7    019C    CLR	0x1C
+46:               		
+47:               		PWM01DT = 0X03;			//死区设为2uS，计算为（3+1）*1/8M*4
+  07D8    3003    LDIA	0x3
+  07D9    008F    LD	0xF,A
+48:               								//死区1的占空比以PWM0设置的占空比为基准
+49:               		
+50:               		PWMD2L = 0X3F;        	//PWM2 占空比低位寄存器   该值不能超过周期，否者为100%输出
+  07DA    303F    LDIA	0x3F
+  07DB    0099    LD	0x19,A
+51:               		PWMD3L = 0X7F;			//PWM3 占空比低位寄存器 ，互补以PWM0占空比为准
+  07DC    307F    LDIA	0x7F
+  07DD    009A    LD	0x1A,A
+52:               		PWMD23H = 0;			//PWM2 和 PWM3 占空比高位寄存器 PWMD01H，该值不能超过周期，否者为100%输出
+  07DE    018E    CLR	0xE
+53:               		
+54:               		PWMD4L = 0X1F;			//PWM4 占空比低位寄存器,PWM4占空比高位在PWMTH的Bit4~5 
+  07DF    301F    LDIA	0x1F
+  07E0    009B    LD	0x1B,A
+55:               				
+56:               	/***************PWMCON0*************************************
+57:               		Bit7~Bit5 CLKDIV[2:0]: PWM时钟分频。
+58:               			111= FOSC/128
+59:               			110= FOSC/64
+60:               			101= FOSC/32
+61:               			100= FOSC/16
+62:               			011= FOSC/8
+63:               			010= FOSC/4
+64:               			001= FOSC/2
+65:               			000= FOSC/1
+66:               		Bit4~Bit0 PWMxEN: PWMx使能位。
+67:               			1= 使能PWMx。
+68:               			0= 禁止PWMx。
+69:               	******************************************************************/
+70:               		PWMCON0 = 0X1F;			//打开PWM0~PWM4,分频比为1
+  07E1    0093    LD	0x13,A
+71:               		PWMCON2 =0X10;			//PWM4输出反向
+  07E2    3010    LDIA	0x10
+  07E3    009D    LD	0x1D,A
+72:               		TRISA = 0;				//对应的口线设为输出
+  07E4    1683    SETB	0x3,5
+  07E5    0185    CLR	0x5
+73:               		
+74:                   while(1)					//死循环,单片机初始化后,将一直运行这个死循环
+  07E6    0064    CLRWDT
+75:                   {
+76:               		asm("clrwdt");
+77:               		if(++delaycnt > 5000)	//延时20000个软件周期，非精确定时
+  07E7    0AF0    INCR	0x70
+  07E8    1903    SZB	0x3,2
+  07E9    0AF1    INCR	0x71
+  07EA    3013    LDIA	0x13
+  07EB    0271    SUBA	0x71
+  07EC    3089    LDIA	0x89
+  07ED    1903    SZB	0x3,2
+  07EE    0270    SUBA	0x70
+  07EF    1C03    SNZB	0x3,0
+  07F0    2FE6    JP	0x7E6
+78:                  		{
+79:                  			delaycnt = 0;       //清零以备下次重新计数
+  07F1    01F0    CLR	0x70
+  07F2    01F1    CLR	0x71
+80:                  			if(++pwmbuf > 0xfe)	//占空比加一
+  07F3    0AF2    INCR	0x72
+  07F4    0F72    SZINCA	0x72
+  07F5    2FF8    JP	0x7F8
+81:                  			{
+82:                  				pwmbuf = 0x01f;
+  07F6    301F    LDIA	0x1F
+  07F7    00F2    LD	0x72,A
+83:                  			}
+84:               			PWMD0L = pwmbuf;	//写入占空比
+  07F8    0872    LD	A,0x72
+  07F9    1283    CLRB	0x3,5
+  07FA    1303    CLRB	0x3,6
+  07FB    0097    LD	0x17,A
+  07FC    2FE6    JP	0x7E6
+85:                  		}
+86:                   }
+87:               }
+88:               
+89:               
+90:               /***********************************************
+91:               函数名称：Init_System
+92:               函数功能：系统初始化
+93:               入口参数：无
+94:               出口参数：无
+95:               备注：
+96:               ************************************************/
+97:               void Init_System()
+  07B3    0000    NOP
+  07B4    0064    CLRWDT
+98:               {
+99:               	asm("nop");
+100:              	asm("clrwdt");
+101:              	INTCON = 0;					//系统初始化
+  07B5    018B    CLR	0xB
+102:              	OSCCON = 0X72;				//配置振荡为8M
+  07B6    3072    LDIA	0x72
+  07B7    1683    SETB	0x3,5
+  07B8    1303    CLRB	0x3,6
+  07B9    0088    LD	0x8,A
+103:              	OPTION_REG = 0;
+  07BA    0181    CLR	0x1
+  07BB    0064    CLRWDT
+104:              	asm("clrwdt");
+105:              	
+106:              	TRISA = 0B00000000;			//初始化IO状态
+  07BC    1683    SETB	0x3,5
+  07BD    1303    CLRB	0x3,6
+  07BE    0185    CLR	0x5
+107:              	TRISB = 0B00000000;
+  07BF    0186    CLR	0x6
+108:              
+109:              //	PORTA = 0B00000000;
+110:              	PORTB = 0B00000000;			//初始化输出
+  07C0    1283    CLRB	0x3,5
+  07C1    0186    CLR	0x6
+  07C2    0008    RET
+111:              
+112:              }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    2FFD    JP	0x7FD
+---- start_initialization ------------------------------------------------------------------
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  07FD    0183    CLR	0x3
+  07FE    118A    CLRB	0xA,3
+  07FF    2FC3    JP	0x7C3

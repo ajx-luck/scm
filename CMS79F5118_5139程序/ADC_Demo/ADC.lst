@@ -1,0 +1,311 @@
+---- C:\Edward_work_FILE\work_file\开发文件\雾化器\CMS79F5139_VER\雾化器开发包20201203\CMS79F5118_5139程序\ADC_Demo\ADC.c ----------------------------------------------------------------------
+1:                /*-------------------------------------------
+2:                
+3:                程序名称：AD转换程序
+4:                日期版本：2019/12/27 <V1.1>
+5:                
+6:                备注：直接调用AD_Testing函数检测AD值
+7:                
+8:                *本程序由 中微半导体有限公司 &应用支持部& 编写整理
+9:                *公司网址 www.mcu.com.cn
+10:               *技术支持QQ 3001082102  罗工
+11:                           3001085706	陈工
+12:               -------------------------------------------*/
+13:               
+14:               #include <cms.h>
+15:               
+16:               void AD_Testing(unsigned char ad_fd,unsigned char ad_ch,unsigned char ad_lr);
+17:               
+18:               
+19:               //-------------------------------------
+20:               //示例
+21:               volatile unsigned int AD_Result;
+22:               void main()
+23:               {
+24:               	asm("nop");
+25:               	asm("clrwdt");
+26:               	
+27:               	TRISA = 0B00000010;
+  0748    3002    LDIA	0x2
+  0749    1683    SETB	0x3,5
+  074A    1303    CLRB	0x3,6
+  074B    0085    LD	0x5,A
+  074C    3001    LDIA	0x1
+28:               	
+29:               	while(1)
+30:               	{
+31:               		AD_Testing(1,1,1);			//16分频，AN1通道，右对齐
+  074D    01F0    CLR	0x70
+  074E    0AF0    INCR	0x70
+  074F    01F1    CLR	0x71
+  0750    0AF1    INCR	0x71
+  0751    118A    CLRB	0xA,3
+  0752    2756    CALL	0x756
+  0753    118A    CLRB	0xA,3
+  0754    0064    CLRWDT
+  0755    2F4C    JP	0x74C
+32:               		asm("clrwdt");
+33:               	}
+34:               }
+35:               
+36:               
+37:               
+38:               /************************************************************
+39:               函数名称：AD_Testing()
+40:               函数功能：AD采样函数
+41:               入口参数：ad_fd - 分频 00Fosc/8; 01Fosc/16; 10Fosc/32; 11FRC
+42:               		  ad_ch - AD通道选择（格式：0B00000000~0B00001111或其对应的其他进制数值）
+43:               		  ad_lr - 左/右对齐，输入0或1，0为左对齐，1为右对齐
+44:               		  
+45:               出口参数：AdResult - AD结果
+46:               备    注：采样AD值,采样10次,去掉最大及最小求算术平均值
+47:               ************************************************************/
+48:               void AD_Testing(unsigned char ad_fd,unsigned char ad_ch,unsigned char ad_lr)
+49:               {
+50:               	static volatile unsigned char adtimes;	
+51:               	static volatile unsigned int admin,admax,adsum;
+52:               	volatile unsigned int data;
+53:               	volatile unsigned char i = 0;
+  0757    01F5    CLR	0x75
+54:               	
+55:               	
+56:               	if(!ad_lr)
+  0758    0871    LD	A,0x71
+  0759    1D03    SNZB	0x3,2
+  075A    2F5F    JP	0x75F
+57:               		ADCON1 = 0;						//左对齐,出12位
+  075B    1683    SETB	0x3,5
+  075C    1303    CLRB	0x3,6
+  075D    019F    CLR	0x1F
+  075E    2F63    JP	0x763
+58:               	else
+59:               		ADCON1 = 0x80;					//右对齐,出10位
+  075F    3080    LDIA	0x80
+  0760    1683    SETB	0x3,5
+  0761    1303    CLRB	0x3,6
+  0762    009F    LD	0x1F,A
+60:               	
+61:               	ADCON0 = 0;
+  0763    1283    CLRB	0x3,5
+  0764    019F    CLR	0x1F
+62:               	ADCON0 |= (unsigned char)(ad_fd << 6);//设置分频
+  0765    0874    LD	A,0x74
+  0766    00F2    LD	0x72,A
+  0767    0CF2    RRCR	0x72
+  0768    0CF2    RRCR	0x72
+  0769    0C72    RRCA	0x72
+  076A    39C0    ANDIA	0xC0
+  076B    049F    ORR	0x1F
+63:               	ADCON0 |= (unsigned char)(ad_ch << 2);//设置通道
+  076C    0870    LD	A,0x70
+  076D    00F2    LD	0x72,A
+  076E    3001    LDIA	0x1
+  076F    1003    CLRB	0x3,0
+  0770    0DF2    RLCR	0x72
+  0771    3EFF    ADDIA	0xFF
+  0772    1003    CLRB	0x3,0
+  0773    1D03    SNZB	0x3,2
+  0774    2F70    JP	0x770
+  0775    0D72    RLCA	0x72
+  0776    049F    ORR	0x1F
+64:               	ADCON0 |= 0x01;						//使能ADC		
+  0777    141F    SETB	0x1F,0
+  0778    0000    NOP
+  0779    0000    NOP
+65:               	
+66:               	asm("nop");
+67:               	asm("nop");
+68:               	GODONE = 1;							//开始转换
+  077A    1283    CLRB	0x3,5
+  077B    1303    CLRB	0x3,6
+  077C    149F    SETB	0x1F,1
+69:               	
+70:               	while(GODONE)
+  077D    1283    CLRB	0x3,5
+  077E    1303    CLRB	0x3,6
+  077F    1C9F    SNZB	0x1F,1
+  0780    2F86    JP	0x786
+  0781    0000    NOP
+  0782    0000    NOP
+71:               	{
+72:               		asm("nop");
+73:               		asm("nop");
+74:               		if(0 == (--i))					//ad等待限时，防止拔插电后出现死循环
+  0783    0BF5    SZDECR	0x75
+  0784    2F7D    JP	0x77D
+  0785    0008    RET
+75:               			return;
+76:               	}
+77:                
+78:               	if(!ad_lr)							//左对齐
+  0786    0871    LD	A,0x71
+  0787    1D03    SNZB	0x3,2
+  0788    2F99    JP	0x799
+79:               	{
+80:               		data = (unsigned int)(ADRESH<<4);
+  0789    081E    LD	A,0x1E
+  078A    00F6    LD	0x76,A
+  078B    01F7    CLR	0x77
+  078C    0EF6    SWAPR	0x76
+  078D    0EF7    SWAPR	0x77
+  078E    30F0    LDIA	0xF0
+  078F    05F7    ANDR	0x77
+  0790    0876    LD	A,0x76
+  0791    390F    ANDIA	0xF
+  0792    04F7    ORR	0x77
+  0793    30F0    LDIA	0xF0
+  0794    05F6    ANDR	0x76
+81:               		data |= (unsigned int)(ADRESL>>4);
+  0795    1683    SETB	0x3,5
+  0796    0E1E    SWAPA	0x1E
+  0797    390F    ANDIA	0xF
+  0798    2F9E    JP	0x79E
+82:               	}
+83:               	else								//右对齐
+84:               	{
+85:               		data = (unsigned int)(ADRESH<<8);
+  0799    081E    LD	A,0x1E
+  079A    00F7    LD	0x77,A
+  079B    01F6    CLR	0x76
+86:               		data |= (unsigned int)ADRESL;			
+  079C    1683    SETB	0x3,5
+  079D    081E    LD	A,0x1E
+  079E    04F6    ORR	0x76
+87:               	}         
+88:               
+89:               	if(0 == adtimes)
+  079F    087C    LD	A,0x7C
+  07A0    1D03    SNZB	0x3,2
+  07A1    2FA5    JP	0x7A5
+90:               	{
+91:               		admax = data;
+  07A2    27ED    CALL	0x7ED
+  07A3    118A    CLRB	0xA,3
+  07A4    2FB8    JP	0x7B8
+92:               		admin = data;	
+93:               	}
+94:               	else if(data > admax)
+  07A5    0877    LD	A,0x77
+  07A6    0279    SUBA	0x79
+  07A7    1D03    SNZB	0x3,2
+  07A8    2FAB    JP	0x7AB
+  07A9    0876    LD	A,0x76
+  07AA    0278    SUBA	0x78
+  07AB    1803    SZB	0x3,0
+  07AC    2FB0    JP	0x7B0
+95:               	{
+96:               		admax = data;  				//AD采样最大值
+  07AD    27ED    CALL	0x7ED
+  07AE    118A    CLRB	0xA,3
+97:               	}
+  07AF    2FBC    JP	0x7BC
+98:               	else if(data < admin)
+  07B0    087B    LD	A,0x7B
+  07B1    0277    SUBA	0x77
+  07B2    1D03    SNZB	0x3,2
+  07B3    2FB6    JP	0x7B6
+  07B4    087A    LD	A,0x7A
+  07B5    0276    SUBA	0x76
+  07B6    1803    SZB	0x3,0
+  07B7    2FBC    JP	0x7BC
+99:               	{
+100:              		admin = data;  				//AD采样最小值
+  07B8    0877    LD	A,0x77
+  07B9    00FB    LD	0x7B,A
+  07BA    0876    LD	A,0x76
+  07BB    00FA    LD	0x7A,A
+101:              	}
+102:              	
+103:              	adsum += data;
+  07BC    0876    LD	A,0x76
+  07BD    1283    CLRB	0x3,5
+  07BE    07A0    ADDR	0x20
+  07BF    1803    SZB	0x3,0
+  07C0    0AA1    INCR	0x21
+  07C1    0877    LD	A,0x77
+  07C2    07A1    ADDR	0x21
+104:              	if(++adtimes >= 10)
+  07C3    300A    LDIA	0xA
+  07C4    0AFC    INCR	0x7C
+  07C5    027C    SUBA	0x7C
+  07C6    1C03    SNZB	0x3,0
+  07C7    0008    RET
+105:              	{
+106:              		adsum -= admax;
+  07C8    0878    LD	A,0x78
+  07C9    02A0    SUBR	0x20
+  07CA    0879    LD	A,0x79
+  07CB    1C03    SNZB	0x3,0
+  07CC    03A1    DECR	0x21
+  07CD    02A1    SUBR	0x21
+107:              		adsum -= admin;			
+  07CE    087A    LD	A,0x7A
+  07CF    02A0    SUBR	0x20
+  07D0    087B    LD	A,0x7B
+  07D1    1C03    SNZB	0x3,0
+  07D2    03A1    DECR	0x21
+  07D3    02A1    SUBR	0x21
+108:              					
+109:              		AD_Result = adsum >> 3;		//8次平均值作为最终结果
+  07D4    0821    LD	A,0x21
+  07D5    00F3    LD	0x73,A
+  07D6    0820    LD	A,0x20
+  07D7    00F2    LD	0x72,A
+  07D8    1003    CLRB	0x3,0
+  07D9    0CF3    RRCR	0x73
+  07DA    0CF2    RRCR	0x72
+  07DB    1003    CLRB	0x3,0
+  07DC    0CF3    RRCR	0x73
+  07DD    0CF2    RRCR	0x72
+  07DE    1003    CLRB	0x3,0
+  07DF    0CF3    RRCR	0x73
+  07E0    0CF2    RRCR	0x72
+  07E1    0872    LD	A,0x72
+  07E2    00A2    LD	0x22,A
+  07E3    0873    LD	A,0x73
+  07E4    00A3    LD	0x23,A
+110:              			
+111:              		adsum = 0;
+  07E5    01A0    CLR	0x20
+  07E6    01A1    CLR	0x21
+112:              		admin = 0;
+  07E7    01FA    CLR	0x7A
+  07E8    01FB    CLR	0x7B
+113:              		admax = 0;
+  07E9    01F8    CLR	0x78
+  07EA    01F9    CLR	0x79
+114:              		adtimes = 0;		  
+  07EB    01FC    CLR	0x7C
+  07EC    0008    RET
+115:              	}
+116:              }
+117:              
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    2FF2    JP	0x7F2
+---- start_initialization ------------------------------------------------------------------
+  07F2    01F8    CLR	0x78
+  07F3    01F9    CLR	0x79
+  07F4    01FA    CLR	0x7A
+  07F5    01FB    CLR	0x7B
+  07F6    01FC    CLR	0x7C
+  07F7    1283    CLRB	0x3,5
+  07F8    1303    CLRB	0x3,6
+  07F9    01A0    CLR	0x20
+  07FA    01A1    CLR	0x21
+  07FB    01A2    CLR	0x22
+  07FC    01A3    CLR	0x23
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  0746    0000    NOP
+  0747    0064    CLRWDT
+  0756    00F4    LD	0x74,A
+  07ED    0877    LD	A,0x77
+  07EE    00F9    LD	0x79,A
+  07EF    0876    LD	A,0x76
+  07F0    00F8    LD	0x78,A
+  07F1    0008    RET
+  07FD    0183    CLR	0x3
+  07FE    118A    CLRB	0xA,3
+  07FF    2F46    JP	0x746

@@ -1,0 +1,1 @@
+ SC8F083_Sleep_Demo.d  SC8F083_Sleep_Demo.p1:  D:/×ÊÁÏ/RISC/073-083sleep/SC8F083_Sleep_Demo/SC8F083_Sleep_Demo.c

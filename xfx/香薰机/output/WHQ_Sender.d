@@ -1,0 +1,1 @@
+ WHQ_Sender.d  WHQ_Sender.p1:  C:/mcuproject/scm/xfx/香薰机/WHQ_Sender.c C:/mcuproject/scm/xfx/香薰机/WHQ_Sender.h C:/mcuproject/scm/xfx/香薰机/WHQ_TP_ZPGS.h C:/mcuproject/scm/xfx/香薰机/iic_soft.h

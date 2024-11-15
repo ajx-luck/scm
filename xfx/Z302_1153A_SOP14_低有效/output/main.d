@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/xfx/Z302_1153A_SOP14_µÕ”––ß/main.c

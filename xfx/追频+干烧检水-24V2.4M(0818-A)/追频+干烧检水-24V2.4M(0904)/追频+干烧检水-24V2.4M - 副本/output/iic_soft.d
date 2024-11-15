@@ -1,0 +1,1 @@
+ iic_soft.d  iic_soft.p1:  C:/mcuproject/scm/xfx/追频+干烧检水-24V2.4M(0818-A)/追频+干烧检水-24V2.4M(0904)/追频+干烧检水-24V2.4M\ -\ 副本/iic_soft.c C:/mcuproject/scm/xfx/追频+干烧检水-24V2.4M(0818-A)/追频+干烧检水-24V2.4M(0904)/追频+干烧检水-24V2.4M\ -\ 副本/iic_soft.h

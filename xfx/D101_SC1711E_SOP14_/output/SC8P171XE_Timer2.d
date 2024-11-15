@@ -1,0 +1,1 @@
+ SC8P171XE_Timer2.d  SC8P171XE_Timer2.p1:  C:/mcuproject/scm/xfx/D101_SC1711E_SOP14_/SC8P171XE_Timer2.c

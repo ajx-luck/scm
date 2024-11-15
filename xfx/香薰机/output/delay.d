@@ -1,0 +1,1 @@
+ delay.d  delay.p1:  C:/mcuproject/scm/xfx/ÏãÞ¹»ú/delay.c C:/mcuproject/scm/xfx/ÏãÞ¹»ú/delay.h

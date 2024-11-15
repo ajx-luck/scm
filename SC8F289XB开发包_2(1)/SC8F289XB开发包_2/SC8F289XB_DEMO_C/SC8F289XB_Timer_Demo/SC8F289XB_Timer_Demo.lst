@@ -1,0 +1,65 @@
+---- F:\中微资料\SC8F289XB开发包\SC8F289XB_DEMO_C\SC8F289XB_Timer_Demo\SC8F289XB_Timer0_Demo.c ----------------------------------------------------------------------
+1:                #include <sc.h>
+2:                
+3:                void main(void)
+  07E4    0000    NOP
+  07E5    0064    CLRWDT
+4:                {
+5:                	asm("nop");
+6:                	asm("clrwdt");
+7:                	OSCCON = 0X72;				//8M,打开WDT
+  07E6    3072    LDIA	0x72
+  07E7    1683    SETB	0x3,5
+  07E8    1303    CLRB	0x3,6
+  07E9    0088    LD	0x8,A
+8:                	
+9:                	TRISB = 0;					//PORTB口作输出口
+  07EA    0186    CLR	0x6
+10:               	
+11:               	OPTION_REG = 0B00000000;	//Timer0使用内部时钟，预分频为1:2
+  07EB    0181    CLR	0x1
+12:               	
+13:               	TMR0 = 0;					//设定Timer初始值
+  07EC    1283    CLRB	0x3,5
+  07ED    0181    CLR	0x1
+14:               	T0IF = 0;
+  07EE    110B    CLRB	0xB,2
+15:               	T0IE = 0;					//关闭Timer0溢出中断
+  07EF    128B    CLRB	0xB,5
+16:               	
+17:               	GIE = 0;					//关闭总中断，使用TMR0不能用总中断
+  07F0    138B    CLRB	0xB,7
+18:               	
+19:               	while(1)
+20:               	{
+21:               		if(TMR0 >=125)			//定时125us
+  07F1    307D    LDIA	0x7D
+  07F2    1283    CLRB	0x3,5
+  07F3    1303    CLRB	0x3,6
+  07F4    0201    SUBA	0x1
+  07F5    1C03    SNZB	0x3,0
+  07F6    2FFB    JP	0x7FB
+22:               		{
+23:               			TMR0 -= 125;
+  07F7    307D    LDIA	0x7D
+  07F8    0281    SUBR	0x1
+24:               			PORTB ^= 0XFF;
+  07F9    30FF    LDIA	0xFF
+  07FA    0686    XORR	0x6
+  07FB    0064    CLRWDT
+  07FC    2FF1    JP	0x7F1
+25:               		}
+26:               		asm("clrwdt");
+27:               	}
+28:               }
+29:               
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    2FFD    JP	0x7FD
+---- start_initialization ------------------------------------------------------------------
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  07FD    0183    CLR	0x3
+  07FE    118A    CLRB	0xA,3
+  07FF    2FE4    JP	0x7E4

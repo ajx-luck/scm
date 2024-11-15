@@ -11,6 +11,9 @@ unsigned char	checkCount = 0;	//检测次数
 unsigned char	pwm0Step = 1;	//	pwm0档位
 unsigned char	pwm1Step = 1;	//	pwm1档位
 unsigned int 	timeCount = 0;
+unsigned int 	keyNub = 0;
+unsigned int 	keyCount0 = 0;
+unsigned int 	keyCount1 = 0;
 
 volatile bit	sendFlag;	//发射标记
 volatile bit	B_MainLoop;
@@ -175,50 +178,41 @@ void KeyServer()
 	unsigned int i = (unsigned int)((KeyFlag[1]<<8) | KeyFlag[0]);
 	if(i)
 	{
-	
-		if(i != KeyOldFlag)
-		{
-			if(keyLockFlag)
-			{
-				doubleTouchFlag = 1;
-				return;
-			}
-			KeyOldFlag = i;
-			switch(i)
-			{
-				case 1:
-				ONFlag = 1;
-				procKey1();
-				break;
-				case 2:
-				ONFlag = 1;
-				procKey2();
-				break;
-				case 3:
-				doublePressFlag = 1;
-				break;
-				case 4:
-				procKey1();
-				break;
-				case 8:
-				procKey2();
-				break;
-				default:
-				break;
-			}
+		keyNub = i;
+		if(keyNub & 0x01){
+			if(++keyCount0 > 200)
+				keyCount0 = 200;
 		}
-		keyLockFlag = 1;	//锁定按键
+		if(keyNub & 0x02){
+			if(++keyCount1 > 200)
+				keyCount1 = 200;
+		}
 	}
 	else
 	{
-		KeyOldFlag = 0;
-		keyLockFlag = 0;
-		if(doubleTouchFlag)
+		if(keyCount0 > 3 && keyCount1 > 3)
 		{
 			//同时按下并松开后
 			ONFlag = !ONFlag;
 		}
-		doubleTouchFlag = 0;
+		else if(keyCount0 > 3 || keyCount1 > 3)
+		{
+			
+			if(keyNub & 0x01)
+			{
+				ONFlag = 1;
+				procKey1();
+			}
+			else if(keyNub &0x02)
+			{
+				ONFlag = 1;
+				procKey2();
+			}
+			
+		}
+		keyCount0 = 0;
+		keyCount1 = 0;
+		keyNub = 0;
 	}
 }
 //检测红外遮挡
@@ -283,7 +277,7 @@ void interrupt Isr_Timer()
 	{
 		TMR2IF = 0;
 		
-		if(++MainTime >= 32)
+		if(++MainTime >= 16)
 		{
 			MainTime = 0;
 			B_MainLoop = 1;

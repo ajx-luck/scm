@@ -1,0 +1,764 @@
+---- C:\mcuproject\scm\xfx\Z302_1153A_SOP14_\main.c ----------------------------------------------------------------------
+1:                #include <sc.h>
+2:                
+3:                typedef unsigned char u8t;
+4:                typedef unsigned short u16t;
+5:                
+6:                u8t IntFlag = 0;
+7:                u8t intCount = 0;
+8:                u8t colorStep = 0;
+9:                u8t red = 0;
+10:               u8t lastRed = 0;
+11:               u8t green = 0;
+12:               u8t lastGreen = 0;
+13:               u8t blue = 0;
+14:               u8t lastBlue = 0;
+15:               u8t delayTime = 0;
+16:               u8t workStep = 0;	//0停止 1工作  2暂停
+17:               u8t waitTime = 0;
+18:               u8t workTime = 0;
+19:               u8t count1s = 0;
+20:               u8t ledCount = 0;
+21:               u8t keyCount = 0;
+22:               u8t chrgFlag = 0;
+23:               u8t chrgFullCount = 0;
+24:               u8t sleepTime = 0;
+25:               
+26:               
+27:               void InitSys();
+28:               void workCtr();
+29:               void showRGB();
+30:               void keyCtr();
+31:               char keyRead(char KeyStatus);
+32:               void rainbow();
+33:               void chrgCtr();
+34:               void gotoSleep();
+35:               
+36:               void main()
+37:               {
+38:               	InitSys();
+  0102    2121    CALL	0x121
+39:               	while(1)
+  0103    0064    CLRWDT
+40:               	{
+41:               		asm("clrwdt");
+42:               		if(workStep == 1)
+  0104    0B28    SZDECA	0x28
+  0105    2907    JP	0x107
+43:               		{
+44:               			showRGB();
+  0106    20C2    CALL	0xC2
+45:               		}
+46:               		if(!IntFlag)
+  0107    0832    LD	A,0x32
+  0108    1903    SZB	0x3,2
+  0109    2903    JP	0x103
+47:               			continue;			//10ms执行一次
+48:               		IntFlag = 0;
+  010A    01B2    CLR	0x32
+49:               		chrgCtr();
+  010B    20E2    CALL	0xE2
+50:               		if(chrgFlag == 0)
+  010C    0822    LD	A,0x22
+  010D    1D03    SNZB	0x3,2
+  010E    2910    JP	0x110
+51:               			keyCtr();
+  010F    213A    CALL	0x13A
+52:               		workCtr();
+  0110    2079    CALL	0x79
+53:               		if((0x10 & PORTB) == 0 && keyCount == 0 && workStep == 0)
+  0111    1A05    SZB	0x5,4
+  0112    2903    JP	0x103
+  0113    0823    LD	A,0x23
+  0114    1D03    SNZB	0x3,2
+  0115    2903    JP	0x103
+  0116    0828    LD	A,0x28
+  0117    1D03    SNZB	0x3,2
+  0118    2903    JP	0x103
+54:               		{
+55:               			if(++sleepTime > 200)
+  0119    30C9    LDIA	0xC9
+  011A    0AA0    INCR	0x20
+  011B    0220    SUBA	0x20
+  011C    1C03    SNZB	0x3,0
+  011D    2903    JP	0x103
+56:               			{
+57:               				sleepTime = 0;
+  011E    01A0    CLR	0x20
+58:               				gotoSleep();
+  011F    214F    CALL	0x14F
+  0120    2903    JP	0x103
+59:               			}
+60:               		}
+61:               	}
+62:               }
+63:               
+64:               
+65:               void gotoSleep()
+66:               {
+67:               	sleepTime = 0;
+  014F    01A0    CLR	0x20
+68:               	RBIE = 1;                    //允许PORTB电平变化中断
+  0150    1589    SETB	0x9,3
+69:                   GIE = 1;                    //GIE = 0时，唤醒后执行SLEEP后程序;GIE = 1时，唤醒后跳至中断服务
+  0151    1789    SETB	0x9,7
+70:               
+71:               	IOCB = 0x18;
+  0152    3018    LDIA	0x18
+  0153    008E    LD	0xE,A
+72:               	OSCCON = 0X71;                //配置振荡为16M,关闭WDT
+  0154    3071    LDIA	0x71
+  0155    0088    LD	0x8,A
+73:               	PORTA;
+  0156    0817    LD	A,0x17
+74:                   PORTB;                        //读PORTB值并锁存	
+  0157    0805    LD	A,0x5
+  0158    0064    CLRWDT
+  0159    0063    STOP
+  015A    0000    NOP
+75:               			
+76:                   asm("clrwdt");
+77:               
+78:                   asm("sleep");                //进入休眠模式
+79:               
+80:                   asm("nop");
+81:               	OSCCON = 0X81;                //配置振荡为8M,开 WDT
+  015B    3081    LDIA	0x81
+  015C    0088    LD	0x8,A
+82:               	PORTA;
+  015D    0817    LD	A,0x17
+83:                   PORTB;  
+  015E    0805    LD	A,0x5
+84:               	IOCB = 0x00;
+  015F    018E    CLR	0xE
+85:               	RBIE = 0; 
+  0160    1189    CLRB	0x9,3
+  0161    0008    RET
+86:               }
+87:               
+88:               
+89:               void chrgCtr()
+90:               {
+91:               	if(0x10 & PORTB)
+  00E2    1E05    SNZB	0x5,4
+  00E3    2900    JP	0x100
+92:               	{
+93:               		//充电中
+94:               		workStep = 0;
+  00E4    01A8    CLR	0x28
+95:               		waitTime = 0;
+  00E5    01A7    CLR	0x27
+96:               		workTime = 0;
+  00E6    01A6    CLR	0x26
+97:               		chrgFlag = 1;
+  00E7    01A2    CLR	0x22
+  00E8    0AA2    INCR	0x22
+98:               		if(0x20 & PORTB)
+  00E9    1E85    SNZB	0x5,5
+  00EA    28F5    JP	0xF5
+99:               		{
+100:              			//充满了
+101:              			if(++chrgFullCount > 200)
+  00EB    30C9    LDIA	0xC9
+  00EC    0AA1    INCR	0x21
+  00ED    0221    SUBA	0x21
+  00EE    1C03    SNZB	0x3,0
+  00EF    0008    RET
+102:              			{
+103:              				chrgFullCount = 200;
+  00F0    30C8    LDIA	0xC8
+  00F1    00A1    LD	0x21,A
+104:              				PORTA |= 01;			//灭红灯
+  00F2    1417    SETB	0x17,0
+105:              				PORTB &= 0x7F;			//亮绿灯
+  00F3    1385    CLRB	0x5,7
+  00F4    0008    RET
+  00F5    30C3    LDIA	0xC3
+106:              			}
+107:              		}
+108:              		else
+109:              		{
+110:              			chrgFullCount = 0;
+  00F6    01A1    CLR	0x21
+111:              			//红灯闪烁
+112:              			PORTB |= 0xC3;
+  00F7    0485    ORR	0x5
+113:              			if(count1s < 50)
+  00F8    3032    LDIA	0x32
+  00F9    0225    SUBA	0x25
+  00FA    1803    SZB	0x3,0
+  00FB    28FE    JP	0xFE
+114:              			{
+115:              				PORTA |= 0x01;
+  00FC    1417    SETB	0x17,0
+116:              			}
+  00FD    0008    RET
+117:              			else
+118:              			{
+119:              				PORTA &= 0xFE;
+  00FE    1017    CLRB	0x17,0
+  00FF    0008    RET
+120:              			}
+121:              		}
+122:              	}
+123:              	else
+124:              	{
+125:              		chrgFlag = 0;
+  0100    01A2    CLR	0x22
+  0101    0008    RET
+126:              	}
+127:              }
+128:              
+129:              
+130:              void workCtr()
+131:              {
+132:              	if(workStep == 1)
+  0079    0B28    SZDECA	0x28
+  007A    2884    JP	0x84
+133:              	{
+134:              		PORTA |= 0x06;
+  007B    3006    LDIA	0x6
+  007C    0497    ORR	0x17
+135:              		rainbow();
+  007D    2011    CALL	0x11
+136:              		if(workTime == 0)
+  007E    0826    LD	A,0x26
+  007F    1D03    SNZB	0x3,2
+  0080    0008    RET
+137:              		{
+138:              			workStep = 2;
+  0081    3002    LDIA	0x2
+  0082    00A8    LD	0x28,A
+  0083    0008    RET
+139:              		}
+140:              	}
+141:              	else if(workStep == 0)
+  0084    0828    LD	A,0x28
+  0085    1D03    SNZB	0x3,2
+  0086    2893    JP	0x93
+142:              	{
+143:              		if(chrgFlag)
+  0087    0822    LD	A,0x22
+144:              		{
+145:              			PORTA &= 0x01;
+  0088    3001    LDIA	0x1
+  0089    1903    SZB	0x3,2
+  008A    288F    JP	0x8F
+  008B    0597    ANDR	0x17
+146:              			PORTB |= 0x7F;
+  008C    307F    LDIA	0x7F
+  008D    0485    ORR	0x5
+147:              		}
+  008E    0008    RET
+148:              		else
+149:              		{
+150:              			PORTA = 0x01;
+  008F    0097    LD	0x17,A
+151:              			PORTB = 0xFF;
+  0090    30FF    LDIA	0xFF
+  0091    0085    LD	0x5,A
+  0092    0008    RET
+152:              		}
+153:              	}
+154:              	else if(workStep == 2)
+  0093    3002    LDIA	0x2
+  0094    0628    XORA	0x28
+  0095    1D03    SNZB	0x3,2
+  0096    0008    RET
+155:              	{
+156:              		PORTB = 0xBE;
+  0097    30BE    LDIA	0xBE
+  0098    0085    LD	0x5,A
+157:              		PORTA = 0x01;
+  0099    3001    LDIA	0x1
+  009A    0097    LD	0x17,A
+158:              		if(waitTime == 0)
+  009B    0827    LD	A,0x27
+  009C    1903    SZB	0x3,2
+159:              		{
+160:              			workStep = 0;
+  009D    01A8    CLR	0x28
+  009E    0008    RET
+161:              		}
+162:              	}
+163:              }
+164:              
+165:              //亮灯逻辑  PB1绿 PB2红 PB3蓝
+166:              void showRGB()
+167:              {
+168:              	
+169:              	if(blue > ledCount)
+  00C2    082B    LD	A,0x2B
+  00C3    0224    SUBA	0x24
+  00C4    1803    SZB	0x3,0
+  00C5    28C9    JP	0xC9
+170:              	{
+171:              		PORTB |= 0x41;			//3脚输出高， 10脚输出高
+  00C6    3041    LDIA	0x41
+  00C7    0485    ORR	0x5
+172:              	}
+  00C8    28CB    JP	0xCB
+173:              	else
+174:              	{
+175:              		PORTB &= 0xBE;
+  00C9    30BE    LDIA	0xBE
+  00CA    0585    ANDR	0x5
+176:              	}
+177:              	
+178:              	if(red > ledCount)
+  00CB    082F    LD	A,0x2F
+  00CC    0224    SUBA	0x24
+  00CD    1803    SZB	0x3,0
+  00CE    28D2    JP	0xD2
+179:              	{
+180:              		PORTA |= 0x01;			//1脚输出高
+  00CF    1417    SETB	0x17,0
+181:              		PORTB |= 0x04;			//8脚输出高
+  00D0    1505    SETB	0x5,2
+182:              	}
+  00D1    28D4    JP	0xD4
+183:              	else
+184:              	{
+185:              		PORTA &= 0xFE;
+  00D2    1017    CLRB	0x17,0
+186:              		PORTB &= 0xFB;
+  00D3    1105    CLRB	0x5,2
+187:              	}
+188:              	
+189:              	if(green > ledCount)
+  00D4    082D    LD	A,0x2D
+  00D5    0224    SUBA	0x24
+  00D6    1803    SZB	0x3,0
+  00D7    28DB    JP	0xDB
+190:              	{
+191:              		PORTB |= 0x82;			//2脚输出高 9脚输出高
+  00D8    3082    LDIA	0x82
+  00D9    0485    ORR	0x5
+192:              	}
+  00DA    28DD    JP	0xDD
+193:              	else
+194:              	{
+195:              		PORTB &= 0x7D;
+  00DB    307D    LDIA	0x7D
+  00DC    0585    ANDR	0x5
+196:              	}
+197:              	if(++ledCount > 254)
+  00DD    0AA4    INCR	0x24
+  00DE    0F24    SZINCA	0x24
+  00DF    0008    RET
+198:              		ledCount = 0;
+  00E0    01A4    CLR	0x24
+  00E1    0008    RET
+199:              }
+200:              
+201:              
+202:              
+203:              void InitSys()
+  0121    0000    NOP
+  0122    0064    CLRWDT
+204:              {
+205:              	asm("nop");
+206:                  asm("clrwdt");
+207:              	PORTA = 0x01;
+  0123    3001    LDIA	0x1
+  0124    0097    LD	0x17,A
+208:              	PORTB = 0xFF;
+  0125    30FF    LDIA	0xFF
+  0126    0085    LD	0x5,A
+209:                  INTCON = 0;                    //系统初始化
+  0127    0189    CLR	0x9
+210:                  OSCCON = 0X71;                //配置振荡为8M,开 WDT
+  0128    3071    LDIA	0x71
+  0129    0088    LD	0x8,A
+211:                  OPTION_REG = 0x00;        //Timer0使用内部时钟Focs/4，预分频比为1:2
+  012A    0187    CLR	0x7
+212:                  TMR0 = 155;                //赋予初始值
+  012B    309B    LDIA	0x9B
+  012C    0081    LD	0x1,A
+213:                  INTCON = 0xE0;            //允许所有未被屏蔽的中断、禁止外设中断，使能Timer0
+  012D    30E0    LDIA	0xE0
+  012E    0089    LD	0x9,A
+214:              	TRISA = 0x00;
+  012F    0198    CLR	0x18
+215:              	TRISB = 0x38;
+  0130    3038    LDIA	0x38
+  0131    0086    LD	0x6,A
+216:              	PORTA = 0x01;
+  0132    3001    LDIA	0x1
+  0133    0097    LD	0x17,A
+217:              	PORTB = 0xFF;
+  0134    30FF    LDIA	0xFF
+  0135    0085    LD	0x5,A
+218:              	PDCONB = 0x00;
+  0136    018B    CLR	0xB
+219:              	WPUB = 0x28;
+  0137    3028    LDIA	0x28
+  0138    008D    LD	0xD,A
+  0139    0008    RET
+220:              	
+221:              	
+222:              }
+223:              
+224:              void keyCtr()
+225:              {
+226:              	 PORTB;
+  013A    0805    LD	A,0x5
+227:              	if(keyRead(0x08 & (~PORTB)))
+  013B    0905    COMA	0x5
+  013C    3908    ANDIA	0x8
+  013D    2162    CALL	0x162
+  013E    3A00    XORIA	0x0
+  013F    1903    SZB	0x3,2
+  0140    0008    RET
+228:              	{
+229:              		if(workStep == 1)
+  0141    0B28    SZDECA	0x28
+  0142    2948    JP	0x148
+230:              		{
+231:              			workStep = 2;
+  0143    3002    LDIA	0x2
+  0144    00A8    LD	0x28,A
+232:              			waitTime = 30;
+  0145    301E    LDIA	0x1E
+  0146    00A7    LD	0x27,A
+233:              		}
+  0147    0008    RET
+  0148    3078    LDIA	0x78
+234:              		else
+235:              		{
+236:              			workStep = 1;
+  0149    01A8    CLR	0x28
+  014A    0AA8    INCR	0x28
+237:              			colorStep = 1;
+  014B    01B0    CLR	0x30
+  014C    0AB0    INCR	0x30
+238:              			workTime = 120;
+  014D    00A6    LD	0x26,A
+  014E    0008    RET
+239:              		}
+240:              	}
+241:              }
+242:              
+243:              char keyRead(char KeyStatus)	
+  0162    00B5    LD	0x35,A
+244:              { 
+245:              	if (KeyStatus)
+  0163    0835    LD	A,0x35
+  0164    1903    SZB	0x3,2
+  0165    296E    JP	0x16E
+246:              	{
+247:              		if(++keyCount >= 150)
+  0166    3096    LDIA	0x96
+  0167    0AA3    INCR	0x23
+  0168    0223    SUBA	0x23
+  0169    1C03    SNZB	0x3,0
+  016A    3400    RET	0x0
+248:              		{
+249:              			keyCount = 150;
+  016B    3096    LDIA	0x96
+  016C    00A3    LD	0x23,A
+  016D    3400    RET	0x0
+250:              		}
+251:              	}
+252:              	else
+253:              	{
+254:              		if(keyCount >= 5)
+  016E    3005    LDIA	0x5
+  016F    0223    SUBA	0x23
+255:              		{
+256:              			keyCount = 0;
+  0170    01A3    CLR	0x23
+  0171    1803    SZB	0x3,0
+257:              			return	1;
+  0172    3401    RET	0x1
+  0173    3400    RET	0x0
+258:              		}
+259:              		keyCount = 0;
+260:              	}
+261:              	return 0;
+262:              }
+263:              
+264:              
+265:              
+266:              void rainbow()
+267:              {
+268:              	//lastRed = lastGreen = lastBlue = 0;
+269:              	if(red > lastRed)
+  0011    082F    LD	A,0x2F
+  0012    022E    SUBA	0x2E
+  0013    1C03    SNZB	0x3,0
+270:              		red--;
+  0014    03AF    DECR	0x2F
+271:              	if(green > lastGreen)
+  0015    082D    LD	A,0x2D
+  0016    022C    SUBA	0x2C
+  0017    1C03    SNZB	0x3,0
+272:              		green--;
+  0018    03AD    DECR	0x2D
+273:              	if(blue > lastBlue)
+  0019    082B    LD	A,0x2B
+  001A    022A    SUBA	0x2A
+  001B    1C03    SNZB	0x3,0
+274:              		blue--;
+  001C    03AB    DECR	0x2B
+275:              	if(red < lastRed)
+  001D    082E    LD	A,0x2E
+  001E    022F    SUBA	0x2F
+  001F    1C03    SNZB	0x3,0
+276:              		red++;
+  0020    0AAF    INCR	0x2F
+277:              	if(green < lastGreen)
+  0021    082C    LD	A,0x2C
+  0022    022D    SUBA	0x2D
+  0023    1C03    SNZB	0x3,0
+278:              		green++;
+  0024    0AAD    INCR	0x2D
+279:              	if(blue < lastBlue)
+  0025    082A    LD	A,0x2A
+  0026    022B    SUBA	0x2B
+  0027    1C03    SNZB	0x3,0
+280:              		blue++;
+  0028    0AAB    INCR	0x2B
+281:              	if(delayTime > 0)
+  0029    0829    LD	A,0x29
+  002A    1903    SZB	0x3,2
+  002B    282E    JP	0x2E
+282:              	{
+283:              		delayTime--;
+  002C    03A9    DECR	0x29
+  002D    0008    RET
+284:              		return;
+285:              	}
+286:              	if(colorStep == 1)
+  002E    0B30    SZDECA	0x30
+  002F    2835    JP	0x35
+287:              	{
+288:              		lastRed = 255;
+  0030    30FF    LDIA	0xFF
+  0031    00AE    LD	0x2E,A
+289:              		lastGreen = 0;
+  0032    01AC    CLR	0x2C
+290:              		lastBlue = 0;
+  0033    01AA    CLR	0x2A
+291:              		
+292:              	}
+  0034    2860    JP	0x60
+293:              	else if(colorStep == 2)
+  0035    3002    LDIA	0x2
+  0036    0630    XORA	0x30
+  0037    1D03    SNZB	0x3,2
+  0038    283C    JP	0x3C
+294:              	{
+295:              		lastRed = 255;
+  0039    30FF    LDIA	0xFF
+  003A    00AE    LD	0x2E,A
+  003B    2842    JP	0x42
+296:              		lastGreen = 255;
+297:              		lastBlue = 0;
+298:              	}
+299:              	else if(colorStep == 3)
+  003C    3003    LDIA	0x3
+  003D    0630    XORA	0x30
+  003E    1D03    SNZB	0x3,2
+  003F    2844    JP	0x44
+  0040    30FF    LDIA	0xFF
+300:              	{
+301:              		lastRed = 0;
+  0041    01AE    CLR	0x2E
+302:              		lastGreen = 255;
+  0042    00AC    LD	0x2C,A
+  0043    2833    JP	0x33
+303:              		lastBlue = 0;
+304:              	}
+305:              	else if(colorStep == 4)
+  0044    3004    LDIA	0x4
+  0045    0630    XORA	0x30
+  0046    1D03    SNZB	0x3,2
+  0047    284D    JP	0x4D
+306:              	{
+307:              		lastRed = 0;
+  0048    01AE    CLR	0x2E
+  0049    30FF    LDIA	0xFF
+308:              		lastGreen = 0;
+  004A    01AC    CLR	0x2C
+309:              		lastBlue = 255;
+  004B    00AA    LD	0x2A,A
+310:              	}
+  004C    2860    JP	0x60
+311:              	else if(colorStep == 5)
+  004D    3005    LDIA	0x5
+  004E    0630    XORA	0x30
+  004F    1D03    SNZB	0x3,2
+  0050    2854    JP	0x54
+312:              	{
+313:              		lastRed = 255;
+  0051    30FF    LDIA	0xFF
+  0052    00AE    LD	0x2E,A
+  0053    2849    JP	0x49
+314:              		lastGreen = 0;
+315:              		lastBlue = 255;
+316:              	}
+317:              	else if(colorStep == 6)
+  0054    3006    LDIA	0x6
+  0055    0630    XORA	0x30
+  0056    1903    SZB	0x3,2
+  0057    2830    JP	0x30
+318:              	{
+319:              		lastRed = 255;
+320:              		lastGreen = 0;
+321:              		lastBlue = 0;
+322:              	}
+323:              	else if(colorStep == 7)
+  0058    3007    LDIA	0x7
+  0059    0630    XORA	0x30
+  005A    1903    SZB	0x3,2
+  005B    2839    JP	0x39
+324:              	{
+325:              		lastRed = 255;
+326:              		lastGreen = 255;
+327:              		lastBlue = 0;
+328:              	}
+329:              	else if(colorStep == 8)
+  005C    3008    LDIA	0x8
+  005D    0630    XORA	0x30
+  005E    1903    SZB	0x3,2
+  005F    2840    JP	0x40
+330:              	{
+331:              		lastRed = 0;
+332:              		lastGreen = 255;
+333:              		lastBlue = 0;
+334:              	}
+335:              
+336:              		
+337:              	if(red == lastRed && blue == lastBlue && green == lastGreen)
+  0060    082F    LD	A,0x2F
+  0061    062E    XORA	0x2E
+  0062    1D03    SNZB	0x3,2
+  0063    0008    RET
+  0064    082B    LD	A,0x2B
+  0065    062A    XORA	0x2A
+  0066    1D03    SNZB	0x3,2
+  0067    0008    RET
+  0068    082D    LD	A,0x2D
+  0069    062C    XORA	0x2C
+  006A    1D03    SNZB	0x3,2
+  006B    0008    RET
+338:              	{
+339:              		if(++colorStep > 8)
+  006C    3009    LDIA	0x9
+  006D    0AB0    INCR	0x30
+  006E    0230    SUBA	0x30
+  006F    1C03    SNZB	0x3,0
+  0070    2873    JP	0x73
+340:              		{
+341:              			colorStep = 4;
+  0071    3004    LDIA	0x4
+  0072    00B0    LD	0x30,A
+342:              		}
+343:              		if(delayTime == 0)
+  0073    0829    LD	A,0x29
+  0074    1D03    SNZB	0x3,2
+  0075    0008    RET
+344:              			delayTime = 90;
+  0076    305A    LDIA	0x5A
+  0077    00A9    LD	0x29,A
+  0078    0008    RET
+345:              	}
+346:              }
+347:              
+348:              /***********************************************
+349:              函数名称：Timer0_Isr
+350:              函数功能：中断服务
+351:              入口参数：无
+352:              出口参数：无
+353:              备注：
+354:              ***********************************************/
+355:              void interrupt Timer0_Isr() {
+356:                  if (T0IF) {
+  009F    1D09    SNZB	0x9,2
+  00A0    28B9    JP	0xB9
+357:                      //---------------------------------------
+358:                      TMR0 += 155;        //重新赋初值，在赋值前Timer0已有计数，故在该基础上加初值
+  00A1    309B    LDIA	0x9B
+  00A2    0781    ADDR	0x1
+359:                      //---------------------------------------
+360:              
+361:                      T0IF = 0;            //清中断标志位	
+  00A3    1109    CLRB	0x9,2
+362:                      if(++intCount >= 100)
+  00A4    3064    LDIA	0x64
+  00A5    0AB1    INCR	0x31
+  00A6    0231    SUBA	0x31
+  00A7    1C03    SNZB	0x3,0
+  00A8    28B9    JP	0xB9
+  00A9    3064    LDIA	0x64
+363:              		{
+364:              			IntFlag = 1;
+  00AA    01B2    CLR	0x32
+  00AB    0AB2    INCR	0x32
+365:              			intCount = 0;
+  00AC    01B1    CLR	0x31
+366:              			if(++count1s >= 100)
+  00AD    0AA5    INCR	0x25
+  00AE    0225    SUBA	0x25
+  00AF    1C03    SNZB	0x3,0
+  00B0    28B9    JP	0xB9
+367:              			{
+368:              				count1s = 0;
+  00B1    01A5    CLR	0x25
+369:              				if(workTime > 0)
+  00B2    0826    LD	A,0x26
+  00B3    1903    SZB	0x3,2
+  00B4    28B6    JP	0xB6
+370:              					workTime--;
+  00B5    03A6    DECR	0x26
+371:              				if(waitTime > 0)
+  00B6    0827    LD	A,0x27
+  00B7    1D03    SNZB	0x3,2
+372:              					waitTime--;
+  00B8    03A7    DECR	0x27
+373:              			}
+374:              		}
+375:              
+376:                  }
+377:              
+378:                  if (RBIF) {
+  00B9    1809    SZB	0x9,0
+379:                      RBIF = 0;            //清中断标志
+  00BA    1009    CLRB	0x9,0
+  00BB    0834    LD	A,0x34
+  00BC    008A    LD	0xA,A
+  00BD    0E33    SWAPA	0x33
+  00BE    0083    LD	0x3,A
+  00BF    0ECE    SWAPR	0x4E
+  00C0    0E4E    SWAPA	0x4E
+  00C1    0009    RETI
+380:                  }
+381:              }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    280A    JP	0xA
+  000A    280B    JP	0xB
+---- start_initialization ------------------------------------------------------------------
+  000B    3020    LDIA	0x20
+  000C    0084    LD	0x4,A
+  000D    3033    LDIA	0x33
+  000E    2174    CALL	0x174
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00CE    LD	0x4E,A
+  0005    0E03    SWAPA	0x3
+  0006    00B3    LD	0x33,A
+  0007    080A    LD	A,0xA
+  0008    00B4    LD	0x34,A
+  0009    289F    JP	0x9F
+---- common_function ------------------------------------------------------------------
+  000F    0183    CLR	0x3
+  0010    2902    JP	0x102
+  0174    0064    CLRWDT
+  0175    0180    CLR	0x0
+  0176    0A84    INCR	0x4
+  0177    0604    XORA	0x4
+  0178    1903    SZB	0x3,2
+  0179    3400    RET	0x0
+  017A    0604    XORA	0x4
+  017B    2975    JP	0x175

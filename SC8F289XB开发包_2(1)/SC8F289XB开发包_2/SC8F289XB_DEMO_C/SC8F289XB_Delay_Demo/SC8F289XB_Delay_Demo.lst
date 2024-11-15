@@ -1,0 +1,155 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8F289XB开发包\SC8F289XB_DEMO_C\SC8F289XB_Delay_Demo\SC8F289XB_Delay.c ----------------------------------------------------------------------
+1:                /**********************************************************
+2:                延时函数使用范例
+3:                **********************************************************/
+4:                
+5:                #include <sc.h>
+6:                
+7:                #ifndef _XTAL_FREQ
+8:                 #define _XTAL_FREQ 8000000			//8Mhz,使用内置延时函数必须定义主频
+9:                #endif
+10:               
+11:               //微秒级非精准延时函数
+12:               void DelayXus(unsigned char x)
+13:               {
+14:               	while(--x);
+  07AE    0BF0    SZDECR	0x70
+  07AF    2FAE    JP	0x7AE
+  07B0    0008    RET
+15:               }
+16:               
+17:               //毫秒级非精准延时函数
+18:               void DelayXms(unsigned char x)
+19:               {
+20:               	unsigned char i = 0;;
+  07B2    01F1    CLR	0x71
+21:               	
+22:               	while(--x)
+  07B3    0BF0    SZDECR	0x70
+  07B4    2FB6    JP	0x7B6
+  07B5    0008    RET
+  07B6    0064    CLRWDT
+23:               	{
+24:               		asm("clrwdt"); 
+25:               		while(--i)
+  07B7    2FBC    JP	0x7BC
+  07B8    0000    NOP
+  07B9    0000    NOP
+  07BA    0000    NOP
+  07BB    0000    NOP
+  07BC    0BF1    SZDECR	0x71
+  07BD    2FB8    JP	0x7B8
+  07BE    2FB3    JP	0x7B3
+26:               		{
+27:               			asm("nop");
+28:               			asm("nop");
+29:               			asm("nop");
+30:               			asm("nop");
+31:               		}
+32:               	}
+33:               }
+34:               
+35:               void main(void)
+36:               {
+37:               	OSCCON = 0X72;			//选择主频为8M
+  07BF    3072    LDIA	0x72
+  07C0    1683    SETB	0x3,5
+  07C1    0088    LD	0x8,A
+38:               	TRISA = 0;
+39:               	PORTA = 1;
+40:               	DelayXms(50);
+  07C2    27F3    CALL	0x7F3
+  07C3    118A    CLRB	0xA,3
+  07C4    27B1    CALL	0x7B1
+  07C5    118A    CLRB	0xA,3
+  07C6    0064    CLRWDT
+41:               	CLRWDT();
+42:               	TRISA = 0;
+  07C7    1683    SETB	0x3,5
+  07C8    1303    CLRB	0x3,6
+43:               	PORTA = 1;
+44:               	DelayXus(50);
+  07C9    27F3    CALL	0x7F3
+  07CA    118A    CLRB	0xA,3
+  07CB    27AD    CALL	0x7AD
+  07CC    118A    CLRB	0xA,3
+45:               	TRISA = 0;
+  07CD    1683    SETB	0x3,5
+  07CE    0185    CLR	0x5
+46:               	PORTA = 0;
+  07CF    1283    CLRB	0x3,5
+  07D0    0185    CLR	0x5
+47:               	while(1)
+48:               	{
+49:               		NOP();
+  07D1    0000    NOP
+50:               		_delay(1000);		//延时1000指令周期(编译器内置函数)
+  07D2    30C7    LDIA	0xC7
+  07D3    00F2    LD	0x72,A
+  07D4    2FD5    JP	0x7D5
+  07D5    0BF2    SZDECR	0x72
+  07D6    2FD4    JP	0x7D4
+  07D7    2FD8    JP	0x7D8
+  07D8    2FD9    JP	0x7D9
+  07D9    0064    CLRWDT
+51:               		CLRWDT();
+52:               		PORTA ^= 0XFF;
+  07DA    27F8    CALL	0x7F8
+  07DB    118A    CLRB	0xA,3
+53:               		__delay_us(400);	//延时400us(编译器内置函数)
+  07DC    309F    LDIA	0x9F
+  07DD    00F2    LD	0x72,A
+  07DE    2FDF    JP	0x7DF
+  07DF    0BF2    SZDECR	0x72
+  07E0    2FDE    JP	0x7DE
+  07E1    2FE2    JP	0x7E2
+  07E2    2FE3    JP	0x7E3
+  07E3    0064    CLRWDT
+54:               		CLRWDT();
+55:               		PORTA ^= 0XFF;
+  07E4    27F8    CALL	0x7F8
+  07E5    118A    CLRB	0xA,3
+56:               		__delay_ms(2);		//延时2ms(编译器内置函数)
+  07E6    3006    LDIA	0x6
+  07E7    00F3    LD	0x73,A
+  07E8    3030    LDIA	0x30
+  07E9    00F2    LD	0x72,A
+  07EA    0BF2    SZDECR	0x72
+  07EB    2FEA    JP	0x7EA
+  07EC    0BF3    SZDECR	0x73
+  07ED    2FEA    JP	0x7EA
+  07EE    0000    NOP
+  07EF    0064    CLRWDT
+57:               							//注意编译器内置延时函数没有清看门狗的指令，故延时时间必须小于
+58:               							//程序设置的WDT溢出时间，WDT的溢出时间一般会有+-50%的区别，推荐
+59:               							//WDT溢出时间/2以内清WDT
+60:               		CLRWDT();
+61:               		PORTA ^= 0XFF;
+  07F0    27F8    CALL	0x7F8
+  07F1    118A    CLRB	0xA,3
+  07F2    2FD1    JP	0x7D1
+62:               	}
+63:               }
+64:               
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    2FFD    JP	0x7FD
+---- start_initialization ------------------------------------------------------------------
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  07AD    00F0    LD	0x70,A
+  07B1    00F0    LD	0x70,A
+  07F3    0185    CLR	0x5
+  07F4    3001    LDIA	0x1
+  07F5    1283    CLRB	0x3,5
+  07F6    0085    LD	0x5,A
+  07F7    3432    RET	0x32
+  07F8    30FF    LDIA	0xFF
+  07F9    1283    CLRB	0x3,5
+  07FA    1303    CLRB	0x3,6
+  07FB    0685    XORR	0x5
+  07FC    0008    RET
+  07FD    0183    CLR	0x3
+  07FE    118A    CLRB	0xA,3
+  07FF    2FBF    JP	0x7BF

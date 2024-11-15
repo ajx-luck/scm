@@ -1,0 +1,214 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8P171XE开发包\SC8P171XE_ASM_demo\ADC_DEMO\SC8P171XE_ADC.asm ----------------------------------------------------------------------
+                                   1:     ;-------------------------------------------
+                                   2:     
+                                   3:     ;程序名称：AD转换程序
+                                   4:     ;日期版本：2021/1/20 <V1.0>
+                                   5:     
+                                   6:     ;备注：直接调用AD_SAMPLE函数检测AD值
+                                   7:     
+                                   8:     ;*公司网址 www.mcu.com.cn
+                                   9:     ;					WWW.SCMCU.COM
+                                   10:    ;-------------------------------------------
+                                   11:    
+                                   12:    #INCLUDE	SC8P1712E.H
+                                   13:    
+                                   14:    
+                                   15:    ADRESULTL	EQU			?			;12位AD结果低位
+                                   16:    ADRESULTH	EQU			?			;12位AD结果高位
+                                   17:    ADSUMH	EQU			?				;AD检测总和高位
+                                   18:    ADSUML	EQU			?				;AD检测总和低位
+                                   19:    ADMINL	EQU			?				;AD检测最小值低位
+                                   20:    ADMINH	EQU			?				;AD检测最小值高位
+                                   21:    ADMAXL	EQU			?				;AD检测最大值低位
+                                   22:    ADMAXH	EQU			?				;AD检测最大值高位
+                                   23:    ADCOUNT	EQU			?				;AD检测计数
+                                   24:    ADTEMPL	EQU			?				;AD临时寄存器
+                                   25:    ADTEMPH	EQU			?				;AD临时寄存器
+                                   26:    
+                                   27:    TEMP	EQU			?
+                                   28:    		
+                                   29:    ORG			0000H						
+  0000   2801   JP  0x1            30:    JP			START						
+                                   31:    
+                                   32:    ;-------------------------------------------
+                                   33:    START:
+  0001   0000   NOP                34:    		NOP
+  0002   0064   CLRWDT             35:    		CLRWDT
+  0003   3000   LDIA  0x0          36:    		LDIA		00H
+                                   37:    		OPTION							;预分频器分配给TMR0
+  0004   0181   CLR  0x1           38:    		CLR			TMR0				;初始化TMR0
+  0005   0064   CLRWDT             39:    		CLRWDT
+                                   40:    		
+  0006   3070   LDIA  0x70         41:    		LDIA		070H				;8M内部时钟
+  0007   808F   LD  0x8F,A         42:    		LD			OSCCON,A
+                                   43:    		
+                                   44:    MAIN:										;主程序
+  0008   0064   CLRWDT             45:    		CLRWDT
+  0009   3040   LDIA  0x40         46:    		LDIA		040H				;RB6选择模拟输入
+  000A   8094   LD  0x94,A         47:    		LD			ANSELH,A		
+  000B   3040   LDIA  0x40         48:    		LDIA		040H				;RB6设为输入
+  000C   8086   LD  0x86,A         49:    		LD			TRISB,A	
+  000D   300E   LDIA  0xE          50:    		LDIA		.14
+  000E   2010   CALL  0x10         51:    		CALL		ADC_SAMPLE
+                                   52:    		
+  000F   2808   JP  0x8            53:    		JP			MAIN
+                                   54:    ;-------------------------------------------
+                                   55:    
+                                   56:    ;-------------------------------------------
+                                   57:    ;函数名称：ADC_SAMPLE
+                                   58:    ;函数功能：模数转换(ADC)
+                                   59:    ;入口参数：无
+                                   60:    ;出口参数：ADRESULTL,ADRESULTH - AD检测结果
+                                   61:    ;		   
+                                   62:    ;备注：左对齐，取12位AD，检测10次，去除最大、小值求均值
+                                   63:    ;-------------------------------------------
+                                   64:    ADC_SAMPLE:
+  0010   00A9   LD  0x29,A         65:    		LD			ADTEMPL,A
+  0011   35A9   RLR  0x29          66:    		RLR			ADTEMPL
+  0012   3529   RLA  0x29          67:    		RLA			ADTEMPL
+  0013   3841   ORIA  0x41         68:    		ORIA		041H						;16分频，8M主频必须选16分频或以上
+  0014   009F   LD  0x1F,A         69:    		LD			ADCON0,A
+  0015   300D   LDIA  0xD          70:    		LDIA		B'00001101'			;结果左对齐,选择高速时钟，内部2V做AD参考	
+  0016   809F   LD  0x9F,A         71:    		LD			ADCON1,A
+                                   72:    		
+  0017   3019   LDIA  0x19         73:    		LDIA		.25
+  0018   00AB   LD  0x2B,A         74:    		LD			TEMP,A
+                                   75:    AD_DELAY:
+  0019   281A   JP  0x1A           76:    		JP			$+1					;延时100US
+  001A   281B   JP  0x1B           77:    		JP			$+1
+  001B   281C   JP  0x1C           78:    		JP			$+1
+  001C   0BAB   SZDECR  0x2B       79:    		SZDECR		TEMP	
+                                   80:    		
+                                   81:    AD_START:
+  001D   149F   SETB  0x1F,1       82:    		SETB		ADCON0,1			;AD检测开始		
+  001E   01A9   CLR  0x29          83:    		CLR			ADTEMPL
+                                   84:    AD_WAIT:
+  001F   1C9F   SNZB  0x1F,1       85:    		SNZB		ADCON0,1			;等待检测结束
+  0020   2827   JP  0x27           86:    		JP			AD_TEST_OK
+  0021   0000   NOP                87:    		NOP
+  0022   0000   NOP                88:    		NOP
+  0023   0FA9   SZINCR  0x29       89:    		SZINCR		ADTEMPL				;800us以上检测不到AD结束则直接退出AD检测
+  0024   281F   JP  0x1F           90:    		JP			AD_WAIT
+  0025   019F   CLR  0x1F          91:    		CLR			ADCON0				;关闭AD
+  0026   0008   RET                92:    		RET
+                                   93:    AD_TEST_OK:
+  0027   8E1E   SWAPA  0x9E        94:    		SWAPA		ADRESL				;将检测到的AD值赋给临时寄存器
+  0028   390F   ANDIA  0xF         95:    		ANDIA		0FH						;并移位为高4位，低8位的数据结构
+  0029   00A9   LD  0x29,A         96:    		LD			ADTEMPL,A
+  002A   0E1E   SWAPA  0x1E        97:    		SWAPA		ADRESH
+  002B   00AA   LD  0x2A,A         98:    		LD			ADTEMPH,A
+  002C   30F0   LDIA  0xF0         99:    		LDIA		0F0H
+  002D   052A   ANDA  0x2A         100:   		ANDA		ADTEMPH
+  002E   07A9   ADDR  0x29         101:   		ADDR		ADTEMPL
+  002F   300F   LDIA  0xF          102:   		LDIA		0FH
+  0030   05AA   ANDR  0x2A         103:   		ANDR		ADTEMPH
+                                   104:   		
+  0031   0827   LD  A,0x27         105:   		LD			A,ADMAXH			;如果AD最大值为0，则把检测到的AD值同时赋给最大最小值
+  0032   0426   ORA  0x26          106:   		ORA			ADMAXL
+  0033   1D03   SNZB  0x3,2        107:   		SNZB		STATUS,Z
+  0034   283C   JP  0x3C           108:   		JP			AD_SEND_MAX
+  0035   0829   LD  A,0x29         109:   		LD			A,ADTEMPL
+  0036   00A6   LD  0x26,A         110:   		LD			ADMAXL,A
+  0037   00A4   LD  0x24,A         111:   		LD			ADMINL,A
+  0038   082A   LD  A,0x2A         112:   		LD			A,ADTEMPH
+  0039   00A7   LD  0x27,A         113:   		LD			ADMAXH,A
+  003A   00A5   LD  0x25,A         114:   		LD			ADMINH,A
+  003B   2856   JP  0x56           115:   		JP			AD_ADD_SUM
+                                   116:   
+                                   117:   AD_SEND_MAX:
+  003C   082A   LD  A,0x2A         118:   		LD			A,ADTEMPH			;将AD值与最大值比较
+  003D   0227   SUBA  0x27         119:   		SUBA		ADMAXH				;先判断高位
+  003E   1D03   SNZB  0x3,2        120:   		SNZB		STATUS,Z
+  003F   2842   JP  0x42           121:   		JP			AD_SEND_MAX_1
+  0040   0829   LD  A,0x29         122:   		LD			A,ADTEMPL			;高位相等则判断低位
+  0041   0226   SUBA  0x26         123:   		SUBA		ADMAXL
+                                   124:   AD_SEND_MAX_1:
+  0042   1803   SZB  0x3,0         125:   		SZB			STATUS,C			;高低位最大值均大于AD值，则跳出去判断最小值
+  0043   2849   JP  0x49           126:   		JP			AD_SEND_MIN
+  0044   0829   LD  A,0x29         127:   		LD			A,ADTEMPL			;高低位最大值小于AD值，或高位相等，最大值低位小于AD值
+  0045   00A6   LD  0x26,A         128:   		LD			ADMAXL,A			;把AD值赋给最大值
+  0046   082A   LD  A,0x2A         129:   		LD			A,ADTEMPH
+  0047   00A7   LD  0x27,A         130:   		LD			ADMAXH,A
+  0048   2856   JP  0x56           131:   		JP			AD_ADD_SUM
+                                   132:   		
+                                   133:   AD_SEND_MIN:		
+  0049   0825   LD  A,0x25         134:   		LD			A,ADMINH			;先判断最小值高位
+  004A   022A   SUBA  0x2A         135:   		SUBA		ADTEMPH
+  004B   1D03   SNZB  0x3,2        136:   		SNZB		STATUS,Z
+  004C   284F   JP  0x4F           137:   		JP			AD_SEND_MIN_1
+  004D   0824   LD  A,0x24         138:   		LD			A,ADMINL			;高位相等则判断低位
+  004E   0229   SUBA  0x29         139:   		SUBA		ADTEMPL
+                                   140:   AD_SEND_MIN_1:
+  004F   1803   SZB  0x3,0         141:   		SZB			STATUS,C			;高低位最小值均小于等于AD值，则跳出
+  0050   2856   JP  0x56           142:   		JP			AD_ADD_SUM
+  0051   0829   LD  A,0x29         143:   		LD			A,ADTEMPL			;把AD值赋给最小值
+  0052   00A4   LD  0x24,A         144:   		LD			ADMINL,A
+  0053   082A   LD  A,0x2A         145:   		LD			A,ADTEMPH
+  0054   00A5   LD  0x25,A         146:   		LD			ADMINH,A
+  0055   2856   JP  0x56           147:   		JP			AD_ADD_SUM
+                                   148:   
+                                   149:   AD_ADD_SUM:
+  0056   0829   LD  A,0x29         150:   		LD			A,ADTEMPL			;计算10次测试AD值之和
+  0057   07A3   ADDR  0x23         151:   		ADDR		ADSUML
+  0058   082A   LD  A,0x2A         152:   		LD			A,ADTEMPH
+  0059   37A2   ADDCR  0x22        153:   		ADDCR		ADSUMH
+                                   154:   		
+  005A   0AA8   INCR  0x28         155:   		INCR		ADCOUNT				;测试10次则求平均值
+  005B   300A   LDIA  0xA          156:   		LDIA		0AH
+  005C   0228   SUBA  0x28         157:   		SUBA		ADCOUNT
+  005D   1C03   SNZB  0x3,0        158:   		SNZB		STATUS,C
+  005E   0008   RET                159:   		RET
+                                   160:   		
+  005F   0826   LD  A,0x26         161:   		LD			A,ADMAXL			;AD值之和减去最大值
+  0060   02A3   SUBR  0x23         162:   		SUBR		ADSUML
+  0061   0827   LD  A,0x27         163:   		LD			A,ADMAXH
+  0062   1C03   SNZB  0x3,0        164:   		SNZB		STATUS,C
+  0063   0F27   SZINCA  0x27       165:   		SZINCA	ADMAXH
+  0064   02A2   SUBR  0x22         166:   		SUBR		ADSUMH
+                                   167:   		
+  0065   0825   LD  A,0x25         168:   		LD			A,ADMINH			;如果减去最大值之后的数值小于最小值，则有可能是干扰
+  0066   0222   SUBA  0x22         169:   		SUBA		ADSUMH				;此时将AD和清零
+  0067   1D03   SNZB  0x3,2        170:   		SNZB		STATUS,Z
+  0068   286B   JP  0x6B           171:   		JP			AD_JUDGE_MIN_1
+  0069   0824   LD  A,0x24         172:   		LD			A,ADMINL
+  006A   0223   SUBA  0x23         173:   		SUBA		ADSUML
+                                   174:   AD_JUDGE_MIN_1:
+  006B   1C03   SNZB  0x3,0        175:   		SNZB		STATUS,C
+  006C   2874   JP  0x74           176:   		JP			AD_CLR_SUM
+  006D   0824   LD  A,0x24         177:   		LD			A,ADMINL			;AD值之和减去最小值
+  006E   02A3   SUBR  0x23         178:   		SUBR		ADSUML
+  006F   0825   LD  A,0x25         179:   		LD			A,ADMINH
+  0070   1C03   SNZB  0x3,0        180:   		SNZB		STATUS,C
+  0071   0F25   SZINCA  0x25       181:   		SZINCA	ADMINH
+  0072   02A2   SUBR  0x22         182:   		SUBR		ADSUMH
+  0073   2876   JP  0x76           183:   		JP			AD_AVERAGE
+                                   184:   
+                                   185:   AD_CLR_SUM:
+  0074   01A3   CLR  0x23          186:   		CLR			ADSUML
+  0075   01A2   CLR  0x22          187:   		CLR			ADSUMH
+                                   188:   		
+                                   189:   AD_AVERAGE:
+  0076   3003   LDIA  0x3          190:   		LDIA		03H
+                                   191:   AD_AVERAGE_1:
+  0077   1003   CLRB  0x3,0        192:   		CLRB		STATUS,C			;将AD值之和移位3次
+  0078   0CA2   RRCR  0x22         193:   		RRCR		ADSUMH
+  0079   0CA3   RRCR  0x23         194:   		RRCR		ADSUML
+  007A   3EFF   ADDIA  0xFF        195:   		ADDIA		0FFH
+  007B   1D03   SNZB  0x3,2        196:   		SNZB		STATUS,Z
+  007C   2877   JP  0x77           197:   		JP			AD_AVERAGE_1
+  007D   0823   LD  A,0x23         198:   		LD			A,ADSUML			;将平均值赋给ADRESULT
+  007E   00A0   LD  0x20,A         199:   		LD			ADRESULTL,A
+  007F   0822   LD  A,0x22         200:   		LD			A,ADSUMH
+  0080   00A1   LD  0x21,A         201:   		LD			ADRESULTH,A
+                                   202:   		
+  0081   01A3   CLR  0x23          203:   		CLR			ADSUML				;清零用到检测AD的临时寄存器
+  0082   01A2   CLR  0x22          204:   		CLR			ADSUMH
+  0083   01A4   CLR  0x24          205:   		CLR			ADMINL
+  0084   01A5   CLR  0x25          206:   		CLR			ADMINH
+  0085   01A6   CLR  0x26          207:   		CLR			ADMAXL
+  0086   01A7   CLR  0x27          208:   		CLR			ADMAXH
+  0087   01A8   CLR  0x28          209:   		CLR			ADCOUNT
+  0088   0008   RET                210:   		RET
+                                   211:   				
+                                   212:   		
+---- H:\MyDownloads\IDE_RAR\SCMCU_IDE_V2.00.09_Beta3\SCMCU_IDE_V2.00.09_Beta3\mcu\Head\SC8P1712E.H ----------------------------------------------------------------------

@@ -1,1 +1,1 @@
- main.d  main.p1:  C:/Users/mxy/Desktop/keytest2/main.c C:/Users/mxy/Desktop/keytest2/pwm.h C:/Users/mxy/Desktop/keytest2/Touch_Kscan_Library.h C:/Users/mxy/Desktop/keytest2/TouchKeyConst.h
+ main.d  main.p1:  C:/mcuproject/scm/台灯/main.c C:/mcuproject/scm/台灯/pwm.h C:/mcuproject/scm/台灯/TouchKeyConst.h C:/mcuproject/scm/台灯/Touch_Kscan_Library.h

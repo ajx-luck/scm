@@ -1,0 +1,1 @@
+ adc.d  adc.p1:  C:/mcuproject/scm/台灯雾化器/adc.c C:/mcuproject/scm/台灯雾化器/adc.h

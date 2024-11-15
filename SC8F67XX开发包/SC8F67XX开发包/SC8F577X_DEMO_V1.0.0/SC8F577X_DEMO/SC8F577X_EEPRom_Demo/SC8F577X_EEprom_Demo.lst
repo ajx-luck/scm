@@ -1,0 +1,165 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8F577X开发包\SC8F577X_DEMO\SC8F577X_EEPRom_Demo\main.c ----------------------------------------------------------------------
+1:                /**********************************************************
+2:                
+3:                **********************************************************/
+4:                
+5:                #include <sc.h>
+6:                
+7:                
+8:                
+9:                void Memory_Write(unsigned char Addr,unsigned char Value);
+10:               unsigned int Memory_Read(unsigned char Addr);
+11:               
+12:               volatile unsigned int t;
+13:               
+14:               
+15:               void main()
+  07DC    0000    NOP
+  07DD    0064    CLRWDT
+16:               {
+17:               	asm("nop");
+18:               	asm("clrwdt");
+19:               	TRISA = 0;
+  07DE    1683    SETB	0x3,5
+  07DF    1303    CLRB	0x3,6
+  07E0    0185    CLR	0x5
+20:               
+21:               	Memory_Write(0x08,120);			//调用写函数
+  07E1    3078    LDIA	0x78
+  07E2    00F0    LD	0x70,A
+  07E3    3008    LDIA	0x8
+  07E4    118A    CLRB	0xA,3
+  07E5    27C4    CALL	0x7C4
+  07E6    118A    CLRB	0xA,3
+22:               	t = Memory_Read(0x08);				//调用读函数
+  07E7    3008    LDIA	0x8
+  07E8    118A    CLRB	0xA,3
+  07E9    27B8    CALL	0x7B8
+  07EA    118A    CLRB	0xA,3
+  07EB    0871    LD	A,0x71
+  07EC    00F5    LD	0x75,A
+  07ED    0870    LD	A,0x70
+  07EE    00F4    LD	0x74,A
+23:               	if ( t!= 0x96 ) RA0 = 1;
+  07EF    3096    LDIA	0x96
+  07F0    0674    XORA	0x74
+  07F1    0475    ORA	0x75
+  07F2    1903    SZB	0x3,2
+  07F3    2FF7    JP	0x7F7
+  07F4    1283    CLRB	0x3,5
+  07F5    1405    SETB	0x5,0
+  07F6    2FF9    JP	0x7F9
+24:               		else RA0 = 0 ;
+  07F7    1283    CLRB	0x3,5
+  07F8    1005    CLRB	0x5,0
+25:               	while(1)
+  07F9    0064    CLRWDT
+  07FA    2FF9    JP	0x7F9
+26:               	{
+27:               		asm("clrwdt");
+28:               	}
+29:               }
+30:               
+31:               
+32:               /***********************************************
+33:               函数名称：Memory_Write
+34:               函数功能：写数据/程序寄存器
+35:               入口参数：Addr - 写入地址
+36:                         Value - 写入数值
+37:               出口参数：无
+38:               备注：
+39:               ************************************************/
+40:               void Memory_Write(unsigned char Addr,unsigned char Value)
+  07C4    00F1    LD	0x71,A
+41:               {
+42:               									//将要写入的地址放入EEADDR寄存器
+43:               	EEADR = Addr;
+  07C5    0090    LD	0x10,A
+44:               	EEPGD = 0;							//访问数据存储器
+  07C6    138C    CLRB	0xC,7
+45:               	
+46:               									//将要写入的数据给EEPROM的数据寄存器
+47:               	EEDAT = Value;
+  07C7    0870    LD	A,0x70
+  07C8    008E    LD	0xE,A
+48:               	
+49:               	WREN = 1;								//允许写周期
+  07C9    150C    SETB	0xC,2
+50:               	GIE = 0;								//关闭中断
+  07CA    138B    CLRB	0xB,7
+  07CB    1B8B    SZB	0xB,7
+  07CC    2FCA    JP	0x7CA
+  07CD    0064    CLRWDT
+51:               	
+52:               	while(GIE) GIE = 0;						//确保中断已关闭
+53:               	
+54:               	asm("clrwdt");					//写入EE时必须清WDT，防止WDT溢出导致芯片数据写错甚至不能正常工作
+55:               	
+56:               	EECON2 = 0x55;							//给EECON2写入0x55
+  07CE    3055    LDIA	0x55
+  07CF    1683    SETB	0x3,5
+  07D0    1303    CLRB	0x3,6
+  07D1    008D    LD	0xD,A
+57:               	EECON2 = 0xaa;							//给EECON2写入0xaa
+  07D2    30AA    LDIA	0xAA
+  07D3    008D    LD	0xD,A
+58:               	WR = 1;									//启动写周期
+  07D4    148C    SETB	0xC,1
+  07D5    0000    NOP
+  07D6    0000    NOP
+59:               	asm("nop");
+60:               	asm("nop");
+61:               	WREN = 0;								//禁止写入
+  07D7    1683    SETB	0x3,5
+  07D8    1303    CLRB	0x3,6
+  07D9    110C    CLRB	0xC,2
+62:               	GIE = 1;								//开启中断							
+  07DA    178B    SETB	0xB,7
+  07DB    0008    RET
+63:               	
+64:               }
+65:               
+66:               
+67:               /***********************************************
+68:               函数名称：Memory_Read
+69:               函数功能：读数据/程序寄存器
+70:               入口参数：Addr - 读取地址
+71:               出口参数：返回读取地址相应数值
+72:               备注：
+73:               ************************************************/
+74:               unsigned int Memory_Read(unsigned char Addr)
+  07B8    00F3    LD	0x73,A
+75:               {
+76:               									//将要写入的地址放入EEADDR寄存器
+77:               		EEADR = Addr;
+  07B9    0090    LD	0x10,A
+78:               		EEPGD = 0;							//访问数据存储器
+  07BA    138C    CLRB	0xC,7
+79:               	
+80:               	RD=1;									//允许读操作
+  07BB    140C    SETB	0xC,0
+  07BC    0000    NOP
+  07BD    0000    NOP
+81:               	asm("nop");
+82:               	asm("nop");
+83:               	
+84:               	return  EEDAT;
+  07BE    1683    SETB	0x3,5
+  07BF    1303    CLRB	0x3,6
+  07C0    080E    LD	A,0xE
+  07C1    00F0    LD	0x70,A
+  07C2    01F1    CLR	0x71
+  07C3    0008    RET
+85:               }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    2FFB    JP	0x7FB
+---- start_initialization ------------------------------------------------------------------
+  07FB    01F4    CLR	0x74
+  07FC    01F5    CLR	0x75
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  07FD    0183    CLR	0x3
+  07FE    118A    CLRB	0xA,3
+  07FF    2FDC    JP	0x7DC

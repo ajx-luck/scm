@@ -1,0 +1,369 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8F577X开发包\SC8F577X_DEMO\SC8F577X_ADC_Timer_Demo\SC8F577X_ADC.c ----------------------------------------------------------------------
+1:                /**********************************************************
+2:                AD检测范例程序
+3:                **********************************************************/
+4:                
+5:                #include <sc.h>
+6:                
+7:                
+8:                
+9:                volatile unsigned int   result,result1,result2;
+10:               
+11:               
+12:               unsigned int  Read_ADC(unsigned char  ADCchannel,unsigned char  ADCLDORef);
+13:               void DelayXms(unsigned char x);
+14:               
+15:               
+16:               /***********************************************************
+17:               函数名称：DelayXms
+18:               函数功能：毫秒级非精准延时
+19:               入口参数：x - 延时时间
+20:               出口参数：
+21:               备    注：
+22:               ***********************************************************/
+23:               void DelayXms(unsigned char x)
+24:               {
+25:               	unsigned char i,j;
+26:               	for(i=x;i>0;i--)
+  00CA    00F3    LD	0x73,A
+  00CB    0873    LD	A,0x73
+  00CC    1903    SZB	0x3,2
+  00CD    0008    RET
+27:               		for(j=153;j>0;j--);
+  00CE    3099    LDIA	0x99
+  00CF    00F4    LD	0x74,A
+  00D0    0BF4    SZDECR	0x74
+  00D1    28D0    JP	0xD0
+  00D2    03F3    DECR	0x73
+  00D3    28CB    JP	0xCB
+28:               }
+29:               
+30:               /***********************************************************
+31:               main主函数
+32:               ***********************************************************/
+33:               void main()
+34:               {
+35:               	
+36:               	asm("nop");
+37:               	asm("clrwdt");
+38:               	INTCON = 0;				//禁止中断
+  006F    018B    CLR	0xB
+39:               	OSCCON = 0X70;			//配置振荡为16M
+  0070    3070    LDIA	0x70
+  0071    1683    SETB	0x3,5
+  0072    1303    CLRB	0x3,6
+  0073    0088    LD	0x8,A
+40:               	
+41:                   DelayXms(2);
+  0074    3002    LDIA	0x2
+  0075    118A    CLRB	0xA,3
+  0076    20C9    CALL	0xC9
+  0077    118A    CLRB	0xA,3
+42:               	
+43:               	ADCON0 = 0B10000001;   //	
+  0078    3081    LDIA	0x81
+  0079    009D    LD	0x1D,A
+44:               	ADCON1 = 0B00000011;	
+  007A    3003    LDIA	0x3
+  007B    009C    LD	0x1C,A
+45:               
+46:               	OPTION_REG = 0B00001111;
+  007C    300F    LDIA	0xF
+  007D    0081    LD	0x1,A
+47:               	
+48:               	TMR0 = 6;					//设定Timer0初始值
+  007E    3006    LDIA	0x6
+  007F    1283    CLRB	0x3,5
+  0080    0081    LD	0x1,A
+49:               	T0IF = 0;
+  0081    110B    CLRB	0xB,2
+50:               	T0IE = 1;   // T0 中断使能
+  0082    168B    SETB	0xB,5
+51:               	
+52:               	T2CON = 0B00000011; // 16分频
+  0083    3003    LDIA	0x3
+  0084    0092    LD	0x12,A
+53:               	PR2 = 250;
+  0085    30FA    LDIA	0xFA
+  0086    1683    SETB	0x3,5
+  0087    0091    LD	0x11,A
+54:               	TMR2 = 0;
+  0088    1283    CLRB	0x3,5
+  0089    0191    CLR	0x11
+55:               	TMR2ON = 1;
+  008A    1512    SETB	0x12,2
+56:               	TMR2IE = 1; // T2 中断使能
+  008B    148D    SETB	0xD,1
+57:               	
+58:               	PEIE = 1;  // 这位必须开启才能进入T2中断
+  008C    170B    SETB	0xB,6
+59:               
+60:               	TRISB6 = 0;  //RB6 输出态
+  008D    1683    SETB	0x3,5
+  008E    1306    CLRB	0x6,6
+61:               	TRISB5 = 0;  //RB5 输出态
+  008F    1286    CLRB	0x6,5
+62:               	
+63:               	ADON = 1;
+  0090    141D    SETB	0x1D,0
+64:               	INTF = 0;
+  0091    108B    CLRB	0xB,1
+65:               	
+66:               	GIE  = 1;
+  0092    178B    SETB	0xB,7
+67:               	
+68:               	while(1)
+  0093    0064    CLRWDT
+  0094    3013    LDIA	0x13
+69:               	{
+70:               		asm("clrwdt");
+71:               
+72:               		result = Read_ADC(19,0);   // VDD 参考读取内部1.2V基准 
+  0095    01F2    CLR	0x72
+  0096    118A    CLRB	0xA,3
+  0097    2018    CALL	0x18
+  0098    118A    CLRB	0xA,3
+  0099    0873    LD	A,0x73
+  009A    00F8    LD	0x78,A
+  009B    0872    LD	A,0x72
+  009C    00F7    LD	0x77,A
+  009D    3013    LDIA	0x13
+73:               		
+74:               		result1 = Read_ADC(19,1);   // 内部LDO 2V 参考读取内部1.2V基准 
+  009E    01F2    CLR	0x72
+  009F    0AF2    INCR	0x72
+  00A0    118A    CLRB	0xA,3
+  00A1    2018    CALL	0x18
+  00A2    118A    CLRB	0xA,3
+  00A3    0873    LD	A,0x73
+  00A4    00F6    LD	0x76,A
+  00A5    0872    LD	A,0x72
+  00A6    00F5    LD	0x75,A
+75:               		result2 = Read_ADC(19,2);    // 内部LDO 2.4V 参考读取内部1.2V基准 
+  00A7    3002    LDIA	0x2
+  00A8    00F2    LD	0x72,A
+  00A9    3013    LDIA	0x13
+  00AA    118A    CLRB	0xA,3
+  00AB    2018    CALL	0x18
+  00AC    118A    CLRB	0xA,3
+  00AD    0873    LD	A,0x73
+  00AE    00A5    LD	0x25,A
+  00AF    0872    LD	A,0x72
+  00B0    00A4    LD	0x24,A
+  00B1    2893    JP	0x93
+76:               	}
+77:               }
+78:               
+79:               void interrupt Timer0_Isr(void)
+80:               {
+81:               		
+82:               	if(T0IF)  // TIMER0 62us进 中断
+  00B2    1D0B    SNZB	0xB,2
+  00B3    28BB    JP	0xBB
+83:               	{
+84:               		TMR0 += 6;
+  00B4    3006    LDIA	0x6
+  00B5    1283    CLRB	0x3,5
+  00B6    1303    CLRB	0x3,6
+  00B7    0781    ADDR	0x1
+85:               		T0IF = 0;
+  00B8    110B    CLRB	0xB,2
+86:               		
+87:               		RB6 = ~RB6;
+  00B9    3040    LDIA	0x40
+  00BA    0686    XORR	0x6
+88:               		   
+89:               	}
+90:               	
+91:               	if(TMR2IF) // TIMER2 1MS 中断
+  00BB    1283    CLRB	0x3,5
+  00BC    1303    CLRB	0x3,6
+  00BD    1C8C    SNZB	0xC,1
+  00BE    28C2    JP	0xC2
+92:               	{
+93:                       
+94:               		TMR2IF = 0;
+  00BF    108C    CLRB	0xC,1
+95:               		RB5 = ~RB5;   
+  00C0    3020    LDIA	0x20
+  00C1    0686    XORR	0x6
+  00C2    0871    LD	A,0x71
+  00C3    008A    LD	0xA,A
+  00C4    0E70    SWAPA	0x70
+  00C5    0083    LD	0x3,A
+  00C6    0EFE    SWAPR	0x7E
+  00C7    0E7E    SWAPA	0x7E
+  00C8    0009    RETI
+96:               	}
+97:               	
+98:               }
+99:               
+100:              /******************************************
+101:                返回  Adc_Result 
+102:                
+103:               ADCchannel 为输入AD通道 0-18
+104:                           19  检测内部1.2V 
+105:              			 20  检测PGA输出
+106:               ADCLDORef =1,开启内部LDO 2V 作为ADC 参考
+107:               ADCLDORef =2,开启内部LDO 2.4V 作为ADC 参考
+108:               ADCLDORef =0,VDD 作为ADC 参考
+109:              *****************************************/
+110:              unsigned int  Read_ADC(unsigned char  ADCchannel,unsigned char  ADCLDORef)
+111:              {
+112:               unsigned int	Adc_Result;
+113:              	unsigned char i=200;
+  001B    30C8    LDIA	0xC8
+  001C    00A0    LD	0x20,A
+114:              	
+115:              	
+116:              	if(ADCLDORef==0)
+  001D    0872    LD	A,0x72
+  001E    1D03    SNZB	0x3,2
+  001F    2823    JP	0x23
+117:              	{
+118:              		ADCON1 = 0B00000000;
+  0020    1683    SETB	0x3,5
+  0021    019C    CLR	0x1C
+119:              	}
+  0022    282A    JP	0x2A
+120:              	else if(ADCLDORef==1)
+  0023    0B72    SZDECA	0x72
+  0024    2827    JP	0x27
+121:              	{
+122:              		ADCON1 = 0B00000101;
+  0025    3005    LDIA	0x5
+  0026    2828    JP	0x28
+123:              	}
+124:              	else
+125:              	{
+126:                  	ADCON1 = 0B00000110;	
+  0027    3006    LDIA	0x6
+  0028    1683    SETB	0x3,5
+  0029    009C    LD	0x1C,A
+127:              	}
+128:              	
+129:              	CHS4 = 0;	
+  002A    131C    CLRB	0x1C,6
+130:              	if(ADCchannel >=16)
+  002B    3010    LDIA	0x10
+  002C    1283    CLRB	0x3,5
+  002D    0223    SUBA	0x23
+  002E    1C03    SNZB	0x3,0
+  002F    2834    JP	0x34
+131:              	{
+132:              		ADCchannel -= 16;	
+  0030    3010    LDIA	0x10
+  0031    02A3    SUBR	0x23
+133:              		CHS4 = 1;	
+  0032    1683    SETB	0x3,5
+  0033    171C    SETB	0x1C,6
+134:              	}
+135:              	
+136:              	ADCON0 &= 0b11000011;
+  0034    30C3    LDIA	0xC3
+  0035    1683    SETB	0x3,5
+  0036    059D    ANDR	0x1D
+137:              	ADCON0 |= ADCchannel<<2; 
+  0037    1283    CLRB	0x3,5
+  0038    0823    LD	A,0x23
+  0039    00F4    LD	0x74,A
+  003A    3001    LDIA	0x1
+  003B    1003    CLRB	0x3,0
+  003C    0DF4    RLCR	0x74
+  003D    3EFF    ADDIA	0xFF
+  003E    1003    CLRB	0x3,0
+  003F    1D03    SNZB	0x3,2
+  0040    283C    JP	0x3C
+  0041    0D74    RLCA	0x74
+  0042    1683    SETB	0x3,5
+  0043    049D    ORR	0x1D
+  0044    0000    NOP
+138:              	asm("nop");
+139:              	GODONE = 1;
+  0045    1683    SETB	0x3,5
+  0046    1303    CLRB	0x3,6
+  0047    149D    SETB	0x1D,1
+140:              	while(GODONE==1&&i>0)
+  0048    284F    JP	0x4F
+  0049    1283    CLRB	0x3,5
+  004A    0820    LD	A,0x20
+  004B    1903    SZB	0x3,2
+  004C    2853    JP	0x53
+141:              	{
+142:              		i--;
+  004D    03A0    DECR	0x20
+  004E    0000    NOP
+  004F    1683    SETB	0x3,5
+  0050    1303    CLRB	0x3,6
+  0051    189D    SZB	0x1D,1
+  0052    2849    JP	0x49
+143:              		asm("nop");
+144:              	}
+145:              	Adc_Result = ADRESH<<4;
+  0053    1683    SETB	0x3,5
+  0054    081E    LD	A,0x1E
+  0055    1283    CLRB	0x3,5
+  0056    00A1    LD	0x21,A
+  0057    30F0    LDIA	0xF0
+  0058    01A2    CLR	0x22
+  0059    0EA1    SWAPR	0x21
+  005A    0EA2    SWAPR	0x22
+  005B    05A2    ANDR	0x22
+  005C    0821    LD	A,0x21
+  005D    390F    ANDIA	0xF
+  005E    04A2    ORR	0x22
+  005F    30F0    LDIA	0xF0
+  0060    05A1    ANDR	0x21
+146:              	Adc_Result += ADRESL>>4;
+  0061    1683    SETB	0x3,5
+  0062    0E1F    SWAPA	0x1F
+  0063    390F    ANDIA	0xF
+  0064    1283    CLRB	0x3,5
+  0065    07A1    ADDR	0x21
+  0066    1803    SZB	0x3,0
+  0067    0AA2    INCR	0x22
+147:              	
+148:              	return Adc_Result;
+  0068    0822    LD	A,0x22
+  0069    00F3    LD	0x73,A
+  006A    0821    LD	A,0x21
+  006B    00F2    LD	0x72,A
+  006C    0008    RET
+149:              	
+150:              }
+151:              
+152:              
+153:              
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    280B    JP	0xB
+  000B    118A    CLRB	0xA,3
+  000C    280D    JP	0xD
+---- start_initialization ------------------------------------------------------------------
+  000D    01F5    CLR	0x75
+  000E    01F6    CLR	0x76
+  000F    01F7    CLR	0x77
+  0010    01F8    CLR	0x78
+  0011    1283    CLRB	0x3,5
+  0012    1303    CLRB	0x3,6
+  0013    01A4    CLR	0x24
+  0014    01A5    CLR	0x25
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00FE    LD	0x7E,A
+  0005    0E03    SWAPA	0x3
+  0006    00F0    LD	0x70,A
+  0007    080A    LD	A,0xA
+  0008    00F1    LD	0x71,A
+  0009    118A    CLRB	0xA,3
+  000A    28B2    JP	0xB2
+---- common_function ------------------------------------------------------------------
+  0015    0183    CLR	0x3
+  0016    118A    CLRB	0xA,3
+  0017    286D    JP	0x6D
+  0018    1283    CLRB	0x3,5
+  0019    1303    CLRB	0x3,6
+  001A    00A3    LD	0x23,A
+  006D    0000    NOP
+  006E    0064    CLRWDT
+  00C9    00F2    LD	0x72,A

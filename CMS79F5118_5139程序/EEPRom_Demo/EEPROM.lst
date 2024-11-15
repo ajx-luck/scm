@@ -1,0 +1,224 @@
+---- C:\Users\edwar\Desktop\CMS79F5118_5139程序\EEPRom_Demo\EEPRom_Demo.c ----------------------------------------------------------------------
+1:                /*-------------------------------------------
+2:                
+3:                程序名称：数据EEPROM程序存储器读写程序
+4:                日期版本：2019/12/27 <V1.0>
+5:                
+6:                备注：在读写数据EE时，若写完以后立刻进行读操作，
+7:                      应先等待写操作（WR）完成。
+8:                
+9:                *本程序由 中微半导体有限公司 &应用支持部& 编写整理
+10:               *公司网址 www.mcu.com.cn
+11:               *技术支持QQ 3001082102  罗工
+12:                           3001085706	陈工
+13:               -------------------------------------------*/
+14:               
+15:               
+16:               #include <cms.h>
+17:               
+18:               
+19:               //选择读写 程序EEPROM/程序存储器
+20:               #define Data_EEP
+21:               //#define Flash_EEP
+22:               
+23:               
+24:               unsigned char Memory_Write(unsigned int Addr,unsigned int Value);//使用程序EE时，可将数据类型改为char型
+25:               unsigned int Memory_Read(unsigned int Addr);
+26:               
+27:               volatile unsigned int t;
+28:               
+29:               
+30:               void main()
+  07B6    0000    NOP
+  07B7    0064    CLRWDT
+  07B8    305A    LDIA	0x5A
+31:               {
+32:               	asm("nop");
+33:               	asm("clrwdt");
+34:               
+35:               	
+36:               	Memory_Write(0x0000,0x5a);			//调用写函数
+  07B9    01F0    CLR	0x70
+  07BA    01F1    CLR	0x71
+  07BB    00F2    LD	0x72,A
+  07BC    01F3    CLR	0x73
+  07BD    118A    CLRB	0xA,3
+  07BE    27CF    CALL	0x7CF
+  07BF    118A    CLRB	0xA,3
+37:               	while(1)
+  07C0    0064    CLRWDT
+38:               	{
+39:               		asm("clrwdt");
+40:               		
+41:               		if(!WR)
+  07C1    1683    SETB	0x3,5
+  07C2    1703    SETB	0x3,6
+  07C3    188C    SZB	0xC,1
+  07C4    2FC0    JP	0x7C0
+42:               			t = Memory_Read(0x0000);	//调用读函数
+  07C5    01F0    CLR	0x70
+  07C6    01F1    CLR	0x71
+  07C7    118A    CLRB	0xA,3
+  07C8    27A6    CALL	0x7A6
+  07C9    118A    CLRB	0xA,3
+  07CA    0871    LD	A,0x71
+  07CB    00F5    LD	0x75,A
+  07CC    0870    LD	A,0x70
+  07CD    00F4    LD	0x74,A
+  07CE    2FC0    JP	0x7C0
+43:               	}
+44:               }
+45:               
+46:               
+47:               /***********************************************
+48:               函数名称：Memory_Write
+49:               函数功能：写数据/程序寄存器
+50:               入口参数：Addr - 写入地址
+51:                         Value - 写入数值
+52:               出口参数：返回值 0 - 写未准备好 1 - 写完毕
+53:               备注：
+54:               ************************************************/
+55:               unsigned char Memory_Write(unsigned int Addr,unsigned int Value)
+56:               {
+57:               	static volatile bit B_GIE_On;
+58:               	static volatile unsigned char i = 0;
+59:               	
+60:               	if(WR)									//写还没有结束直接返回
+  07CF    1683    SETB	0x3,5
+  07D0    1703    SETB	0x3,6
+  07D1    1C8C    SNZB	0xC,1
+  07D2    2FD4    JP	0x7D4
+  07D3    0008    RET
+61:               		return 0;
+62:               	
+63:               	B_GIE_On = 0;							//记录进来前是否已经开启中断
+  07D4    1077    CLRB	0x77,0
+64:               	if(GIE)
+  07D5    1B8B    SZB	0xB,7
+65:               		B_GIE_On = 1;
+  07D6    1477    SETB	0x77,0
+66:               	
+67:               	#ifdef Data_EEP							//将要写入的地址放入EEADDR寄存器
+68:               		EEADR = Addr;
+  07D7    0870    LD	A,0x70
+  07D8    1283    CLRB	0x3,5
+  07D9    008D    LD	0xD,A
+69:               		EEPGD = 0;							//访问数据存储器
+  07DA    1683    SETB	0x3,5
+  07DB    138C    CLRB	0xC,7
+70:               	#else ifdef Flash_EEP
+71:               		EEADR=(Addr & 0xff);				
+72:               		EEADRH=(Addr >> 8);
+73:               		EEPGD = 1;							//访问程序存储器
+74:               	#endif
+75:               	
+76:               	EEDATH=(Value >> 8);					//将要写入的数据给EEPROM的数据寄存器
+  07DC    0873    LD	A,0x73
+  07DD    1283    CLRB	0x3,5
+  07DE    008E    LD	0xE,A
+77:               	EEDAT=(Value & 0xff);
+  07DF    0872    LD	A,0x72
+  07E0    008C    LD	0xC,A
+78:               	
+79:               	WREN = 1;								//允许写周期
+  07E1    1683    SETB	0x3,5
+  07E2    150C    SETB	0xC,2
+80:               	GIE = 0;								//关闭中断
+  07E3    138B    CLRB	0xB,7
+81:               	
+82:               	while(GIE)
+  07E4    1F8B    SNZB	0xB,7
+  07E5    2FEA    JP	0x7EA
+83:               	{
+84:               		GIE = 0;							//确保中断已关闭
+  07E6    138B    CLRB	0xB,7
+85:               		if(0 == --i)
+  07E7    0BF6    SZDECR	0x76
+  07E8    2FE4    JP	0x7E4
+  07E9    0008    RET
+86:               			return 0;
+87:               	}
+88:               	
+89:               	EECON2 = 0x55;							//给EECON2写入0x55
+  07EA    3055    LDIA	0x55
+  07EB    1683    SETB	0x3,5
+  07EC    1703    SETB	0x3,6
+  07ED    008D    LD	0xD,A
+90:               	EECON2 = 0xaa;							//给EECON2写入0xaa
+  07EE    30AA    LDIA	0xAA
+  07EF    008D    LD	0xD,A
+91:               	WR = 1;									//启动写周期
+  07F0    148C    SETB	0xC,1
+  07F1    0000    NOP
+  07F2    0000    NOP
+92:               	asm("nop");
+93:               	asm("nop");
+94:               	
+95:               	if(B_GIE_On)							//若原来已开启中断的就开启中断	
+  07F3    1877    SZB	0x77,0
+96:               		GIE = 1;													
+  07F4    178B    SETB	0xB,7
+97:               
+98:               	WREN = 0;								//禁止写入
+  07F5    1683    SETB	0x3,5
+  07F6    1703    SETB	0x3,6
+  07F7    110C    CLRB	0xC,2
+99:               	return 1;
+  07F8    0008    RET
+100:              }
+101:              
+102:              
+103:              /***********************************************
+104:              函数名称：Memory_Read
+105:              函数功能：读数据/程序寄存器
+106:              入口参数：Addr - 读取地址
+107:              出口参数：返回读取地址相应数值
+108:              备注：
+109:              ************************************************/
+110:              unsigned int Memory_Read(unsigned int Addr)
+111:              {
+112:              	#ifdef Data_EEP							//将要写入的地址放入EEADDR寄存器
+113:              		EEADR = Addr;
+  07A6    0870    LD	A,0x70
+  07A7    1283    CLRB	0x3,5
+  07A8    008D    LD	0xD,A
+114:              		EEPGD = 0;							//访问数据存储器
+  07A9    1683    SETB	0x3,5
+  07AA    138C    CLRB	0xC,7
+115:              	#else ifdef Flash_EEP
+116:              		EEADR=(Addr & 0xff);				
+117:              		EEADRH=(Addr >> 8);
+118:              		EEPGD = 1;							//访问程序存储器
+119:              	#endif
+120:              
+121:              	RD=1;									//允许读操作
+  07AB    140C    SETB	0xC,0
+  07AC    0000    NOP
+  07AD    0000    NOP
+122:              	asm("nop");
+123:              	asm("nop");
+124:              	
+125:              	return ((EEDATH << 8) | EEDAT);
+  07AE    1283    CLRB	0x3,5
+  07AF    1703    SETB	0x3,6
+  07B0    080E    LD	A,0xE
+  07B1    00F1    LD	0x71,A
+  07B2    01F0    CLR	0x70
+  07B3    080C    LD	A,0xC
+  07B4    04F0    ORR	0x70
+  07B5    0008    RET
+126:              }
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    2FF9    JP	0x7F9
+---- start_initialization ------------------------------------------------------------------
+  07F9    01F7    CLR	0x77
+  07FA    01F4    CLR	0x74
+  07FB    01F5    CLR	0x75
+  07FC    01F6    CLR	0x76
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  07FD    0183    CLR	0x3
+  07FE    118A    CLRB	0xA,3
+  07FF    2FB6    JP	0x7B6

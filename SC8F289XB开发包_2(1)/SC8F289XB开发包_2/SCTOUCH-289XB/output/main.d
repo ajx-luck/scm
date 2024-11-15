@@ -1,0 +1,1 @@
+ main.d  main.p1:  H:/MyDownloads/说明书&测试报告/开发包/SC8F289XB开发包/SCTOUCH-289XB/main.c H:/MyDownloads/说明书&测试报告/开发包/SC8F289XB开发包/SCTOUCH-289XB/CheckTouchKey.h

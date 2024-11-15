@@ -1,0 +1,1 @@
+ SC8P062B_Sleep_Demo.d  SC8P062B_Sleep_Demo.p1:  C:/Work/11_2024_5_17/SC8P062B/SC8P062B_Sleep_Demo/SC8P062B_Sleep_Demo.c

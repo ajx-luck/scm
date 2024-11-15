@@ -1,0 +1,152 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8P171XE开发包\SC8P171XE_C_demo\SC8P171XE_PWM\SC8P171XE_PWM.c ----------------------------------------------------------------------
+1:                /*-------------------------------------------
+2:                功能：PWM演示
+3:                版本：V1.0
+4:                日期：2021.01.06 
+5:                
+6:                *本程序由 中微半导体 &应用支持部& 编写整理
+7:                *公司网址 www.mcu.com.cn
+8:                
+9:                -------------------------------------------*/
+10:               #include <sc.h>           		//调用单片机的头文件
+11:               
+12:               	struct twobyte
+13:               	{
+14:               		unsigned char bytel;
+15:               		unsigned char byteh;
+16:               	};
+17:               
+18:               struct twobyte xx={0X23,0XFF};
+19:               
+20:               void main(void)            		//主函数,单片机开机后就是从这个函数开始运行
+21:               {
+22:               	unsigned int delaycnt = 0;
+  07B8    01F0    CLR	0x70
+  07B9    01F1    CLR	0x71
+23:               	unsigned char pwmbuf = 0;
+  07BA    01F2    CLR	0x72
+  07BB    0000    NOP
+  07BC    0064    CLRWDT
+24:               
+25:               	asm("nop");
+26:               	asm("clrwdt");
+27:               	OSCCON = 0X70;				//8M
+  07BD    3070    LDIA	0x70
+  07BE    1683    SETB	0x3,5
+  07BF    008F    LD	0xF,A
+28:               	
+29:               	TRISA = 0B00111110;			//选择PWM0~1的PA1,PA2口设为输入
+  07C0    303E    LDIA	0x3E
+  07C1    0085    LD	0x5,A
+30:               								//对应PWM3~5的RA3~RA5设为输入 
+31:               								//以下是对PWM功能初始化
+32:               	PWMCON = 0B00000100;		//PWM选择时钟源为Fosc/1,PWM0反向
+  07C2    3004    LDIA	0x4
+  07C3    1283    CLRB	0x3,5
+  07C4    009B    LD	0x1B,A
+33:               	PWMTL = 0XFF;
+  07C5    30FF    LDIA	0xFF
+  07C6    0099    LD	0x19,A
+34:               	PWMTH = 0B00000001;			//PWM0~3周期选择为01FF，则周期为（511+1）*1/8M=64uS，周期的时钟分频在PWMCON选择
+  07C7    3001    LDIA	0x1
+  07C8    009A    LD	0x1A,A
+35:               								//PWM4周期选择为0FF，则周期为（255+1）*1/8M=32uS
+36:               	
+37:               	PWMD01H = 0X00;				//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出							
+  07C9    0198    CLR	0x18
+38:                   PWMD0L = 0X1F;				//脉宽为（31+1）*1/8M=4uS,则占空比为1/16
+  07CA    301F    LDIA	0x1F
+  07CB    0096    LD	0x16,A
+39:               	PWMD1L = 0X7F;				//脉宽为（127+1）*1/8M=16uS,则占空比为1/4
+  07CC    307F    LDIA	0x7F
+  07CD    0097    LD	0x17,A
+40:               								//PWM0~1可以选择先写高位也可以先写低位
+41:               	PWMD23H = 0X00;				//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出							
+  07CE    019C    CLR	0x1C
+42:                   PWMD2L = 0X3F;				//脉宽为（63+1）*1/8M=8uS,则占空比为1/8
+  07CF    303F    LDIA	0x3F
+  07D0    008E    LD	0xE,A
+43:               	PWMD3L = 0XFF;				//脉宽为（255+1）*1/8M=32uS,则占空比为1/2
+  07D1    30FF    LDIA	0xFF
+  07D2    008F    LD	0xF,A
+44:               								//PWM2~3必须先写高位再写低位 
+45:                   
+46:                   PWMD4L = 0X3F;				//脉宽为（63+1）*1/8M=8uS,则占空比为1/4
+  07D3    303F    LDIA	0x3F
+  07D4    0090    LD	0x10,A
+47:                   							//PWM4占空比高位在PWMTH的4,5位 
+48:                   
+49:                   PWMIF = 0;              	//清零PWMIF中断标志位
+  07D5    110C    CLRB	0xC,2
+50:                   PWMCON = 0B00000111;		//PWM选择时钟源为Fosc/1,PWM0反向，允许PWM0,PWM1使能
+  07D6    3007    LDIA	0x7
+  07D7    009B    LD	0x1B,A
+51:                   PWMCON1 = 0B00100111;		//允许PWM2,PWM3,PWM4使能，PWM4反向
+  07D8    3027    LDIA	0x27
+  07D9    1683    SETB	0x3,5
+  07DA    008E    LD	0xE,A
+52:               	TRISA = 0B00000000;			//选择的PA1,PA2口设为输出
+  07DB    0185    CLR	0x5
+53:               
+54:                   while(1)					//死循环,单片机初始化后,将一直运行这个死循环
+  07DC    0064    CLRWDT
+55:                   {
+56:               		asm("clrwdt");
+57:               		if(++delaycnt >5000)	//延时5000个软件周期，非精确定时
+  07DD    0AF0    INCR	0x70
+  07DE    1903    SZB	0x3,2
+  07DF    0AF1    INCR	0x71
+  07E0    3013    LDIA	0x13
+  07E1    0271    SUBA	0x71
+  07E2    3089    LDIA	0x89
+  07E3    1903    SZB	0x3,2
+  07E4    0270    SUBA	0x70
+  07E5    1C03    SNZB	0x3,0
+  07E6    2FF0    JP	0x7F0
+58:                  		{
+59:                  			delaycnt = 0;        //清零以备下次重新计数
+  07E7    01F0    CLR	0x70
+  07E8    01F1    CLR	0x71
+60:               			
+61:               			pwmbuf++;			//占空比加一
+  07E9    0AF2    INCR	0x72
+62:               			PWMD0L = pwmbuf;	//写入占空比,注意写0仍会有波形输出，如要输出低电平需关掉PWM，口线输出低
+  07EA    0872    LD	A,0x72
+  07EB    1283    CLRB	0x3,5
+  07EC    0096    LD	0x16,A
+63:               			PWMD23H = 0X00;	
+  07ED    019C    CLR	0x1C
+64:               			PWMD2L = pwmbuf;
+  07EE    0872    LD	A,0x72
+  07EF    008E    LD	0xE,A
+65:               		
+66:                  		}
+67:               		xx.bytel = 0x23;
+  07F0    3023    LDIA	0x23
+  07F1    00F3    LD	0x73,A
+68:               		xx.byteh = 0x03;
+  07F2    3003    LDIA	0x3
+  07F3    00F4    LD	0x74,A
+69:               		PORTB = xx.bytel;
+  07F4    0873    LD	A,0x73
+  07F5    1283    CLRB	0x3,5
+  07F6    0086    LD	0x6,A
+70:               		PORTA = xx.byteh;		
+  07F7    0874    LD	A,0x74
+  07F8    0085    LD	0x5,A
+  07F9    2FDC    JP	0x7DC
+71:                   }
+72:               }
+73:               
+74:               
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    2FFA    JP	0x7FA
+---- start_initialization ------------------------------------------------------------------
+  07FA    3023    LDIA	0x23
+  07FB    00F3    LD	0x73,A
+  07FC    30FF    LDIA	0xFF
+  07FD    00F4    LD	0x74,A
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  07FE    0183    CLR	0x3

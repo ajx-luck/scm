@@ -1,0 +1,275 @@
+---- H:\MyDownloads\说明书&测试报告\开发包\SC8F577X开发包\SC8F577X_DEMO\SC8F577X_PGA+恒流源_Demo\main.c ----------------------------------------------------------------------
+1:                /**********************************************************
+2:                
+3:                **********************************************************/
+4:                
+5:                #include <sc.h>
+6:                
+7:                
+8:                volatile unsigned int  Adc_Result1,Adc_Result2,Adc_Result0;
+9:                
+10:               /***********************************************************
+11:               main主函数
+12:               ***********************************************************/
+13:               
+14:               unsigned int  Read_ADC(unsigned char  ADCchannel,unsigned char  ADCLDORef);
+15:               void Init_System();
+16:               
+17:               
+18:               void main()
+19:               {
+20:               	Init_System();
+  078D    118A    CLRB	0xA,3
+  078E    2773    CALL	0x773
+  078F    118A    CLRB	0xA,3
+21:               	
+22:               	TRISA |= 0x01;       //RA0 输入态
+  0790    1405    SETB	0x5,0
+23:               	PGACON =  0b10000011;//  使能PGA，16倍放大
+  0791    3083    LDIA	0x83
+  0792    009A    LD	0x1A,A
+24:               
+25:               	ECIGEN =1;             //恒流源开启
+  0793    179B    SETB	0x1B,7
+26:               	while(1)
+27:               	{
+28:               		
+29:                     PGACH =0;
+  0794    131A    CLRB	0x1A,6
+  0795    3014    LDIA	0x14
+30:               	  Adc_Result1 =  Read_ADC(20,1);//读取PGA的值
+  0796    01F0    CLR	0x70
+  0797    0AF0    INCR	0x70
+  0798    118A    CLRB	0xA,3
+  0799    27B4    CALL	0x7B4
+  079A    118A    CLRB	0xA,3
+  079B    0871    LD	A,0x71
+  079C    00FA    LD	0x7A,A
+  079D    0870    LD	A,0x70
+  079E    00F9    LD	0x79,A
+31:               	  PGACH =1;
+  079F    171A    SETB	0x1A,6
+  07A0    3014    LDIA	0x14
+32:               	  Adc_Result2 =  Read_ADC(20,1);//读取PGA的值
+  07A1    01F0    CLR	0x70
+  07A2    0AF0    INCR	0x70
+  07A3    118A    CLRB	0xA,3
+  07A4    27B4    CALL	0x7B4
+  07A5    118A    CLRB	0xA,3
+  07A6    0871    LD	A,0x71
+  07A7    00F8    LD	0x78,A
+  07A8    0870    LD	A,0x70
+  07A9    00F7    LD	0x77,A
+33:               	  
+34:               	  Adc_Result1 += Adc_Result2;
+  07AA    0877    LD	A,0x77
+  07AB    07F9    ADDR	0x79
+  07AC    1803    SZB	0x3,0
+  07AD    0AFA    INCR	0x7A
+  07AE    0878    LD	A,0x78
+  07AF    07FA    ADDR	0x7A
+35:               	  Adc_Result1 >>=1;
+  07B0    1003    CLRB	0x3,0
+  07B1    0CFA    RRCR	0x7A
+  07B2    0CF9    RRCR	0x79
+  07B3    2F94    JP	0x794
+36:               	   
+37:               
+38:               		
+39:               	}
+40:               }
+41:               
+42:               
+43:               /******************************************
+44:                 返回  Adc_Result 
+45:                 
+46:                ADCchannel 为输入AD通道 0-18
+47:                            19  检测内部1.2V 
+48:               			 20  检测PGA输出
+49:                ADCLDORef =1,开启内部LDO 2V 作为ADC 参考
+50:                ADCLDORef =2,开启内部LDO 2.4V 作为ADC 参考
+51:                ADCLDORef =0,VDD 作为ADC 参考
+52:               *****************************************/
+53:               unsigned int  Read_ADC(unsigned char  ADCchannel,unsigned char  ADCLDORef)
+  07B4    00F6    LD	0x76,A
+54:               {
+55:                unsigned int	Adc_Result;
+56:               	unsigned char i=200;
+  07B5    30C8    LDIA	0xC8
+  07B6    00F5    LD	0x75,A
+57:               	
+58:               	
+59:               	if(ADCLDORef==0)
+  07B7    0870    LD	A,0x70
+  07B8    1D03    SNZB	0x3,2
+  07B9    2FBC    JP	0x7BC
+60:               	{
+61:               		ADCON1 = 0B00000000;
+  07BA    019C    CLR	0x1C
+62:               	}
+  07BB    2FC2    JP	0x7C2
+63:               	else if(ADCLDORef==1)
+  07BC    0B70    SZDECA	0x70
+  07BD    2FC0    JP	0x7C0
+64:               	{
+65:               		ADCON1 = 0B00000101;
+  07BE    3005    LDIA	0x5
+  07BF    2FC1    JP	0x7C1
+66:               	}
+67:               	else
+68:               	{
+69:                   	ADCON1 = 0B00000110;	
+  07C0    3006    LDIA	0x6
+  07C1    009C    LD	0x1C,A
+70:               	}
+71:               	
+72:               	CHS4 = 0;	
+  07C2    131C    CLRB	0x1C,6
+73:               	if(ADCchannel >=16)
+  07C3    3010    LDIA	0x10
+  07C4    0276    SUBA	0x76
+  07C5    1C03    SNZB	0x3,0
+  07C6    2FCA    JP	0x7CA
+74:               	{
+75:               		ADCchannel -= 16;	
+  07C7    3010    LDIA	0x10
+  07C8    02F6    SUBR	0x76
+76:               		CHS4 = 1;	
+  07C9    171C    SETB	0x1C,6
+77:               	}
+78:               	
+79:               	ADCON0 &= 0b11000011;
+  07CA    30C3    LDIA	0xC3
+  07CB    059D    ANDR	0x1D
+80:               	ADCON0 |= ADCchannel<<2; 
+  07CC    0876    LD	A,0x76
+  07CD    00F2    LD	0x72,A
+  07CE    3001    LDIA	0x1
+  07CF    1003    CLRB	0x3,0
+  07D0    0DF2    RLCR	0x72
+  07D1    3EFF    ADDIA	0xFF
+  07D2    1003    CLRB	0x3,0
+  07D3    1D03    SNZB	0x3,2
+  07D4    2FD0    JP	0x7D0
+  07D5    0D72    RLCA	0x72
+  07D6    049D    ORR	0x1D
+  07D7    0000    NOP
+81:               	asm("nop");
+82:               	GODONE =1;
+  07D8    1683    SETB	0x3,5
+  07D9    1303    CLRB	0x3,6
+  07DA    149D    SETB	0x1D,1
+83:               	while(GODONE==1&&i>0)
+  07DB    2FE1    JP	0x7E1
+  07DC    0875    LD	A,0x75
+  07DD    1903    SZB	0x3,2
+  07DE    2FE5    JP	0x7E5
+84:               	{
+85:               		i--;
+  07DF    03F5    DECR	0x75
+  07E0    0000    NOP
+  07E1    1683    SETB	0x3,5
+  07E2    1303    CLRB	0x3,6
+  07E3    189D    SZB	0x1D,1
+  07E4    2FDC    JP	0x7DC
+86:               		asm("nop");
+87:               	}
+88:               	Adc_Result = ADRESH<<4;
+  07E5    081E    LD	A,0x1E
+  07E6    00F3    LD	0x73,A
+  07E7    30F0    LDIA	0xF0
+  07E8    01F4    CLR	0x74
+  07E9    0EF3    SWAPR	0x73
+  07EA    0EF4    SWAPR	0x74
+  07EB    05F4    ANDR	0x74
+  07EC    0873    LD	A,0x73
+  07ED    390F    ANDIA	0xF
+  07EE    04F4    ORR	0x74
+  07EF    30F0    LDIA	0xF0
+  07F0    05F3    ANDR	0x73
+89:               	Adc_Result += ADRESL>>4;
+  07F1    0E1F    SWAPA	0x1F
+  07F2    390F    ANDIA	0xF
+  07F3    07F3    ADDR	0x73
+  07F4    1803    SZB	0x3,0
+  07F5    0AF4    INCR	0x74
+90:               	
+91:               	return Adc_Result;
+  07F6    0874    LD	A,0x74
+  07F7    00F1    LD	0x71,A
+  07F8    0873    LD	A,0x73
+  07F9    00F0    LD	0x70,A
+  07FA    0008    RET
+92:               	
+93:               }
+94:               
+95:               
+96:               /***********************************************
+97:               函数名称：Init_System
+98:               函数功能：系统初始化
+99:               入口参数：无
+100:              出口参数：无
+101:              备注：
+102:              ************************************************/
+103:              void Init_System()
+104:              {
+105:              	asm("nop");
+106:              	asm("clrwdt");
+107:              	INTCON = 0;					//系统初始化
+  0775    018B    CLR	0xB
+108:              	OSCCON = 0X70;				//配置振荡为8M,关WDT
+  0776    3070    LDIA	0x70
+  0777    1683    SETB	0x3,5
+  0778    1303    CLRB	0x3,6
+  0779    0088    LD	0x8,A
+109:              	OPTION_REG = 0;
+  077A    0181    CLR	0x1
+110:              	
+111:                  WPUA  = 0B00000000;			
+  077B    1283    CLRB	0x3,5
+  077C    0187    CLR	0x7
+112:                  WPUB  = 0B00001000;			//初始化RB3上拉
+  077D    3008    LDIA	0x8
+  077E    0088    LD	0x8,A
+113:                
+114:               
+115:              	TRISA = 0B00000001;			//初始化IO状态
+  077F    3001    LDIA	0x1
+  0780    1683    SETB	0x3,5
+  0781    0085    LD	0x5,A
+116:              	TRISB = 0B00001000;
+  0782    3008    LDIA	0x8
+  0783    0086    LD	0x6,A
+117:              
+118:              	PORTA = 0B00000000;
+  0784    1283    CLRB	0x3,5
+  0785    0185    CLR	0x5
+119:              	PORTB = 0B00000000;			//初始化输出
+  0786    0186    CLR	0x6
+120:              	
+121:                  ADCON0 = 0B10000001;         //	
+  0787    3081    LDIA	0x81
+  0788    1683    SETB	0x3,5
+  0789    009D    LD	0x1D,A
+122:              	ADCON1 = 0B00000011;
+  078A    3003    LDIA	0x3
+  078B    009C    LD	0x1C,A
+  078C    0008    RET
+123:              	
+124:                 
+125:              }
+126:              
+---- stringtab ------------------------------------------------------------------
+---- reset_enter ------------------------------------------------------------------
+  0000    118A    CLRB	0xA,3
+  0001    2FFB    JP	0x7FB
+---- start_initialization ------------------------------------------------------------------
+  07FB    01FB    CLR	0x7B
+  07FC    01FC    CLR	0x7C
+---- interrupt_function_enter ----------------------------------------------------------
+---- common_function ------------------------------------------------------------------
+  0773    0000    NOP
+  0774    0064    CLRWDT
+  07FD    0183    CLR	0x3
+  07FE    118A    CLRB	0xA,3
+  07FF    2F8D    JP	0x78D
