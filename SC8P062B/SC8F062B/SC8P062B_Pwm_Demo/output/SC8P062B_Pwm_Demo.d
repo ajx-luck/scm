@@ -1,1 +1,1 @@
- SC8P062B_Pwm_Demo.d  SC8P062B_Pwm_Demo.p1:  C:/Work/11_2024_5_17/SC8P062B/SC8P062B_Pwm_Demo/SC8P062B_Pwm_Demo.c
+ SC8P062B_Pwm_Demo.d  SC8P062B_Pwm_Demo.p1:  C:/mcuproject/scm/SC8P062B/SC8F062B/SC8P062B_Pwm_Demo/SC8P062B_Pwm_Demo.c

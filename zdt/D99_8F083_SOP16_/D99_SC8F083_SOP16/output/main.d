@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/zdt/D99_8F083_SOP16_/D99_SC8F083_SOP16/main.c C:/mcuproject/scm/zdt/D99_8F083_SOP16_/D99_SC8F083_SOP16/TouchKeyConst.h C:/mcuproject/scm/zdt/D99_8F083_SOP16_/D99_SC8F083_SOP16/Touch_Kscan_Library.h

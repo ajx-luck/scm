@@ -5,7 +5,7 @@ opt pagewidth 120
 	opt pm
 
 	processor	SC8P062BD
-opt include "C:\Work\11_2024_5_17\SCMCU_IDE_V2.00.16_Beta2\data\include\sc8p062bd.cgen.inc"
+opt include "C:\mcuproject\scm\SCMCU_IDE_V2.00.16_Beta5\SCMCU_IDE_V2.00.16_Beta5\data\include\sc8p062bd.cgen.inc"
 clrc	macro
 	bcf	3,0
 	endm
@@ -190,7 +190,7 @@ main@pwmbuf:	; 1 bytes @ 0x2
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 8 in file "C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+;;		line 8 in file "C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -218,12 +218,12 @@ main@pwmbuf:	; 1 bytes @ 0x2
 ;; This function uses a non-reentrant model
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
-	file	"C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+	file	"C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 	line	8
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
-	file	"C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+	file	"C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 	line	8
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
@@ -352,7 +352,7 @@ l957:
 	
 l523:	
 	line	78
-# 78 "C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+# 78 "C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 clrwdt ;# 
 psect	maintext
 	line	79
@@ -420,7 +420,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _Init_System *****************
 ;; Defined at:
-;;		line 99 in file "C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+;;		line 99 in file "C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -451,7 +451,7 @@ psect	text1,local,class=CODE,delta=2,merge=1,group=0
 global __ptext1
 __ptext1:	;psect for function _Init_System
 psect	text1
-	file	"C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+	file	"C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 	line	99
 	global	__size_of_Init_System
 	__size_of_Init_System	equ	__end_of_Init_System-_Init_System
@@ -463,10 +463,10 @@ _Init_System:
 	line	101
 	
 l907:	
-# 101 "C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+# 101 "C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 nop ;# 
 	line	102
-# 102 "C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+# 102 "C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 clrwdt ;# 
 psect	text1
 	line	103
@@ -487,7 +487,7 @@ l913:
 ;SC8P062B_Pwm_Demo.c: 105: OPTION_REG = 0;
 	clrf	(1)	;volatile
 	line	106
-# 106 "C:\Work\11_2024_5_17\SC8P062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
+# 106 "C:\mcuproject\scm\SC8P062B\SC8F062B\SC8P062B_Pwm_Demo\SC8P062B_Pwm_Demo.c"
 clrwdt ;# 
 psect	text1
 	line	108
