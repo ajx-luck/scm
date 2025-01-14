@@ -162,10 +162,10 @@ void main()
 
 void ledShow()
 {
-	if(++ledCntTime > 5)
+	if(++ledCntTime > 30)
 	{
 		ledCntTime = 0;
-		if(++ledCnt > 6)
+		if(++ledCnt > 5)
 		{
 			ledCnt = 0;
 		}
@@ -173,59 +173,58 @@ void ledShow()
 		PORTB &= 0xC7;
 		TRISA |= 0x20;
 		TRISB |= 0x38;
+		switch(ledCnt)
+		{
+			case 1:
+			if(ledStep > 0)
+			{
+				TRISB &= 0xE7;
+				PORTB |= 0x10;
+			}
+			break;
+			case 2:
+			if(ledStep > 1)
+			{
+				TRISB &= 0xCF;
+				PORTB |= 0x20;
+			}
+			break;
+			case 3:
+			if(ledStep > 2)
+			{
+				TRISB &= 0xE7;
+				PORTB |= 0x08;
+			}
+			break;
+			case 4:
+			if(ledStep > 3)
+			{
+				TRISB &= 0xCF;
+				PORTB |= 0x10;
+			}
+			break;
+			case 5:
+			if(ledStep > 4)
+			{
+				TRISA &= 0xDF;
+				TRISB &= 0xDF;
+				PORTB |= 0x20;
+			}
+			break;
+			case 0:
+			if(ledStep > 5)
+			{
+				TRISA &= 0xDF;
+				TRISB &= 0xDF;
+				PORTA |= 0x20;
+			}
+			break;
+			default:
+			break;
+		}
 	}
 
-	switch(ledCnt)
-	{
-		case 0:
-		break;
-		case 1:
-		if(ledStep > 0)
-		{
-			TRISB &= 0xE7;
-			PORTB |= 0x10;
-		}
-		break;
-		case 2:
-		if(ledStep > 1)
-		{
-			TRISB &= 0xCF;
-			PORTB |= 0x20;
-		}
-		break;
-		case 3:
-		if(ledStep > 2)
-		{
-			TRISB &= 0xE7;
-			PORTB |= 0x08;
-		}
-		break;
-		case 4:
-		if(ledStep > 3)
-		{
-			TRISB &= 0xCF;
-			PORTB |= 0x10;
-		}
-		break;
-		case 5:
-		if(ledStep > 4)
-		{
-			TRISA &= 0xDF;
-			TRISB &= 0xDF;
-			PORTB |= 0x20;
-		}
-		break;
-		case 6:
-		if(ledStep > 5)
-		{
-			TRISA &= 0xDF;
-			TRISB &= 0xDF;
-			PORTA |= 0x20;
-		}
-		break;
-		default:
-		break;
-	}
+	
 }
 
 
@@ -629,7 +628,7 @@ void checkOutA()
         }
         else
         {
-        	u8t maxAout = 7;
+        	u8t maxAout = 11;
         	if(workStep == 1)
     		{
     			maxAout = maxAout + 5;
@@ -644,15 +643,15 @@ void checkOutA()
     		}
     		else if(workStep == 4)
     		{
-    			maxAout = maxAout + 7;
+    			maxAout = maxAout + 8;
     		}
     		else if(workStep == 5)
     		{
-    			maxAout = maxAout + 8;
+    			maxAout = maxAout + 9;
     		}
     		else if(workStep == 6)
     		{
-    			maxAout = maxAout + 8;
+    			maxAout = maxAout + 10;
     		}
         	if(overCount > 0)
         	{
