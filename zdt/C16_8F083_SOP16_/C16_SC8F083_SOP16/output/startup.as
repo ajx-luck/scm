@@ -9,7 +9,7 @@
 	;
 	; -oC16_SC8F083_SOP16.cof -mC16_SC8F083_SOP16.map \
 	; --summary=default,-psect,-class --fill=0xFFFF --output=intel main.p1 \
-	; C:\mcuproject\scm\C16_8F083_SOP16_\C16_SC8F083_SOP16\Touch_Kscan_Library.lpp \
+	; C:\mcuproject\scm\zdt\C16_8F083_SOP16_\C16_SC8F083_SOP16\Touch_Kscan_Library.lpp \
 	; --chip=SC8F083 -P --runtime=default, \
 	; --opt=-local,-asmfile,+asm,-speed,+space,-debug -E+cmscerr.err \
 	; -D__DEBUG=1 -g --asmlist --warn=-9 --stack=compiled:auto:auto:auto \

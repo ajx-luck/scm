@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/zdt/C212_062B_SOP14--╤бв╙иак╦10цК/main.c

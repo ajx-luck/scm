@@ -62,7 +62,7 @@ u16t	count8s;
 u16t	count900s;
 u8t		lowBatFlag = 0;
 u8t		sleepTime;
-u8t		startChrgTime = 0;
+u8t		stopChrgTime = 0;
 
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
@@ -430,10 +430,10 @@ void chrgCtr()
 				PWMD01H = 0X00;
 				PWMD0L = chrgMaxDuty;
 		}
+
 	}
-	else
+	else 
 	{
-		startChrgTime = 0;
 		chrgFlag = 0;
 		chrgFullFlag = 0;
 		protectFlag = 0;

@@ -42,7 +42,14 @@ u8t		lowBatTime = 0;
 u8t		lowFanTime = 0;//风扇降低为1档的时间
 u8t		bujinFlag = 0;	
 u16t	motorStep = 0;
-u16t	maxMotorStep = 0;
+u16t	maxMotorStep = 512;
+u8t		powerFlag = 0;
+u16t		keyCount = 0;
+u8t		longKeyFlag = 0;
+u8t		closeTime = 0;
+u8t		motorStopFlag = 0;
+u8t		zeroFlag = 1;	//默认在原点
+u8t		bujinStartFlag = 0;
 
 volatile unsigned int adresult;
 volatile unsigned int result;
@@ -113,7 +120,7 @@ void KeyServer()
 		{
 			//确定状态改变的按键
 			KeyOldFlag ^= KeyFlag[0];
-			if ((KeyOldFlag & 0x1) && (KeyFlag[0] & 0x1) && firstLock == 0) 
+			if ((KeyOldFlag & 0x1) && (KeyFlag[0] & 0x1) && firstLock == 0 && powerFlag > 0) 
 			{
 				//KEY1被按下
 				if(lowBatLock == 1)
@@ -134,7 +141,7 @@ void KeyServer()
 					shanshuoTime2 = 0;
 				}
 			}
-			if ((KeyOldFlag & 0x2) && (KeyFlag[0] & 0x2) && firstLock == 0) 
+			if ((KeyOldFlag & 0x2) && (KeyFlag[0] & 0x2) && firstLock == 0 && powerFlag > 0) 
 			{
 				//KEY2被按下
 				if(lowBatLock == 1)
@@ -156,13 +163,14 @@ void KeyServer()
 				}
 				
 			}
-			if ((KeyOldFlag & 0x4) && (KeyFlag[0] & 0x4) && firstLock == 0 && workStep > 0) 
+			if ((KeyOldFlag & 0x4) && (KeyFlag[0] & 0x4) && firstLock == 0 && workStep > 0 && powerFlag > 0) 
 			{
 				//KEY3被按下
 				if(++bujinFlag > 3)
 				{
 					bujinFlag = 0;
 				}
+				bujinStartFlag = 1;
 				if(bujinFlag >= 2)
 				{
 					shanshuoTime3 = 450;
@@ -175,10 +183,35 @@ void KeyServer()
 
 			KeyOldFlag = KeyFlag[0];
 		}
+		if(firstLock == 0 && KeyOldFlag & 0x4)
+		{
+			if(++keyCount >= 400)
+			{
+				keyCount = 0;
+				if(longKeyFlag == 0)
+				{
+					longKeyFlag = 1;
+					if(powerFlag > 0)
+					{
+						powerFlag = 0;
+						workStep = 0;
+						wuhuaFlag = 0;
+						bujinFlag = 0;
+					}
+					else
+					{
+						powerFlag = 1;
+						shanshuoTime3 = 900;
+					}
+				}
+			}
+		}
 	} 
 	else 
 	{
 		KeyOldFlag = 0;
+		longKeyFlag = 0;
+		keyCount = 0;
 	}
 }
 
@@ -231,7 +264,7 @@ void WorkSleep()
 	
 		//进入休眠前,必须固定口线电平,这儿全部输出低电平,并关闭所有上拉电阻
 		PORTA = 0x01;
-		PORTB = 0x02;
+		PORTB = 0x00;
 		TRISC = 0;
 		PORTC = 0x03;
 
@@ -239,9 +272,8 @@ void WorkSleep()
 		//WPUB7 = 1;//上拉			
 		RBIF = 0;//清标志
 		RBIE = 1; //允许PB口电平变化中断
-		IOCB5= 1;//允许PB0电平变化中断
-		PORTB;//读一次PB口
-		PORTB &= 0xFD;	
+		IOCB5= 1;//允许PB1电平变化中断
+		PORTB;//读一次PB口	
 /****如需要PA口中断唤醒，使能下列程序并按需修改****
 			TRISA0 =1;	//输入
 			WPUA0 = 1;	//上拉			
@@ -261,6 +293,7 @@ void WorkSleep()
 		}
 		//休眠被唤醒,重新配置中断等SFR,使系统进入正常工作
 		Refurbish_Sfr();
+		PORTB &= 0xFD;
 		ADCON0 = 0X41;
 		ADON = 1;
 		ADCON1 = 0x00;
@@ -559,12 +592,24 @@ void wuhuaCtr()
 {
 	if(count1s == 0)
 	{
-		if(++count10s >= 10)
+		if(++count10s >= 20)
 		{
 			count10s = 0;
 		}
+		if(workStep == 0 && wuhuaFlag == 0 && powerFlag > 0)
+		{
+			if(++closeTime > 200)
+			{
+				closeTime = 0;
+				powerFlag = 0;
+			}
+		}
+		else
+		{
+			closeTime = 0;
+		}
 	}
-	if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 5))
+	if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 10))
 	{
 		pwmInit();
 		/*
@@ -604,20 +649,43 @@ void wuhuaCtr()
 
 void bujinCtr()
 {
-	if(bujinFlag || motorStep > 0)
+	if(bujinFlag || motorStopFlag)
 	{
-		if(bujinFlag == 1)
+		//马达启动或者切换原点定位
+		if(bujinStartFlag && zeroFlag)
 		{
-			maxMotorStep = 512;
+			bujinStartFlag = 0;
+			if(bujinFlag == 1)
+			{
+				maxMotorStep = 512;
+				motorStopFlag = 1;
+			}
+			else if(bujinFlag == 2)
+			{
+				maxMotorStep = 1024;
+				motorStopFlag = 1;
+			}
+			else if(bujinFlag == 3)
+			{
+				maxMotorStep = 1696;		//1360 120度
+				motorStopFlag = 1;
+			}
+			motorStep = maxMotorStep/2;
 		}
-		else if(bujinFlag == 2)
+		if(motorStep == maxMotorStep/2 || motorStep == ((maxMotorStep/2) + maxMotorStep))
 		{
-			maxMotorStep = 1024;
+			zeroFlag = 1;
+			if(bujinFlag == 0)
+			{
+				motorStopFlag = 0;
+			}
 		}
-		else if(bujinFlag == 3)
+		else
 		{
-			maxMotorStep = 1360;
+			zeroFlag = 0;
 		}
+		
+		
 		if(++motorStep >= (maxMotorStep*2))
 		{
 			motorStep = 0;
@@ -743,6 +811,7 @@ void workCtr()
 		fanCtr();
 		wuhuaCtr();
 		bujinCtr();
+		
 	}
 	
 }
@@ -753,7 +822,7 @@ void workCtr()
 void main()
 {
 	Init_System();
-	firstLock = 0;
+	firstLock = 1;
 	firstTime = 200;
 	while(1)
 	{
@@ -767,7 +836,7 @@ void main()
 			Refurbish_Sfr();
 			KeyServer();
 			workCtr();
-			if(firstTime == 0 && chrgFlag == 0 && workStep == 0 && wuhuaFlag == 0 && bujinFlag == 0 && shanshuoTime == 0 && shanshuoTime2 == 0)
+			if(firstTime == 0 && chrgFlag == 0 && workStep == 0 && wuhuaFlag == 0 && powerFlag == 0 && keyCount == 0 && bujinFlag == 0 && shanshuoTime == 0 && shanshuoTime2 == 0)
 			{
 				WorkSleep();
 			}

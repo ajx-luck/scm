@@ -40,6 +40,7 @@ volatile unsigned int adresult;
 volatile unsigned int result;
 volatile unsigned char test_adc;
 volatile unsigned int power_ad;
+static unsigned int time;
 
 void chrgCtr();
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
@@ -186,11 +187,10 @@ void interrupt Isr_Timer()
 void WorkSleep()
 {
 #if (0 != C_KEY_WAKEUP)
-	static unsigned char time;
 	
 	if(B_OnOff)time = 0;
 	
-	if(++time >= 125)
+	if(++time >= 2000)
 	{
 		time = 0;
 		INTCON = 0;			//;关断ADC模块及中断使能；
@@ -624,6 +624,10 @@ void main()
 			if(firstTime == 0 && chrgFlag == 0 && workStep == 0 && wuhuaFlag == 0 && shanshuoTime == 0 && shanshuoTime2 == 0)
 			{
 				WorkSleep();
+			}
+			else
+			{
+				time = 0;
 			}
 		}
 	}

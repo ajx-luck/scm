@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/zdt/D108_8F083_tssop20_无转头/D108_8F083_tssop20_/main.c C:/mcuproject/scm/zdt/D108_8F083_tssop20_无转头/D108_8F083_tssop20_/TouchKeyConst.h C:/mcuproject/scm/zdt/D108_8F083_tssop20_无转头/D108_8F083_tssop20_/Touch_Kscan_Library.h

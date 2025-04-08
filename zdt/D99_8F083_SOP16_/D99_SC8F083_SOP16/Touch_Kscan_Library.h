@@ -29,7 +29,7 @@ extern volatile unsigned char KeyFlag[2];
 #define		WaterMode
 
 //同时最大允许有效按键数,超过该值将认为是干扰
-#define		C_VALID_KEY		1
+#define		C_VALID_KEY		2
 
 //按键最大允许生效时间(单位：ms),以4ms调用基准换算,为0时将忽略
 #define		C_VALID_TIME	60*(1000/4)

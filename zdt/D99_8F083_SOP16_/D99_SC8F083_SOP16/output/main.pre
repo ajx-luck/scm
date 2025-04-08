@@ -587,7 +587,7 @@ unsigned char KeyUpShake[2];
 const unsigned int KeyValidTime = 60*(1000/4);
 const unsigned char KeyTotalNumber = 2;
 const unsigned char KeyShakeCounter = 2;
-const unsigned char KeyValidNumber = 1;
+const unsigned char KeyValidNumber = 2;
 
 const unsigned int KeyWakeUpEn = 0x0003;
 
@@ -597,6 +597,7 @@ const unsigned char WaterModeSel = 1;
 # 35 "C:\mcuproject\scm\zdt\D99_8F083_SOP16_\D99_SC8F083_SOP16\main.c"
 const static unsigned char numArray[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x71,0x79,0x50};
 volatile unsigned char MainTime;
+static unsigned int time;
 volatile bit B_MainLoop,B_OnOff;
 unsigned char count1s = 0;
 unsigned char workStep = 0;
@@ -626,7 +627,7 @@ unsigned char wuhuaKeyFlag = 0;
 unsigned char showBatStep = 0;
 unsigned char curBatStep = 0;
 unsigned int count30s = 0;
-
+unsigned int count15s = 0;
 
 volatile unsigned int adresult;
 volatile unsigned int result;
@@ -668,7 +669,7 @@ ADON = 1;
 ADCON1 = 0x00;
 }
 
-# 116
+# 117
 void Refurbish_Sfr()
 {
 
@@ -679,12 +680,13 @@ if (4 != T2CON)
 T2CON = 4;
 }
 
-# 130
+# 131
 void KeyServer()
 {
 static unsigned char KeyOldFlag = 0;
 if (KeyFlag[0])
 {
+time = 0;
 if (KeyFlag[0] != KeyOldFlag)
 {
 
@@ -694,7 +696,7 @@ if ((KeyOldFlag & 0x1) && (KeyFlag[0] & 0x1) && firstLock == 0)
 
 if(lowBatLock == 1)
 {
-shanshuoTime = 450;
+shanshuoTime = 225;
 }
 else if(++workStep > 2)
 {
@@ -702,7 +704,7 @@ workStep = 0;
 }
 if(workStep == 2)
 {
-shanshuoTime = 450;
+shanshuoTime = 225;
 }
 else
 {
@@ -714,7 +716,7 @@ if ((KeyOldFlag & 0x2) && (KeyFlag[0] & 0x2) && firstLock == 0)
 
 if(lowBatLock == 1)
 {
-shanshuoTime2 = 450;
+shanshuoTime2 = 225;
 }
 else if(++wuhuaFlag > 2)
 {
@@ -722,7 +724,7 @@ wuhuaFlag = 0;
 }
 if(wuhuaFlag == 2)
 {
-shanshuoTime2 = 450;
+shanshuoTime2 = 225;
 count10s = 0;
 }
 else
@@ -741,7 +743,7 @@ KeyOldFlag = 0;
 }
 }
 
-# 195
+# 197
 void interrupt Isr_Timer()
 {
 if(TMR2IF)
@@ -751,7 +753,7 @@ if(firstTime > 0 || workStep > 0 || wuhuaFlag > 0 || chrgFlag > 0)
 {
 ledShow();
 }
-if(++MainTime >= 32)
+if(++MainTime >= 64)
 {
 MainTime = 0;
 B_MainLoop = 1;
@@ -771,11 +773,11 @@ PIR1 = 0;
 void WorkSleep()
 {
 
-static unsigned char time;
+
 
 if(B_OnOff)time = 0;
 
-if(++time >= 125)
+if(++time >= 1000)
 {
 time = 0;
 INTCON = 0;
@@ -802,7 +804,7 @@ RBIE = 1;
 IOCB0= 1;
 PORTB;
 
-# 265
+# 267
 SystemEnterSleep();
 if(RAIF)
 {
@@ -818,7 +820,7 @@ ADCON1 = 0x00;
 
 }
 
-# 299
+# 301
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo)
 {
 volatile unsigned long adsum = 0;
@@ -1095,7 +1097,7 @@ else
 {
 if(power_ad < 3600)
 {
-curBatStep = (power_ad - 2800)/40;
+curBatStep = (power_ad - 2800)/80;
 }
 else
 {
@@ -1108,9 +1110,21 @@ curBatStep = 99;
 
 if(chrgFlag)
 {
+if(chrgFullFlag && showBatStep < 99)
+{
+if(++count15s >= 7500)
+{
+count15s = 0;
+showBatStep++;
+}
+}
+else
+{
+count15s = 0;
+}
 if(curBatStep > showBatStep)
 {
-if(++count30s >= 10000 && showBatStep < 99)
+if(++count30s >= 15000 && showBatStep < 99)
 {
 count30s = 0;
 showBatStep++;
@@ -1124,9 +1138,14 @@ count30s = 0;
 }
 else
 {
+unsigned int tempSubBatTime = 15000;
+if(showBatStep < 40)
+{
+tempSubBatTime = 8000;
+}
 if(curBatStep < showBatStep && showBatStep > 1)
 {
-if(++count30s >= 2500 && showBatStep > 1)
+if(++count30s >= tempSubBatTime && showBatStep > 1)
 {
 count30s = 0;
 showBatStep--;
@@ -1198,7 +1217,7 @@ void keyLedCtr()
 if(shanshuoTime > 0)
 {
 shanshuoTime--;
-if((shanshuoTime % 150) < 75)
+if((shanshuoTime % 75) < 37)
 {
 fanKeyFlag = 0;
 }
@@ -1219,7 +1238,7 @@ fanKeyFlag = 0;
 if(shanshuoTime2 > 0)
 {
 shanshuoTime2--;
-if((shanshuoTime2 % 150) < 75)
+if((shanshuoTime2 % 75) < 37)
 {
 wuhuaKeyFlag = 0;
 }
@@ -1299,11 +1318,11 @@ fanValue = (unsigned int)(fan_temp);
 }
 if(fanValue > 1300)
 {
-if(++fanOverTime > 50)
+if(++fanOverTime > 25)
 {
 fanOverTime = 0;
 workStep = 0;
-shanshuoTime = 450;
+shanshuoTime = 225;
 }
 }
 else
@@ -1332,16 +1351,16 @@ void wuhuaCtr()
 {
 if(count1s == 0)
 {
-if(++count10s >= 20)
+if(++count10s >= 10)
 {
 count10s = 0;
 }
 }
-if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 10))
+if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 5))
 {
 pwmInit();
 
-# 834
+# 853
 }
 else
 {
@@ -1399,7 +1418,7 @@ wuhuaCtr();
 
 }
 
-# 894
+# 913
 void main()
 {
 Init_System();
@@ -1425,6 +1444,10 @@ PORTB &= 0xEF;
 TRISA |= 0x1B;
 TRISB |= 0x10;
 WorkSleep();
+}
+else
+{
+time = 0;
 }
 }
 }

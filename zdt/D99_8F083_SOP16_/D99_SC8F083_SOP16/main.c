@@ -34,6 +34,7 @@
 
 const static unsigned char numArray[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x71,0x79,0x50};
 volatile unsigned char MainTime;
+static unsigned int time;
 volatile bit	B_MainLoop,B_OnOff;
 u8t	count1s = 0;
 u8t	workStep = 0;
@@ -63,7 +64,7 @@ u8t		wuhuaKeyFlag = 0;
 u8t		showBatStep = 0;
 u8t		curBatStep = 0;
 u16t	count30s = 0;
-
+u16t	count15s = 0;
 
 volatile unsigned int adresult;
 volatile unsigned int result;
@@ -132,6 +133,7 @@ void KeyServer()
 	static unsigned char KeyOldFlag = 0;
 	if (KeyFlag[0]) 
 	{
+		time = 0;
 		if (KeyFlag[0] != KeyOldFlag) 
 		{
 			//确定状态改变的按键
@@ -141,7 +143,7 @@ void KeyServer()
 				//KEY1被按下
 				if(lowBatLock == 1)
 				{
-					shanshuoTime = 450;
+					shanshuoTime = 225;
 				}
 				else if(++workStep > 2)
 				{
@@ -149,7 +151,7 @@ void KeyServer()
 				}
 				if(workStep == 2)
 				{
-					shanshuoTime = 450;
+					shanshuoTime = 225;
 				}
 				else
 				{
@@ -161,7 +163,7 @@ void KeyServer()
 				//KEY2被按下
 				if(lowBatLock == 1)
 				{
-					shanshuoTime2 = 450;
+					shanshuoTime2 = 225;
 				}
 				else if(++wuhuaFlag > 2)
 				{
@@ -169,7 +171,7 @@ void KeyServer()
 				}
 				if(wuhuaFlag == 2)
 				{
-					shanshuoTime2 = 450;
+					shanshuoTime2 = 225;
 					count10s = 0;
 				}
 				else
@@ -201,7 +203,7 @@ void interrupt Isr_Timer()
 		{
 			ledShow();
 		}
-		if(++MainTime >= 32)	//需根据你选择的触摸路数和触摸电容选择扫描一次按键的时间
+		if(++MainTime >= 64)	//需根据你选择的触摸路数和触摸电容选择扫描一次按键的时间
 		{						//一般103电容，8路触摸，8M主频检测时间约4ms，故扫描一次的时间可选5ms
 			MainTime = 0;
 			B_MainLoop = 1;
@@ -221,11 +223,11 @@ void interrupt Isr_Timer()
 void WorkSleep()
 {
 #if (0 != C_KEY_WAKEUP)
-	static unsigned char time;
+	
 	
 	if(B_OnOff)time = 0;
 	
-	if(++time >= 125)
+	if(++time >= 1000)
 	{
 		time = 0;
 		INTCON = 0;			//;关断ADC模块及中断使能；
@@ -572,7 +574,7 @@ void setBatStep()
 	{
 		if(power_ad < 3600)
 		{
-			curBatStep = (power_ad - 2800)/40;
+			curBatStep = (power_ad - 2800)/80;
 		}
 		else
 		{
@@ -585,9 +587,21 @@ void setBatStep()
 
 		if(chrgFlag)
 		{
+			if(chrgFullFlag && showBatStep < 99)
+			{
+				if(++count15s >= 7500)
+				{
+					count15s = 0;
+					showBatStep++;
+				}
+			}
+			else
+			{
+				count15s = 0;
+			}
 			if(curBatStep > showBatStep)
 			{
-				if(++count30s >= 10000 && showBatStep < 99)	//20s
+				if(++count30s >= 15000 && showBatStep < 99)	//60s
 				{	
 					count30s = 0;
 					showBatStep++;
@@ -601,9 +615,14 @@ void setBatStep()
 		}
 		else
 		{
+			u16t tempSubBatTime = 15000;
+			if(showBatStep < 40)
+			{
+				tempSubBatTime = 8000;
+			}
 			if(curBatStep < showBatStep && showBatStep > 1)
 			{
-				if(++count30s >= 2500 && showBatStep > 1)	//10s
+				if(++count30s >= tempSubBatTime && showBatStep > 1)	//60s
 				{	
 					count30s = 0;
 					showBatStep--;
@@ -675,7 +694,7 @@ void keyLedCtr()
 	if(shanshuoTime > 0)
 	{
 		shanshuoTime--;
-		if((shanshuoTime % 150) < 75)
+		if((shanshuoTime % 75) < 37)
 		{
 			fanKeyFlag = 0;
 		}
@@ -696,7 +715,7 @@ void keyLedCtr()
 	if(shanshuoTime2 > 0)
 	{
 		shanshuoTime2--;
-		if((shanshuoTime2 % 150) < 75)
+		if((shanshuoTime2 % 75) < 37)
 		{
 			wuhuaKeyFlag = 0;
 		}
@@ -776,11 +795,11 @@ void fanCtr()
 		}
 		if(fanValue > 1300)		//原来的值是1.3V
 		{
-			if(++fanOverTime > 50)
+			if(++fanOverTime > 25)
 			{
 				fanOverTime = 0;
 				workStep = 0;
-				shanshuoTime = 450;
+				shanshuoTime = 225;
 			}
 		}
 		else
@@ -809,12 +828,12 @@ void wuhuaCtr()
 {
 	if(count1s == 0)
 	{
-		if(++count10s >= 20)
+		if(++count10s >= 10)
 		{
 			count10s = 0;
 		}
 	}
-	if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 10))
+	if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 5))
 	{
 		pwmInit();
 		/*
@@ -916,6 +935,10 @@ void main()
 				TRISA |= 0x1B;
 				TRISB |= 0x10;
 				WorkSleep();
+			}
+			else
+			{
+				time = 0;
 			}
 		}
 	}
