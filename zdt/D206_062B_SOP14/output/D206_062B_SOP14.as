@@ -1111,11 +1111,10 @@ l2838:
 	
 l2840:	
 ;main.c: 620: }
-;main.c: 621: maxDuty = 40 + (workStep*3);
-	movf	(_workStep),w
-	addwf	(_workStep),w
-	addwf	(_workStep),w
-	addlw	028h
+;main.c: 621: maxDuty = 36 + (workStep*2);
+	clrc
+	rlf	(_workStep),w
+	addlw	024h
 	movwf	(_maxDuty)
 	line	622
 	
@@ -1133,13 +1132,13 @@ u2730:
 	
 l2844:	
 ;main.c: 623: {
-;main.c: 624: if(++count5s > 300)
+;main.c: 624: if(++count5s > 600)
 	incf	(_count5s),f
 	skipnz
 	incf	(_count5s+1),f
-	movlw	01h
+	movlw	02h
 	subwf	((_count5s+1)),w
-	movlw	02Dh
+	movlw	059h
 	skipnz
 	subwf	((_count5s)),w
 	skipc
@@ -1158,10 +1157,10 @@ l2846:
 	line	627
 	
 l2848:	
-;main.c: 627: overWorkTime = 1000;
-	movlw	0E8h
+;main.c: 627: overWorkTime = 300;
+	movlw	02Ch
 	movwf	(_overWorkTime)
-	movlw	03h
+	movlw	01h
 	movwf	((_overWorkTime))+1
 	line	628
 	

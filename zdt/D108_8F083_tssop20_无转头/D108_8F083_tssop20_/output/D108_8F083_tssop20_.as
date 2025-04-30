@@ -160,6 +160,7 @@ __end_of_Table_KeyChannel:
 	global	_keyCount
 	global	_maxMotorStep
 	global	_motorStep
+	global	_fanValue
 	global	_shanshuoTime3
 	global	_shanshuoTime2
 	global	_shanshuoTime
@@ -177,7 +178,6 @@ __end_of_Table_KeyChannel:
 	global	_powerFlag
 	global	_bujinFlag
 	global	_lowFanTime
-	global	_lowBatTime
 	global	_lowBatLock
 	global	_chrgFullTime
 	global	_chrgFullFlag
@@ -197,18 +197,15 @@ __end_of_Table_KeyChannel:
 	global	_KeyUpShake
 	global	CheckValidTime@F87
 	global	_result
-	global	_fanValue
+	global	_lowBatTime
 	global	_firstLock
-psect	nvBANK0,class=BANK0,space=1,noexec
-global __pnvBANK0
-__pnvBANK0:
+psect	nvBANK1,class=BANK1,space=1,noexec
+global __pnvBANK1
+__pnvBANK1:
 _firstLock:
        ds      1
 
 	global	_firstTime
-psect	nvBANK1,class=BANK1,space=1,noexec
-global __pnvBANK1
-__pnvBANK1:
 _firstTime:
        ds      1
 
@@ -376,6 +373,9 @@ _maxMotorStep:
 _motorStep:
        ds      2
 
+_fanValue:
+       ds      2
+
 _shanshuoTime3:
        ds      2
 
@@ -425,9 +425,6 @@ _bujinFlag:
        ds      1
 
 _lowFanTime:
-       ds      1
-
-_lowBatTime:
        ds      1
 
 _lowBatLock:
@@ -490,7 +487,7 @@ CheckValidTime@F87:
 _result:
        ds      2
 
-_fanValue:
+_lowBatTime:
        ds      2
 
 	file	"D108_8F083_tssop20_.as"
@@ -523,7 +520,7 @@ psect cinit,class=CODE,delta=2,merge=1
 	bcf	status, 7	;select IRP bank0
 	movlw	low(__pbssBANK0)
 	movwf	fsr
-	movlw	low((__pbssBANK0)+02Ch)
+	movlw	low((__pbssBANK0)+02Dh)
 	fcall	clear_ram0
 ; Clear objects allocated to BANK1
 psect cinit,class=CODE,delta=2,merge=1
@@ -775,7 +772,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!    Strings     0
 ;!    Constant    17
 ;!    Data        0
-;!    BSS         86
+;!    BSS         87
 ;!    Persistent  2
 ;!    Stack       0
 ;!
@@ -783,7 +780,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!    Space          Size  Autos    Used
 ;!    COMMON           14      8      12
 ;!    BANK0            80     34      79
-;!    BANK1            80      4      44
+;!    BANK1            80      4      45
 ;!    BANK2            80      0       0
 
 ;!
@@ -853,7 +850,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;! ---------------------------------------------------------------------------------
 ;! (Depth) Function   	        Calls       Base Space   Used Autos Params    Refs
 ;! ---------------------------------------------------------------------------------
-;! (0) _main                                                 0     0      0   11909
+;! (0) _main                                                 0     0      0   11912
 ;!                      _CheckTouchKey
 ;!                        _Init_System
 ;!                          _KeyServer
@@ -862,7 +859,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!                            _chrgCtr
 ;!                            _workCtr
 ;! ---------------------------------------------------------------------------------
-;! (1) _workCtr                                              4     4      0    7906
+;! (1) _workCtr                                              4     4      0    7909
 ;!                                              0 BANK1      4     4      0
 ;!                         _ADC_Sample
 ;!                            ___ftdiv
@@ -887,7 +884,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;! (3) ___lwmod                                              5     1      4     622
 ;!                                              2 COMMON     5     1      4
 ;! ---------------------------------------------------------------------------------
-;! (2) _fanCtr                                               5     5      0    1286
+;! (2) _fanCtr                                               5     5      0    1289
 ;!                                             13 BANK0      5     5      0
 ;!                         _ADC_Sample
 ;!                             ___lmul
@@ -1085,17 +1082,17 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!BITBANK1            50      0       0       5        0.0%
 ;!BITSFR2              0      0       0       5        0.0%
 ;!SFR2                 0      0       0       5        0.0%
-;!BANK1               50      4      2C       6       55.0%
+;!BANK1               50      4      2D       6       56.3%
 ;!BANK2               50      0       0       7        0.0%
-;!ABS                  0      0      87       8        0.0%
-;!DATA                 0      0      87       9        0.0%
+;!ABS                  0      0      88       8        0.0%
+;!DATA                 0      0      88       9        0.0%
 ;!BITBANK2            50      0       0      10        0.0%
 
 	global	_main
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 776 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
+;;		line 780 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1129,12 +1126,12 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
 	file	"C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
-	line	776
+	line	780
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
 	file	"C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
-	line	776
+	line	780
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
@@ -1142,170 +1139,168 @@ _main:
 ;incstack = 0
 	opt	stack 2
 ; Regs used in _main: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
-	line	778
-	
-l4669:	
-;main.c: 778: Init_System();
-	fcall	_Init_System
-	line	779
-	
-l4671:	
-;main.c: 779: firstLock = 1;
-	bcf	status, 5	;RP0=0, select bank0
-	clrf	(_firstLock)
-	incf	(_firstLock),f
-	line	780
-	
-l4673:	
-;main.c: 780: firstTime = 200;
-	movlw	low(0C8h)
-	bsf	status, 5	;RP0=1, select bank1
-	movwf	(_firstTime)^080h
-	line	783
+	line	782
 	
 l4675:	
-;main.c: 782: {
-;main.c: 783: if(B_MainLoop)
-	btfss	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
-	goto	u4791
-	goto	u4790
-u4791:
-	goto	l4675
-u4790:
-	line	785
+;main.c: 782: Init_System();
+	fcall	_Init_System
+	line	783
 	
 l4677:	
-;main.c: 784: {
-;main.c: 785: B_MainLoop = 0;
-	bcf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
-	line	786
-# 786 "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
-clrwdt ;# 
-psect	maintext
-	line	788
+;main.c: 783: firstLock = 1;
+	clrf	(_firstLock)^080h
+	incf	(_firstLock)^080h,f
+	line	784
 	
 l4679:	
-;main.c: 788: CheckTouchKey();
-	fcall	_CheckTouchKey
-	line	789
+;main.c: 784: firstTime = 200;
+	movlw	low(0C8h)
+	movwf	(_firstTime)^080h
+	line	787
 	
 l4681:	
-;main.c: 789: chrgCtr();
-	fcall	_chrgCtr
-	line	790
-	
-l4683:	
-;main.c: 790: Refurbish_Sfr();
-	fcall	_Refurbish_Sfr
-	line	791
-	
-l4685:	
-;main.c: 791: KeyServer();
-	fcall	_KeyServer
-	line	792
-	
-l4687:	
-;main.c: 792: workCtr();
-	fcall	_workCtr
-	line	793
-	
-l4689:	
-;main.c: 793: if(firstTime == 0 && chrgFlag == 0 && workStep == 0 && powerFlag == 0 && keyCount == 0 && wuhuaFlag == 0 && bujinFlag == 0 && shanshuoTime == 0 && shanshuoTime2 == 0)
-	bsf	status, 5	;RP0=1, select bank1
-	movf	((_firstTime)^080h),w
-	btfss	status,2
-	goto	u4801
-	goto	u4800
-u4801:
-	goto	l4675
-u4800:
-	
-l4691:	
-	bcf	status, 5	;RP0=0, select bank0
-	movf	((_chrgFlag)),w
-	btfss	status,2
-	goto	u4811
-	goto	u4810
-u4811:
-	goto	l4675
-u4810:
-	
-l4693:	
-	movf	((_workStep)),w
-	btfss	status,2
+;main.c: 786: {
+;main.c: 787: if(B_MainLoop)
+	btfss	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
 	goto	u4821
 	goto	u4820
 u4821:
-	goto	l4675
+	goto	l4681
 u4820:
+	line	789
+	
+l4683:	
+;main.c: 788: {
+;main.c: 789: B_MainLoop = 0;
+	bcf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
+	line	790
+# 790 "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
+clrwdt ;# 
+psect	maintext
+	line	792
+	
+l4685:	
+;main.c: 792: CheckTouchKey();
+	fcall	_CheckTouchKey
+	line	793
+	
+l4687:	
+;main.c: 793: chrgCtr();
+	fcall	_chrgCtr
+	line	794
+	
+l4689:	
+;main.c: 794: Refurbish_Sfr();
+	fcall	_Refurbish_Sfr
+	line	795
+	
+l4691:	
+;main.c: 795: KeyServer();
+	fcall	_KeyServer
+	line	796
+	
+l4693:	
+;main.c: 796: workCtr();
+	fcall	_workCtr
+	line	797
 	
 l4695:	
-	movf	((_powerFlag)),w
+;main.c: 797: if(firstTime == 0 && chrgFlag == 0 && workStep == 0 && powerFlag == 0 && keyCount == 0 && wuhuaFlag == 0 && bujinFlag == 0 && shanshuoTime == 0 && shanshuoTime2 == 0)
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstTime)^080h),w
 	btfss	status,2
 	goto	u4831
 	goto	u4830
 u4831:
-	goto	l4675
+	goto	l4681
 u4830:
 	
 l4697:	
-	movf	((_keyCount)),w
-iorwf	((_keyCount+1)),w
+	bcf	status, 5	;RP0=0, select bank0
+	movf	((_chrgFlag)),w
 	btfss	status,2
 	goto	u4841
 	goto	u4840
 u4841:
-	goto	l4675
+	goto	l4681
 u4840:
 	
 l4699:	
-	movf	((_wuhuaFlag)),w
+	movf	((_workStep)),w
 	btfss	status,2
 	goto	u4851
 	goto	u4850
 u4851:
-	goto	l4675
+	goto	l4681
 u4850:
 	
 l4701:	
-	movf	((_bujinFlag)),w
+	movf	((_powerFlag)),w
 	btfss	status,2
 	goto	u4861
 	goto	u4860
 u4861:
-	goto	l4675
+	goto	l4681
 u4860:
 	
 l4703:	
-	movf	((_shanshuoTime)),w
-iorwf	((_shanshuoTime+1)),w
+	movf	((_keyCount)),w
+iorwf	((_keyCount+1)),w
 	btfss	status,2
 	goto	u4871
 	goto	u4870
 u4871:
-	goto	l4675
+	goto	l4681
 u4870:
 	
 l4705:	
-	movf	((_shanshuoTime2)),w
-iorwf	((_shanshuoTime2+1)),w
+	movf	((_wuhuaFlag)),w
 	btfss	status,2
 	goto	u4881
 	goto	u4880
 u4881:
-	goto	l4675
+	goto	l4681
 u4880:
-	line	795
 	
 l4707:	
-;main.c: 794: {
-;main.c: 795: WorkSleep();
+	movf	((_bujinFlag)),w
+	btfss	status,2
+	goto	u4891
+	goto	u4890
+u4891:
+	goto	l4681
+u4890:
+	
+l4709:	
+	movf	((_shanshuoTime)),w
+iorwf	((_shanshuoTime+1)),w
+	btfss	status,2
+	goto	u4901
+	goto	u4900
+u4901:
+	goto	l4681
+u4900:
+	
+l4711:	
+	movf	((_shanshuoTime2)),w
+iorwf	((_shanshuoTime2+1)),w
+	btfss	status,2
+	goto	u4911
+	goto	u4910
+u4911:
+	goto	l4681
+u4910:
+	line	799
+	
+l4713:	
+;main.c: 798: {
+;main.c: 799: WorkSleep();
 	fcall	_WorkSleep
-	goto	l4675
+	goto	l4681
 	global	start
 	ljmp	start
 	opt stack 0
-	line	799
+	line	803
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -1313,7 +1308,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _workCtr *****************
 ;; Defined at:
-;;		line 720 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
+;;		line 724 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1323,7 +1318,7 @@ GLOBAL	__end_of_main
 ;; Registers used:
 ;;		wreg, fsr0l, fsr0h, status,2, status,0, pclath, cstack
 ;; Tracked objects:
-;;		On entry : 300/0
+;;		On entry : 200/0
 ;;		On exit  : 200/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
@@ -1348,12 +1343,12 @@ GLOBAL	__end_of_main
 ;; This function uses a non-reentrant model
 ;;
 psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	720
+	line	724
 global __ptext1
 __ptext1:	;psect for function _workCtr
 psect	text1
 	file	"C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
-	line	720
+	line	724
 	global	__size_of_workCtr
 	__size_of_workCtr	equ	__end_of_workCtr-_workCtr
 	
@@ -1361,32 +1356,32 @@ _workCtr:
 ;incstack = 0
 	opt	stack 4
 ; Regs used in _workCtr: [wreg-fsr0h+status,2+status,0+pclath+cstack]
-	line	722
+	line	726
 	
-l4591:	
-;main.c: 722: test_adc = ADC_Sample(31, 0);
+l4597:	
+;main.c: 726: test_adc = ADC_Sample(31, 0);
 	clrf	(ADC_Sample@adldo)
 	movlw	low(01Fh)
 	fcall	_ADC_Sample
 	movwf	(_test_adc)	;volatile
-	line	723
+	line	727
 	
-l4593:	
-;main.c: 723: if (0xA5 == test_adc)
+l4599:	
+;main.c: 727: if (0xA5 == test_adc)
 		movlw	165
 	xorwf	((_test_adc)),w	;volatile
 	btfss	status,2
-	goto	u4671
-	goto	u4670
-u4671:
-	goto	l4599
-u4670:
-	line	727
+	goto	u4701
+	goto	u4700
+u4701:
+	goto	l4605
+u4700:
+	line	731
 	
-l4595:	
-;main.c: 724: {
-;main.c: 725: volatile unsigned long power_temp;
-;main.c: 727: power_temp = (unsigned long)(((4096UL*1.2*1000))/adresult);
+l4601:	
+;main.c: 728: {
+;main.c: 729: volatile unsigned long power_temp;
+;main.c: 731: power_temp = (unsigned long)(((4096UL*1.2*1000))/adresult);
 	movlw	0x0
 	movwf	(___ftdiv@f1)
 	movlw	0x96
@@ -1428,10 +1423,10 @@ l4595:
 	bsf	status, 5	;RP0=1, select bank1
 	movwf	(workCtr@power_temp)^080h	;volatile
 
-	line	728
+	line	732
 	
-l4597:	
-;main.c: 728: power_ad = (unsigned int)(power_temp);
+l4603:	
+;main.c: 732: power_ad = (unsigned int)(power_temp);
 	movf	(workCtr@power_temp+1)^080h,w	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(_power_ad+1)	;volatile
@@ -1439,178 +1434,188 @@ l4597:
 	movf	(workCtr@power_temp)^080h,w	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(_power_ad)	;volatile
-	line	730
+	line	734
 	
-l4599:	
-;main.c: 729: }
-;main.c: 730: if(workStep == 2 && power_ad < 2900)
+l4605:	
+;main.c: 733: }
+;main.c: 734: if(workStep == 2 && power_ad < 3300)
 		movlw	2
 	xorwf	((_workStep)),w
 	btfss	status,2
-	goto	u4681
-	goto	u4680
-u4681:
-	goto	l4609
-u4680:
+	goto	u4711
+	goto	u4710
+u4711:
+	goto	l4615
+u4710:
 	
-l4601:	
+l4607:	
+	movlw	0Ch
+	subwf	(_power_ad+1),w	;volatile
+	movlw	0E4h
+	skipnz
+	subwf	(_power_ad),w	;volatile
+	skipnc
+	goto	u4721
+	goto	u4720
+u4721:
+	goto	l4615
+u4720:
+	line	736
+	
+l4609:	
+;main.c: 735: {
+;main.c: 736: if(++lowFanTime > 200)
+	movlw	low(0C9h)
+	incf	(_lowFanTime),f
+	subwf	((_lowFanTime)),w
+	skipc
+	goto	u4731
+	goto	u4730
+u4731:
+	goto	l4617
+u4730:
+	line	738
+	
+l4611:	
+;main.c: 737: {
+;main.c: 738: lowFanTime = 0;
+	clrf	(_lowFanTime)
+	line	739
+	
+l4613:	
+;main.c: 739: workStep = 1;
+	clrf	(_workStep)
+	incf	(_workStep),f
+	goto	l4617
+	line	744
+	
+l4615:	
+;main.c: 742: else
+;main.c: 743: {
+;main.c: 744: lowFanTime = 0;
+	clrf	(_lowFanTime)
+	line	746
+	
+l4617:	
+;main.c: 745: }
+;main.c: 746: if(power_ad < 2900)
 	movlw	0Bh
 	subwf	(_power_ad+1),w	;volatile
 	movlw	054h
 	skipnz
 	subwf	(_power_ad),w	;volatile
 	skipnc
-	goto	u4691
-	goto	u4690
-u4691:
-	goto	l4609
-u4690:
-	line	732
-	
-l4603:	
-;main.c: 731: {
-;main.c: 732: if(++lowFanTime > 200)
-	movlw	low(0C9h)
-	incf	(_lowFanTime),f
-	subwf	((_lowFanTime)),w
-	skipc
-	goto	u4701
-	goto	u4700
-u4701:
-	goto	l4611
-u4700:
-	line	734
-	
-l4605:	
-;main.c: 733: {
-;main.c: 734: lowFanTime = 0;
-	clrf	(_lowFanTime)
-	line	735
-	
-l4607:	
-;main.c: 735: workStep = 1;
-	clrf	(_workStep)
-	incf	(_workStep),f
-	goto	l4611
-	line	740
-	
-l4609:	
-;main.c: 738: else
-;main.c: 739: {
-;main.c: 740: lowFanTime = 0;
-	clrf	(_lowFanTime)
-	line	742
-	
-l4611:	
-;main.c: 741: }
-;main.c: 742: if(power_ad < 2700)
-	movlw	0Ah
-	subwf	(_power_ad+1),w	;volatile
-	movlw	08Ch
-	skipnz
-	subwf	(_power_ad),w	;volatile
-	skipnc
-	goto	u4711
-	goto	u4710
-u4711:
-	goto	l4619
-u4710:
-	line	744
-	
-l4613:	
-;main.c: 743: {
-;main.c: 744: if(++lowBatTime > 200)
-	movlw	low(0C9h)
-	incf	(_lowBatTime),f
-	subwf	((_lowBatTime)),w
-	skipc
-	goto	u4721
-	goto	u4720
-u4721:
-	goto	l4621
-u4720:
-	line	746
-	
-l4615:	
-;main.c: 745: {
-;main.c: 746: lowBatTime = 0;
-	clrf	(_lowBatTime)
-	line	747
-	
-l4617:	
-;main.c: 747: lowBatLock = 1;
-	clrf	(_lowBatLock)
-	incf	(_lowBatLock),f
+	goto	u4741
+	goto	u4740
+u4741:
+	goto	l4625
+u4740:
 	line	748
-;main.c: 748: workStep = 0;
-	clrf	(_workStep)
-	line	749
-;main.c: 749: wuhuaFlag = 0;
-	clrf	(_wuhuaFlag)
-	line	750
-;main.c: 750: bujinFlag = 0;
-	clrf	(_bujinFlag)
-	goto	l4621
-	line	755
 	
 l4619:	
-;main.c: 753: else
-;main.c: 754: {
-;main.c: 755: lowBatTime = 0;
-	clrf	(_lowBatTime)
-	line	757
+;main.c: 747: {
+;main.c: 748: if(++lowBatTime > 1000)
+	bsf	status, 5	;RP0=1, select bank1
+	incf	(_lowBatTime)^080h,f
+	skipnz
+	incf	(_lowBatTime+1)^080h,f
+	movlw	03h
+	subwf	((_lowBatTime+1)^080h),w
+	movlw	0E9h
+	skipnz
+	subwf	((_lowBatTime)^080h),w
+	skipc
+	goto	u4751
+	goto	u4750
+u4751:
+	goto	l4627
+u4750:
+	line	750
 	
 l4621:	
-;main.c: 756: }
-;main.c: 757: if(firstTime > 0)
-	bsf	status, 5	;RP0=1, select bank1
-	movf	((_firstTime)^080h),w
-	btfsc	status,2
-	goto	u4731
-	goto	u4730
-u4731:
-	goto	l4629
-u4730:
-	line	759
+;main.c: 749: {
+;main.c: 750: lowBatTime = 0;
+	clrf	(_lowBatTime)^080h
+	clrf	(_lowBatTime+1)^080h
+	line	751
 	
 l4623:	
-;main.c: 758: {
-;main.c: 759: firstTime--;
-	decf	(_firstTime)^080h,f
-	line	760
+;main.c: 751: lowBatLock = 1;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(_lowBatLock)
+	incf	(_lowBatLock),f
+	line	752
+;main.c: 752: workStep = 0;
+	clrf	(_workStep)
+	line	753
+;main.c: 753: wuhuaFlag = 0;
+	clrf	(_wuhuaFlag)
+	line	754
+;main.c: 754: bujinFlag = 0;
+	clrf	(_bujinFlag)
+	goto	l4627
+	line	759
 	
 l4625:	
-;main.c: 760: PORTB = 0x00;
-	bcf	status, 5	;RP0=0, select bank0
-	clrf	(6)	;volatile
+;main.c: 757: else
+;main.c: 758: {
+;main.c: 759: lowBatTime = 0;
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(_lowBatTime)^080h
+	clrf	(_lowBatTime+1)^080h
 	line	761
 	
 l4627:	
-;main.c: 761: PORTA = 0x00;
+;main.c: 760: }
+;main.c: 761: if(firstTime > 0)
 	bsf	status, 5	;RP0=1, select bank1
-	clrf	(134)^080h	;volatile
-	line	762
-;main.c: 762: }
-	goto	l1122
-	line	765
+	movf	((_firstTime)^080h),w
+	btfsc	status,2
+	goto	u4761
+	goto	u4760
+u4761:
+	goto	l4635
+u4760:
+	line	763
 	
 l4629:	
-;main.c: 763: else
-;main.c: 764: {
-;main.c: 765: keyLedCtr();
-	fcall	_keyLedCtr
-	line	766
-;main.c: 766: fanCtr();
-	fcall	_fanCtr
-	line	767
-;main.c: 767: wuhuaCtr();
-	fcall	_wuhuaCtr
-	line	768
+;main.c: 762: {
+;main.c: 763: firstTime--;
+	decf	(_firstTime)^080h,f
+	line	764
 	
 l4631:	
-;main.c: 768: bujinCtr();
-	fcall	_bujinCtr
+;main.c: 764: PORTB = 0x00;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(6)	;volatile
+	line	765
+	
+l4633:	
+;main.c: 765: PORTA = 0x00;
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(134)^080h	;volatile
+	line	766
+;main.c: 766: }
+	goto	l1122
+	line	769
+	
+l4635:	
+;main.c: 767: else
+;main.c: 768: {
+;main.c: 769: keyLedCtr();
+	fcall	_keyLedCtr
+	line	770
+;main.c: 770: fanCtr();
+	fcall	_fanCtr
 	line	771
+;main.c: 771: wuhuaCtr();
+	fcall	_wuhuaCtr
+	line	772
+	
+l4637:	
+;main.c: 772: bujinCtr();
+	fcall	_bujinCtr
+	line	775
 	
 l1122:	
 	return
@@ -1622,7 +1627,7 @@ GLOBAL	__end_of_workCtr
 
 ;; *************** function _wuhuaCtr *****************
 ;; Defined at:
-;;		line 569 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
+;;		line 573 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1651,12 +1656,12 @@ GLOBAL	__end_of_workCtr
 ;; This function uses a non-reentrant model
 ;;
 psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	line	569
+	line	573
 global __ptext2
 __ptext2:	;psect for function _wuhuaCtr
 psect	text2
 	file	"C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
-	line	569
+	line	573
 	global	__size_of_wuhuaCtr
 	__size_of_wuhuaCtr	equ	__end_of_wuhuaCtr-_wuhuaCtr
 	
@@ -1664,149 +1669,149 @@ _wuhuaCtr:
 ;incstack = 0
 	opt	stack 4
 ; Regs used in _wuhuaCtr: [wreg+status,2+status,0+pclath+cstack]
-	line	571
-	
-l4319:	
-;main.c: 571: if(count1s == 0)
-	bcf	status, 5	;RP0=0, select bank0
-	movf	((_count1s)),w
-	btfss	status,2
-	goto	u4231
-	goto	u4230
-u4231:
-	goto	l4337
-u4230:
-	line	573
-	
-l4321:	
-;main.c: 572: {
-;main.c: 573: if(++count10s >= 20)
-	movlw	low(014h)
-	incf	(_count10s),f
-	subwf	((_count10s)),w
-	skipc
-	goto	u4241
-	goto	u4240
-u4241:
-	goto	l4325
-u4240:
 	line	575
 	
-l4323:	
-;main.c: 574: {
-;main.c: 575: count10s = 0;
-	clrf	(_count10s)
-	line	577
-	
 l4325:	
-;main.c: 576: }
-;main.c: 577: if(workStep == 0 && wuhuaFlag == 0 && powerFlag > 0)
-	movf	((_workStep)),w
-	btfss	status,2
-	goto	u4251
-	goto	u4250
-u4251:
-	goto	l4335
-u4250:
-	
-l4327:	
-	movf	((_wuhuaFlag)),w
+;main.c: 575: if(count1s == 0)
+	bcf	status, 5	;RP0=0, select bank0
+	movf	((_count1s)),w
 	btfss	status,2
 	goto	u4261
 	goto	u4260
 u4261:
-	goto	l4335
+	goto	l4343
 u4260:
+	line	577
 	
-l4329:	
-	movf	((_powerFlag)),w
-	btfsc	status,2
+l4327:	
+;main.c: 576: {
+;main.c: 577: if(++count10s >= 20)
+	movlw	low(014h)
+	incf	(_count10s),f
+	subwf	((_count10s)),w
+	skipc
 	goto	u4271
 	goto	u4270
 u4271:
-	goto	l4335
+	goto	l4331
 u4270:
 	line	579
 	
-l4331:	
+l4329:	
 ;main.c: 578: {
-;main.c: 579: if(++closeTime > 200)
+;main.c: 579: count10s = 0;
+	clrf	(_count10s)
+	line	581
+	
+l4331:	
+;main.c: 580: }
+;main.c: 581: if(workStep == 0 && wuhuaFlag == 0 && powerFlag > 0)
+	movf	((_workStep)),w
+	btfss	status,2
+	goto	u4281
+	goto	u4280
+u4281:
+	goto	l4341
+u4280:
+	
+l4333:	
+	movf	((_wuhuaFlag)),w
+	btfss	status,2
+	goto	u4291
+	goto	u4290
+u4291:
+	goto	l4341
+u4290:
+	
+l4335:	
+	movf	((_powerFlag)),w
+	btfsc	status,2
+	goto	u4301
+	goto	u4300
+u4301:
+	goto	l4341
+u4300:
+	line	583
+	
+l4337:	
+;main.c: 582: {
+;main.c: 583: if(++closeTime > 200)
 	movlw	low(0C9h)
 	incf	(_closeTime),f
 	subwf	((_closeTime)),w
 	skipc
-	goto	u4281
-	goto	u4280
-u4281:
-	goto	l4337
-u4280:
-	line	581
-	
-l4333:	
-;main.c: 580: {
-;main.c: 581: closeTime = 0;
-	clrf	(_closeTime)
-	line	582
-;main.c: 582: powerFlag = 0;
-	clrf	(_powerFlag)
-	goto	l4337
-	line	587
-	
-l4335:	
-;main.c: 585: else
-;main.c: 586: {
-;main.c: 587: closeTime = 0;
-	clrf	(_closeTime)
-	line	590
-	
-l4337:	
-;main.c: 588: }
-;main.c: 589: }
-;main.c: 590: if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 10))
-		decf	((_wuhuaFlag)),w
-	btfsc	status,2
-	goto	u4291
-	goto	u4290
-u4291:
-	goto	l4343
-u4290:
-	
-l4339:	
-		movlw	2
-	xorwf	((_wuhuaFlag)),w
-	btfss	status,2
-	goto	u4301
-	goto	u4300
-u4301:
-	goto	l4345
-u4300:
-	
-l4341:	
-	movlw	low(0Ah)
-	subwf	(_count10s),w
-	skipnc
 	goto	u4311
 	goto	u4310
 u4311:
-	goto	l4345
+	goto	l4343
 u4310:
-	line	592
+	line	585
+	
+l4339:	
+;main.c: 584: {
+;main.c: 585: closeTime = 0;
+	clrf	(_closeTime)
+	line	586
+;main.c: 586: powerFlag = 0;
+	clrf	(_powerFlag)
+	goto	l4343
+	line	591
+	
+l4341:	
+;main.c: 589: else
+;main.c: 590: {
+;main.c: 591: closeTime = 0;
+	clrf	(_closeTime)
+	line	594
 	
 l4343:	
-;main.c: 591: {
-;main.c: 592: pwmInit();
-	fcall	_pwmInit
-	line	621
-;main.c: 621: }
-	goto	l1075
-	line	624
+;main.c: 592: }
+;main.c: 593: }
+;main.c: 594: if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 10))
+		decf	((_wuhuaFlag)),w
+	btfsc	status,2
+	goto	u4321
+	goto	u4320
+u4321:
+	goto	l4349
+u4320:
 	
 l4345:	
-;main.c: 622: else
-;main.c: 623: {
-;main.c: 624: pwmStop();
+		movlw	2
+	xorwf	((_wuhuaFlag)),w
+	btfss	status,2
+	goto	u4331
+	goto	u4330
+u4331:
+	goto	l4351
+u4330:
+	
+l4347:	
+	movlw	low(0Ah)
+	subwf	(_count10s),w
+	skipnc
+	goto	u4341
+	goto	u4340
+u4341:
+	goto	l4351
+u4340:
+	line	596
+	
+l4349:	
+;main.c: 595: {
+;main.c: 596: pwmInit();
+	fcall	_pwmInit
+	line	625
+;main.c: 625: }
+	goto	l1075
+	line	628
+	
+l4351:	
+;main.c: 626: else
+;main.c: 627: {
+;main.c: 628: pwmStop();
 	fcall	_pwmStop
-	line	626
+	line	630
 	
 l1075:	
 	return
@@ -1861,19 +1866,19 @@ _pwmStop:
 ; Regs used in _pwmStop: [status,2]
 	line	491
 	
-l4059:	
+l4063:	
 ;main.c: 491: PWMD3L = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(156)^080h	;volatile
 	line	492
 	
-l4061:	
+l4065:	
 ;main.c: 492: PWMCON0 &= 0xF7;
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(21)+(3/8),(3)&7	;volatile
 	line	493
 	
-l4063:	
+l4067:	
 ;main.c: 493: PORTA &= 0xF7;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(134)^080h+(3/8),(3)&7	;volatile
@@ -1932,18 +1937,18 @@ _pwmInit:
 ; Regs used in _pwmInit: [wreg+status,2+status,0]
 	line	480
 	
-l4049:	
+l4053:	
 ;main.c: 480: PWMTH = 0x00;
 	clrf	(24)	;volatile
 	line	481
 	
-l4051:	
+l4055:	
 ;main.c: 481: PWMTL = 73;
 	movlw	low(049h)
 	movwf	(23)	;volatile
 	line	482
 	
-l4053:	
+l4057:	
 ;main.c: 482: PWMD23H = 0x00;
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(158)^080h	;volatile
@@ -1958,12 +1963,12 @@ l4053:
 	movwf	(22)	;volatile
 	line	485
 	
-l4055:	
+l4059:	
 ;main.c: 485: PWMCON2 = 0x00;
 	clrf	(29)	;volatile
 	line	486
 	
-l4057:	
+l4061:	
 ;main.c: 486: PWMCON0 |= 0x28;
 	movlw	low(028h)
 	iorwf	(21),f	;volatile
@@ -2022,20 +2027,20 @@ _keyLedCtr:
 ; Regs used in _keyLedCtr: [wreg+status,2+status,0+pclath+cstack]
 	line	402
 	
-l4225:	
+l4229:	
 ;main.c: 402: if(shanshuoTime > 0)
 	bcf	status, 5	;RP0=0, select bank0
 	movf	((_shanshuoTime)),w
 iorwf	((_shanshuoTime+1)),w
 	btfsc	status,2
-	goto	u4011
-	goto	u4010
-u4011:
-	goto	l4233
-u4010:
+	goto	u4031
+	goto	u4030
+u4031:
+	goto	l4237
+u4030:
 	line	404
 	
-l4227:	
+l4231:	
 ;main.c: 403: {
 ;main.c: 404: shanshuoTime--;
 	movlw	01h
@@ -2046,7 +2051,7 @@ l4227:
 	subwf	(_shanshuoTime+1),f
 	line	405
 	
-l4229:	
+l4233:	
 ;main.c: 405: if((shanshuoTime % 150) < 75)
 	movlw	096h
 	movwf	(___lwmod@divisor)
@@ -2062,21 +2067,21 @@ l4229:
 	skipnz
 	subwf	(0+(?___lwmod)),w
 	skipnc
-	goto	u4021
-	goto	u4020
-u4021:
+	goto	u4041
+	goto	u4040
+u4041:
 	goto	l1012
-u4020:
+u4040:
 	line	407
 	
-l4231:	
+l4235:	
 ;main.c: 406: {
 ;main.c: 407: PORTC |= 0x01;
 	bsf	status, 6	;RP1=1, select bank2
 	bsf	(262)^0100h+(0/8),(0)&7	;volatile
 	line	408
 ;main.c: 408: }
-	goto	l4237
+	goto	l4241
 	line	409
 	
 l1012:	
@@ -2086,36 +2091,36 @@ l1012:
 ;main.c: 411: PORTC &= 0xFE;
 	bsf	status, 6	;RP1=1, select bank2
 	bcf	(262)^0100h+(0/8),(0)&7	;volatile
-	goto	l4237
+	goto	l4241
 	line	414
 	
-l4233:	
+l4237:	
 ;main.c: 414: else if(workStep > 0)
 	movf	((_workStep)),w
 	btfsc	status,2
-	goto	u4031
-	goto	u4030
-u4031:
-	goto	l4231
-u4030:
+	goto	u4051
+	goto	u4050
+u4051:
+	goto	l4235
+u4050:
 	goto	l1012
 	line	423
 	
-l4237:	
+l4241:	
 ;main.c: 421: }
 ;main.c: 423: if(shanshuoTime2 > 0)
 	bcf	status, 6	;RP1=0, select bank0
 	movf	((_shanshuoTime2)),w
 iorwf	((_shanshuoTime2+1)),w
 	btfsc	status,2
-	goto	u4041
-	goto	u4040
-u4041:
-	goto	l4245
-u4040:
+	goto	u4061
+	goto	u4060
+u4061:
+	goto	l4249
+u4060:
 	line	425
 	
-l4239:	
+l4243:	
 ;main.c: 424: {
 ;main.c: 425: shanshuoTime2--;
 	movlw	01h
@@ -2126,7 +2131,7 @@ l4239:
 	subwf	(_shanshuoTime2+1),f
 	line	426
 	
-l4241:	
+l4245:	
 ;main.c: 426: if((shanshuoTime2 % 150) < 75)
 	movlw	096h
 	movwf	(___lwmod@divisor)
@@ -2142,21 +2147,21 @@ l4241:
 	skipnz
 	subwf	(0+(?___lwmod)),w
 	skipnc
-	goto	u4051
-	goto	u4050
-u4051:
+	goto	u4071
+	goto	u4070
+u4071:
 	goto	l1018
-u4050:
+u4070:
 	line	428
 	
-l4243:	
+l4247:	
 ;main.c: 427: {
 ;main.c: 428: PORTC |= 0x02;
 	bsf	status, 6	;RP1=1, select bank2
 	bsf	(262)^0100h+(1/8),(1)&7	;volatile
 	line	429
 ;main.c: 429: }
-	goto	l4249
+	goto	l4253
 	line	430
 	
 l1018:	
@@ -2166,36 +2171,36 @@ l1018:
 ;main.c: 432: PORTC &= 0xFD;
 	bsf	status, 6	;RP1=1, select bank2
 	bcf	(262)^0100h+(1/8),(1)&7	;volatile
-	goto	l4249
+	goto	l4253
 	line	435
 	
-l4245:	
+l4249:	
 ;main.c: 435: else if(wuhuaFlag > 0)
 	movf	((_wuhuaFlag)),w
 	btfsc	status,2
-	goto	u4061
-	goto	u4060
-u4061:
-	goto	l4243
-u4060:
+	goto	u4081
+	goto	u4080
+u4081:
+	goto	l4247
+u4080:
 	goto	l1018
 	line	443
 	
-l4249:	
+l4253:	
 ;main.c: 442: }
 ;main.c: 443: if(shanshuoTime3 > 0)
 	bcf	status, 6	;RP1=0, select bank0
 	movf	((_shanshuoTime3)),w
 iorwf	((_shanshuoTime3+1)),w
 	btfsc	status,2
-	goto	u4071
-	goto	u4070
-u4071:
-	goto	l4257
-u4070:
+	goto	u4091
+	goto	u4090
+u4091:
+	goto	l4261
+u4090:
 	line	445
 	
-l4251:	
+l4255:	
 ;main.c: 444: {
 ;main.c: 445: shanshuoTime3--;
 	movlw	01h
@@ -2206,7 +2211,7 @@ l4251:
 	subwf	(_shanshuoTime3+1),f
 	line	446
 	
-l4253:	
+l4257:	
 ;main.c: 446: if((shanshuoTime3 % 150) < 75)
 	movlw	096h
 	movwf	(___lwmod@divisor)
@@ -2222,14 +2227,14 @@ l4253:
 	skipnz
 	subwf	(0+(?___lwmod)),w
 	skipnc
-	goto	u4081
-	goto	u4080
-u4081:
+	goto	u4101
+	goto	u4100
+u4101:
 	goto	l1024
-u4080:
+u4100:
 	line	448
 	
-l4255:	
+l4259:	
 ;main.c: 447: {
 ;main.c: 448: PORTA |= 0x01;
 	bsf	status, 5	;RP0=1, select bank1
@@ -2249,49 +2254,49 @@ l1024:
 	goto	l1035
 	line	455
 	
-l4257:	
+l4261:	
 ;main.c: 455: else if(powerFlag)
 	movf	((_powerFlag)),w
 	btfsc	status,2
-	goto	u4091
-	goto	u4090
-u4091:
-	goto	l4261
-u4090:
+	goto	u4111
+	goto	u4110
+u4111:
+	goto	l4265
+u4110:
 	goto	l1024
 	line	459
 	
-l4261:	
+l4265:	
 ;main.c: 459: else if(chrgFlag)
 	movf	((_chrgFlag)),w
 	btfsc	status,2
-	goto	u4101
-	goto	u4100
-u4101:
-	goto	l4255
-u4100:
+	goto	u4121
+	goto	u4120
+u4121:
+	goto	l4259
+u4120:
 	line	461
 	
-l4263:	
+l4267:	
 ;main.c: 460: {
 ;main.c: 461: if(chrgFullFlag || count1s < 50)
 	movf	((_chrgFullFlag)),w
 	btfss	status,2
-	goto	u4111
-	goto	u4110
-u4111:
+	goto	u4131
+	goto	u4130
+u4131:
 	goto	l1024
-u4110:
+u4130:
 	
-l4265:	
+l4269:	
 	movlw	low(032h)
 	subwf	(_count1s),w
 	skipnc
-	goto	u4121
-	goto	u4120
-u4121:
-	goto	l4255
-u4120:
+	goto	u4141
+	goto	u4140
+u4141:
+	goto	l4259
+u4140:
 	goto	l1024
 	line	475
 	
@@ -2350,25 +2355,25 @@ ___lwmod:
 ; Regs used in ___lwmod: [wreg+status,2+status,0]
 	line	13
 	
-l4119:	
+l4123:	
 	movf	((___lwmod@divisor)),w
 iorwf	((___lwmod@divisor+1)),w
 	btfsc	status,2
-	goto	u3881
-	goto	u3880
-u3881:
-	goto	l4135
-u3880:
+	goto	u3901
+	goto	u3900
+u3901:
+	goto	l4139
+u3900:
 	line	14
 	
-l4121:	
+l4125:	
 	clrf	(___lwmod@counter)
 	incf	(___lwmod@counter),f
 	line	15
-	goto	l4125
+	goto	l4129
 	line	16
 	
-l4123:	
+l4127:	
 	clrc
 	rlf	(___lwmod@divisor),f
 	rlf	(___lwmod@divisor+1),f
@@ -2376,32 +2381,32 @@ l4123:
 	incf	(___lwmod@counter),f
 	line	15
 	
-l4125:	
+l4129:	
 	btfss	(___lwmod@divisor+1),(15)&7
-	goto	u3891
-	goto	u3890
-u3891:
-	goto	l4123
-u3890:
+	goto	u3911
+	goto	u3910
+u3911:
+	goto	l4127
+u3910:
 	line	20
 	
-l4127:	
+l4131:	
 	movf	(___lwmod@divisor+1),w
 	subwf	(___lwmod@dividend+1),w
 	skipz
-	goto	u3905
+	goto	u3925
 	movf	(___lwmod@divisor),w
 	subwf	(___lwmod@dividend),w
-u3905:
+u3925:
 	skipc
-	goto	u3901
-	goto	u3900
-u3901:
-	goto	l4131
-u3900:
+	goto	u3921
+	goto	u3920
+u3921:
+	goto	l4135
+u3920:
 	line	21
 	
-l4129:	
+l4133:	
 	movf	(___lwmod@divisor),w
 	subwf	(___lwmod@dividend),f
 	movf	(___lwmod@divisor+1),w
@@ -2410,22 +2415,22 @@ l4129:
 	subwf	(___lwmod@dividend+1),f
 	line	22
 	
-l4131:	
+l4135:	
 	clrc
 	rrf	(___lwmod@divisor+1),f
 	rrf	(___lwmod@divisor),f
 	line	23
 	
-l4133:	
+l4137:	
 	decfsz	(___lwmod@counter),f
-	goto	u3911
-	goto	u3910
-u3911:
-	goto	l4127
-u3910:
+	goto	u3931
+	goto	u3930
+u3931:
+	goto	l4131
+u3930:
 	line	25
 	
-l4135:	
+l4139:	
 	movf	(___lwmod@dividend+1),w
 	movwf	(?___lwmod+1)
 	movf	(___lwmod@dividend),w
@@ -2490,108 +2495,130 @@ _fanCtr:
 ; Regs used in _fanCtr: [wreg+status,2+status,0+pclath+cstack]
 	line	516
 	
-l4267:	
+l4271:	
 ;main.c: 516: if(workStep > 0)
 	movf	((_workStep)),w
 	btfsc	status,2
-	goto	u4131
-	goto	u4130
-u4131:
-	goto	l4313
-u4130:
+	goto	u4151
+	goto	u4150
+u4151:
+	goto	l4319
+u4150:
 	line	518
 	
-l4269:	
+l4273:	
 ;main.c: 517: {
 ;main.c: 518: PORTA |= 0x02;
 	bsf	(134)^080h+(1/8),(1)&7	;volatile
 	line	519
 	
-l4271:	
+l4275:	
 ;main.c: 519: unsigned char maxFanValue = 52;
 	movlw	low(034h)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(fanCtr@maxFanValue)
 	line	520
 	
-l4273:	
+l4277:	
 ;main.c: 520: if(workStep == 1)
 		decf	((_workStep)),w
 	btfss	status,2
-	goto	u4141
-	goto	u4140
-u4141:
-	goto	l4277
-u4140:
+	goto	u4161
+	goto	u4160
+u4161:
+	goto	l1051
+u4160:
 	line	522
 	
-l4275:	
+l4279:	
 ;main.c: 521: {
 ;main.c: 522: maxFanValue = 40;
 	movlw	low(028h)
 	movwf	(fanCtr@maxFanValue)
 	line	523
-;main.c: 523: }
-	goto	l4281
-	line	524
 	
-l4277:	
-;main.c: 524: else if(workStep == 3)
-		movlw	3
-	xorwf	((_workStep)),w
-	btfss	status,2
-	goto	u4151
-	goto	u4150
-u4151:
-	goto	l4281
-u4150:
+l1051:	
+	line	524
+;main.c: 523: }
+;main.c: 524: if(power_ad < 3150)
+	movlw	0Ch
+	subwf	(_power_ad+1),w	;volatile
+	movlw	04Eh
+	skipnz
+	subwf	(_power_ad),w	;volatile
+	skipnc
+	goto	u4171
+	goto	u4170
+u4171:
+	goto	l4283
+u4170:
 	line	526
 	
-l4279:	
+l4281:	
 ;main.c: 525: {
-;main.c: 526: maxFanValue = 10;
-	movlw	low(0Ah)
+;main.c: 526: maxFanValue = 32;
+	movlw	low(020h)
 	movwf	(fanCtr@maxFanValue)
 	line	528
 	
-l4281:	
+l4283:	
 ;main.c: 527: }
-;main.c: 528: test_adc = ADC_Sample(2, 0);
+;main.c: 528: if(workStep == 3)
+		movlw	3
+	xorwf	((_workStep)),w
+	btfss	status,2
+	goto	u4181
+	goto	u4180
+u4181:
+	goto	l4287
+u4180:
+	line	530
+	
+l4285:	
+;main.c: 529: {
+;main.c: 530: maxFanValue = 10;
+	movlw	low(0Ah)
+	movwf	(fanCtr@maxFanValue)
+	line	532
+	
+l4287:	
+;main.c: 531: }
+;main.c: 532: test_adc = ADC_Sample(2, 0);
 	clrf	(ADC_Sample@adldo)
 	movlw	low(02h)
 	fcall	_ADC_Sample
 	movwf	(_test_adc)	;volatile
-	line	529
+	line	533
 	
-l4283:	
-;main.c: 529: if (0xA5 == test_adc)
+l4289:	
+;main.c: 533: if (0xA5 == test_adc)
 		movlw	165
 	xorwf	((_test_adc)),w	;volatile
 	btfss	status,2
-	goto	u4161
-	goto	u4160
-u4161:
-	goto	l4293
-u4160:
-	line	532
+	goto	u4191
+	goto	u4190
+u4191:
+	goto	l4299
+u4190:
+	line	536
 	
-l4285:	
-;main.c: 530: {
-;main.c: 531: volatile unsigned long fan_temp;
-;main.c: 532: if(power_ad > 0)
+l4291:	
+;main.c: 534: {
+;main.c: 535: volatile unsigned long fan_temp;
+;main.c: 536: if(power_ad > 0)
 	movf	((_power_ad)),w	;volatile
 iorwf	((_power_ad+1)),w	;volatile
 	btfsc	status,2
-	goto	u4171
-	goto	u4170
-u4171:
-	goto	l4293
-u4170:
-	line	534
+	goto	u4201
+	goto	u4200
+u4201:
+	goto	l4299
+u4200:
+	line	538
 	
-l4287:	
-;main.c: 533: {
-;main.c: 534: fan_temp = ((unsigned long)1UL*adresult * power_ad)/4096;
+l4293:	
+;main.c: 537: {
+;main.c: 538: fan_temp = ((unsigned long)1UL*adresult * power_ad)/4096;
 	movf	(_adresult),w	;volatile
 	movwf	(___lmul@multiplier)
 	movf	(_adresult+1),w	;volatile
@@ -2615,9 +2642,9 @@ l4287:
 	movwf	(fanCtr@fan_temp)	;volatile
 
 	
-l4289:	
+l4295:	
 	movlw	0Ch
-u4185:
+u4215:
 	clrc
 	rrf	(fanCtr@fan_temp+3),f	;volatile
 	rrf	(fanCtr@fan_temp+2),f	;volatile
@@ -2625,147 +2652,141 @@ u4185:
 	rrf	(fanCtr@fan_temp),f	;volatile
 	addlw	-1
 	skipz
-	goto	u4185
+	goto	u4215
 
-	line	535
+	line	539
 	
-l4291:	
-;main.c: 535: fanValue = (unsigned int)(fan_temp);
+l4297:	
+;main.c: 539: fanValue = (unsigned int)(fan_temp);
 	movf	(fanCtr@fan_temp+1),w	;volatile
-	bsf	status, 5	;RP0=1, select bank1
-	movwf	(_fanValue+1)^080h
-	bcf	status, 5	;RP0=0, select bank0
+	movwf	(_fanValue+1)
 	movf	(fanCtr@fan_temp),w	;volatile
-	bsf	status, 5	;RP0=1, select bank1
-	movwf	(_fanValue)^080h
-	line	538
+	movwf	(_fanValue)
+	line	542
 	
-l4293:	
-;main.c: 536: }
-;main.c: 537: }
-;main.c: 538: if(fanValue > 1300)
+l4299:	
+;main.c: 540: }
+;main.c: 541: }
+;main.c: 542: if(fanValue > 1300)
 	movlw	05h
-	bsf	status, 5	;RP0=1, select bank1
-	subwf	(_fanValue+1)^080h,w
+	subwf	(_fanValue+1),w
 	movlw	015h
 	skipnz
-	subwf	(_fanValue)^080h,w
+	subwf	(_fanValue),w
 	skipc
-	goto	u4191
-	goto	u4190
-u4191:
-	goto	l4301
-u4190:
-	line	540
+	goto	u4221
+	goto	u4220
+u4221:
+	goto	l4307
+u4220:
+	line	544
 	
-l4295:	
-;main.c: 539: {
-;main.c: 540: if(++fanOverTime > 50)
+l4301:	
+;main.c: 543: {
+;main.c: 544: if(++fanOverTime > 50)
 	movlw	low(033h)
-	bcf	status, 5	;RP0=0, select bank0
 	incf	(_fanOverTime),f
 	subwf	((_fanOverTime)),w
 	skipc
-	goto	u4201
-	goto	u4200
-u4201:
-	goto	l4303
-u4200:
-	line	542
+	goto	u4231
+	goto	u4230
+u4231:
+	goto	l4309
+u4230:
+	line	546
 	
-l4297:	
-;main.c: 541: {
-;main.c: 542: fanOverTime = 0;
+l4303:	
+;main.c: 545: {
+;main.c: 546: fanOverTime = 0;
 	clrf	(_fanOverTime)
-	line	543
-;main.c: 543: workStep = 0;
+	line	547
+;main.c: 547: workStep = 0;
 	clrf	(_workStep)
-	line	544
+	line	548
 	
-l4299:	
-;main.c: 544: shanshuoTime = 450;
+l4305:	
+;main.c: 548: shanshuoTime = 450;
 	movlw	0C2h
 	movwf	(_shanshuoTime)
 	movlw	01h
 	movwf	((_shanshuoTime))+1
-	goto	l4303
-	line	549
+	goto	l4309
+	line	553
 	
-l4301:	
-;main.c: 547: else
-;main.c: 548: {
-;main.c: 549: fanOverTime = 0;
-	bcf	status, 5	;RP0=0, select bank0
+l4307:	
+;main.c: 551: else
+;main.c: 552: {
+;main.c: 553: fanOverTime = 0;
 	clrf	(_fanOverTime)
-	line	551
+	line	555
 	
-l4303:	
-;main.c: 550: }
-;main.c: 551: if(fanDuty < maxFanValue)
+l4309:	
+;main.c: 554: }
+;main.c: 555: if(fanDuty < maxFanValue)
 	movf	(fanCtr@maxFanValue),w
 	subwf	(_fanDuty),w
 	skipnc
-	goto	u4211
-	goto	u4210
-u4211:
-	goto	l4307
-u4210:
-	line	553
+	goto	u4241
+	goto	u4240
+u4241:
+	goto	l4313
+u4240:
+	line	557
 	
-l4305:	
-;main.c: 552: {
-;main.c: 553: fanDuty++;
+l4311:	
+;main.c: 556: {
+;main.c: 557: fanDuty++;
 	incf	(_fanDuty),f
-	line	554
-;main.c: 554: }
-	goto	l4311
-	line	555
+	line	558
+;main.c: 558: }
+	goto	l4317
+	line	559
 	
-l4307:	
-;main.c: 555: else if(fanDuty > maxFanValue)
+l4313:	
+;main.c: 559: else if(fanDuty > maxFanValue)
 	movf	(_fanDuty),w
 	subwf	(fanCtr@maxFanValue),w
 	skipnc
-	goto	u4221
-	goto	u4220
-u4221:
-	goto	l4311
-u4220:
-	line	557
-	
-l4309:	
-;main.c: 556: {
-;main.c: 557: fanDuty--;
-	decf	(_fanDuty),f
-	line	559
-	
-l4311:	
-;main.c: 558: }
-;main.c: 559: fanInit();
-	fcall	_fanInit
-	line	560
-;main.c: 560: }
-	goto	l1063
-	line	563
-	
-l4313:	
-;main.c: 561: else
-;main.c: 562: {
-;main.c: 563: fanStop();
-	fcall	_fanStop
-	line	564
+	goto	u4251
+	goto	u4250
+u4251:
+	goto	l4317
+u4250:
+	line	561
 	
 l4315:	
-;main.c: 564: fanDuty = 0;
-	bcf	status, 5	;RP0=0, select bank0
-	clrf	(_fanDuty)
-	line	565
+;main.c: 560: {
+;main.c: 561: fanDuty--;
+	decf	(_fanDuty),f
+	line	563
 	
 l4317:	
-;main.c: 565: PORTA &= 0xFD;
+;main.c: 562: }
+;main.c: 563: fanInit();
+	fcall	_fanInit
+	line	564
+;main.c: 564: }
+	goto	l1063
+	line	567
+	
+l4319:	
+;main.c: 565: else
+;main.c: 566: {
+;main.c: 567: fanStop();
+	fcall	_fanStop
+	line	568
+	
+l4321:	
+;main.c: 568: fanDuty = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(_fanDuty)
+	line	569
+	
+l4323:	
+;main.c: 569: PORTA &= 0xFD;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(134)^080h+(1/8),(1)&7	;volatile
-	line	567
+	line	571
 	
 l1063:	
 	return
@@ -2820,18 +2841,18 @@ _fanStop:
 ; Regs used in _fanStop: [status,2]
 	line	509
 	
-l4077:	
+l4081:	
 ;main.c: 509: PWMD4L = 0;
 	bcf	status, 5	;RP0=0, select bank0
 	clrf	(27)	;volatile
 	line	510
 	
-l4079:	
+l4083:	
 ;main.c: 510: PWMCON0 &= 0xEF;
 	bcf	(21)+(4/8),(4)&7	;volatile
 	line	511
 	
-l4081:	
+l4085:	
 ;main.c: 511: PORTA &= 0xEF;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(134)^080h+(4/8),(4)&7	;volatile
@@ -2890,35 +2911,35 @@ _fanInit:
 ; Regs used in _fanInit: [wreg+status,2+status,0]
 	line	499
 	
-l4065:	
+l4069:	
 ;main.c: 499: PWMTH = 0x00;
 	clrf	(24)	;volatile
 	line	500
 	
-l4067:	
+l4071:	
 ;main.c: 500: PWMT4L = 73;
 	movlw	low(049h)
 	movwf	(28)	;volatile
 	line	501
 	
-l4069:	
+l4073:	
 ;main.c: 501: PWMD4L = fanDuty;
 	movf	(_fanDuty),w
 	movwf	(27)	;volatile
 	line	502
 	
-l4071:	
+l4075:	
 ;main.c: 502: PWMCON1 = 0xC0;
 	movlw	low(0C0h)
 	movwf	(22)	;volatile
 	line	503
 	
-l4073:	
+l4077:	
 ;main.c: 503: PWMCON2 = 0x00;
 	clrf	(29)	;volatile
 	line	504
 	
-l4075:	
+l4079:	
 ;main.c: 504: PWMCON0 |= 0x30;
 	movlw	low(030h)
 	iorwf	(21),f	;volatile
@@ -2979,7 +3000,7 @@ ___lmul:
 ; Regs used in ___lmul: [wreg+status,2+status,0]
 	line	119
 	
-l4083:	
+l4087:	
 	clrf	(___lmul@product)
 	clrf	(___lmul@product+1)
 	clrf	(___lmul@product+2)
@@ -2989,14 +3010,14 @@ l4083:
 l1372:	
 	line	121
 	btfss	(___lmul@multiplier),(0)&7
-	goto	u3771
-	goto	u3770
-u3771:
-	goto	l4087
-u3770:
+	goto	u3791
+	goto	u3790
+u3791:
+	goto	l4091
+u3790:
 	line	122
 	
-l4085:	
+l4089:	
 	movf	(___lmul@multiplicand),w
 	addwf	(___lmul@product),f
 	movf	(___lmul@multiplicand+1),w
@@ -3004,29 +3025,29 @@ l4085:
 	skipnc
 	addlw	1
 	skipnz
-	goto	u3781
+	goto	u3801
 	addwf	(___lmul@product+1),f
-u3781:
+u3801:
 	movf	(___lmul@multiplicand+2),w
 	clrz
 	skipnc
 	addlw	1
 	skipnz
-	goto	u3782
+	goto	u3802
 	addwf	(___lmul@product+2),f
-u3782:
+u3802:
 	movf	(___lmul@multiplicand+3),w
 	clrz
 	skipnc
 	addlw	1
 	skipnz
-	goto	u3783
+	goto	u3803
 	addwf	(___lmul@product+3),f
-u3783:
+u3803:
 
 	line	123
 	
-l4087:	
+l4091:	
 	clrc
 	rlf	(___lmul@multiplicand),f
 	rlf	(___lmul@multiplicand+1),f
@@ -3034,7 +3055,7 @@ l4087:
 	rlf	(___lmul@multiplicand+3),f
 	line	124
 	
-l4089:	
+l4093:	
 	clrc
 	rrf	(___lmul@multiplier+3),f
 	rrf	(___lmul@multiplier+2),f
@@ -3046,14 +3067,14 @@ l4089:
 	iorwf	(___lmul@multiplier+1),w
 	iorwf	(___lmul@multiplier),w
 	skipz
-	goto	u3791
-	goto	u3790
-u3791:
+	goto	u3811
+	goto	u3810
+u3811:
 	goto	l1372
-u3790:
+u3810:
 	line	128
 	
-l4091:	
+l4095:	
 	movf	(___lmul@product+3),w
 	movwf	(?___lmul+3)
 	movf	(___lmul@product+2),w
@@ -3092,7 +3113,7 @@ GLOBAL	__end_of___lmul
 ;; Registers used:
 ;;		wreg, status,2, status,0
 ;; Tracked objects:
-;;		On entry : 300/0
+;;		On entry : 200/0
 ;;		On exit  : 300/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
@@ -3126,10 +3147,11 @@ _ADC_Sample:
 	opt	stack 4
 ; Regs used in _ADC_Sample: [wreg+status,2+status,0]
 ;ADC_Sample@adch stored from wreg
+	bcf	status, 5	;RP0=0, select bank0
 	movwf	(ADC_Sample@adch)
 	line	303
 	
-l3977:	
+l3981:	
 ;main.c: 303: volatile unsigned long adsum = 0;
 	clrf	(ADC_Sample@adsum)	;volatile
 	clrf	(ADC_Sample@adsum+1)	;volatile
@@ -3137,7 +3159,7 @@ l3977:
 	clrf	(ADC_Sample@adsum+3)	;volatile
 	line	304
 	
-l3979:	
+l3983:	
 ;main.c: 304: volatile unsigned int admin = 0, admax = 0;
 	clrf	(ADC_Sample@admin)	;volatile
 	clrf	(ADC_Sample@admin+1)	;volatile
@@ -3149,26 +3171,26 @@ l3979:
 	clrf	(ADC_Sample@ad_temp+1)	;volatile
 	line	307
 	
-l3981:	
+l3985:	
 ;main.c: 307: if ((!LDO_EN) && (adldo & 0x04) )
 	bsf	status, 5	;RP0=1, select bank1
 	btfsc	(1202/8)^080h,(1202)&7	;volatile
-	goto	u3621
-	goto	u3620
-u3621:
-	goto	l3987
-u3620:
+	goto	u3641
+	goto	u3640
+u3641:
+	goto	l3991
+u3640:
 	
-l3983:	
+l3987:	
 	btfss	(ADC_Sample@adldo),(2)&7
-	goto	u3631
-	goto	u3630
-u3631:
-	goto	l3987
-u3630:
+	goto	u3651
+	goto	u3650
+u3651:
+	goto	l3991
+u3650:
 	line	310
 	
-l3985:	
+l3989:	
 ;main.c: 308: {
 ;main.c: 310: ADCON1 = adldo;
 	movf	(ADC_Sample@adldo),w
@@ -3179,70 +3201,70 @@ l3985:
 opt asmopt_off
 	movlw	66
 movwf	((??_ADC_Sample+0)+0),f
-	u4897:
+	u4927:
 decfsz	(??_ADC_Sample+0)+0,f
-	goto	u4897
+	goto	u4927
 	nop
 opt asmopt_pop
 
 	line	312
 ;main.c: 312: }
-	goto	l3989
+	goto	l3993
 	line	314
 	
-l3987:	
+l3991:	
 ;main.c: 313: else
 ;main.c: 314: ADCON1 = adldo;
 	movf	(ADC_Sample@adldo),w
 	movwf	(150)^080h	;volatile
 	line	316
 	
-l3989:	
+l3993:	
 ;main.c: 316: if(adch & 0x10)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	btfss	(ADC_Sample@adch),(4)&7
-	goto	u3641
-	goto	u3640
-u3641:
-	goto	l3995
-u3640:
+	goto	u3661
+	goto	u3660
+u3661:
+	goto	l3999
+u3660:
 	line	318
 	
-l3991:	
+l3995:	
 ;main.c: 317: {
 ;main.c: 318: CHS4 = 1;
 	bsf	status, 5	;RP0=1, select bank1
 	bsf	(1206/8)^080h,(1206)&7	;volatile
 	line	319
 	
-l3993:	
+l3997:	
 ;main.c: 319: adch &= 0x0f;
 	movlw	low(0Fh)
 	bcf	status, 5	;RP0=0, select bank0
 	andwf	(ADC_Sample@adch),f
 	line	321
 	
-l3995:	
+l3999:	
 	line	322
 	
-l3997:	
+l4001:	
 ;main.c: 322: for (i = 0; i < 10; i++)
 	clrf	(ADC_Sample@i)
 	line	324
 	
-l4003:	
+l4007:	
 ;main.c: 323: {
 ;main.c: 324: ADCON0 = (unsigned char)(0X41 | (adch << 2));
 	movf	(ADC_Sample@adch),w
 	movwf	(??_ADC_Sample+0)+0
 	movlw	(02h)-1
-u3655:
+u3675:
 	clrc
 	rlf	(??_ADC_Sample+0)+0,f
 	addlw	-1
 	skipz
-	goto	u3655
+	goto	u3675
 	clrc
 	rlf	(??_ADC_Sample+0)+0,w
 	iorlw	041h
@@ -3263,14 +3285,14 @@ nop ;#
 psect	text11
 	line	329
 	
-l4005:	
+l4009:	
 ;main.c: 329: GODONE = 1;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	bsf	(1193/8)^080h,(1193)&7	;volatile
 	line	331
 	
-l4007:	
+l4011:	
 ;main.c: 331: unsigned char j = 0;
 	bcf	status, 5	;RP0=0, select bank0
 	clrf	(ADC_Sample@j)
@@ -3293,14 +3315,14 @@ l990:
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	decfsz	(ADC_Sample@j),f
-	goto	u3661
-	goto	u3660
-u3661:
+	goto	u3681
+	goto	u3680
+u3681:
 	goto	l989
-u3660:
+u3680:
 	line	337
 	
-l4009:	
+l4013:	
 ;main.c: 337: return 0;
 	movlw	low(0)
 	goto	l992
@@ -3310,14 +3332,14 @@ l989:
 	line	332
 	bsf	status, 5	;RP0=1, select bank1
 	btfsc	(1193/8)^080h,(1193)&7	;volatile
-	goto	u3671
-	goto	u3670
-u3671:
+	goto	u3691
+	goto	u3690
+u3691:
 	goto	l990
-u3670:
+u3690:
 	line	340
 	
-l4013:	
+l4017:	
 ;main.c: 338: }
 ;main.c: 340: ad_temp = (unsigned int)((ADRESH << 4) + (ADRESL >> 4));
 	movf	(153)^080h,w	;volatile
@@ -3334,7 +3356,7 @@ l4013:
 	movlw	0f0h
 	andwf	(ADC_Sample@ad_temp),f	;volatile
 	
-l4015:	
+l4019:	
 	bsf	status, 5	;RP0=1, select bank1
 	swapf	(152)^080h,w	;volatile
 	andlw	(0ffh shr 4) & 0ffh
@@ -3344,19 +3366,19 @@ l4015:
 	incf	(ADC_Sample@ad_temp+1),f	;volatile
 	line	342
 	
-l4017:	
+l4021:	
 ;main.c: 342: if (0 == admax)
 	movf	((ADC_Sample@admax)),w	;volatile
 iorwf	((ADC_Sample@admax+1)),w	;volatile
 	btfss	status,2
-	goto	u3681
-	goto	u3680
-u3681:
-	goto	l4021
-u3680:
+	goto	u3701
+	goto	u3700
+u3701:
+	goto	l4025
+u3700:
 	line	344
 	
-l4019:	
+l4023:	
 ;main.c: 343: {
 ;main.c: 344: admax = ad_temp;
 	movf	(ADC_Sample@ad_temp+1),w	;volatile
@@ -3374,24 +3396,24 @@ l4019:
 	goto	l995
 	line	347
 	
-l4021:	
+l4025:	
 ;main.c: 347: else if (ad_temp > admax)
 	movf	(ADC_Sample@ad_temp+1),w	;volatile
 	subwf	(ADC_Sample@admax+1),w	;volatile
 	skipz
-	goto	u3695
+	goto	u3715
 	movf	(ADC_Sample@ad_temp),w	;volatile
 	subwf	(ADC_Sample@admax),w	;volatile
-u3695:
+u3715:
 	skipnc
-	goto	u3691
-	goto	u3690
-u3691:
-	goto	l4025
-u3690:
+	goto	u3711
+	goto	u3710
+u3711:
+	goto	l4029
+u3710:
 	line	348
 	
-l4023:	
+l4027:	
 ;main.c: 348: admax = ad_temp;
 	movf	(ADC_Sample@ad_temp+1),w	;volatile
 	movwf	(ADC_Sample@admax+1)	;volatile
@@ -3400,24 +3422,24 @@ l4023:
 	goto	l995
 	line	349
 	
-l4025:	
+l4029:	
 ;main.c: 349: else if (ad_temp < admin)
 	movf	(ADC_Sample@admin+1),w	;volatile
 	subwf	(ADC_Sample@ad_temp+1),w	;volatile
 	skipz
-	goto	u3705
+	goto	u3725
 	movf	(ADC_Sample@admin),w	;volatile
 	subwf	(ADC_Sample@ad_temp),w	;volatile
-u3705:
+u3725:
 	skipnc
-	goto	u3701
-	goto	u3700
-u3701:
+	goto	u3721
+	goto	u3720
+u3721:
 	goto	l995
-u3700:
+u3720:
 	line	350
 	
-l4027:	
+l4031:	
 ;main.c: 350: admin = ad_temp;
 	movf	(ADC_Sample@ad_temp+1),w	;volatile
 	movwf	(ADC_Sample@admin+1)	;volatile
@@ -3440,114 +3462,48 @@ l995:
 	skipnc
 	addlw	1
 	skipnz
-	goto	u3711
+	goto	u3731
 	addwf	(ADC_Sample@adsum+1),f	;volatile
-u3711:
+u3731:
 	movf	2+(??_ADC_Sample+0)+0,w
 	clrz
 	skipnc
 	addlw	1
 	skipnz
-	goto	u3712
+	goto	u3732
 	addwf	(ADC_Sample@adsum+2),f	;volatile
-u3712:
+u3732:
 	movf	3+(??_ADC_Sample+0)+0,w
 	clrz
 	skipnc
 	addlw	1
 	skipnz
-	goto	u3713
+	goto	u3733
 	addwf	(ADC_Sample@adsum+3),f	;volatile
-u3713:
+u3733:
 
 	line	322
 	
-l4029:	
+l4033:	
 	incf	(ADC_Sample@i),f
 	
-l4031:	
+l4035:	
 	movlw	low(0Ah)
 	subwf	(ADC_Sample@i),w
 	skipc
-	goto	u3721
-	goto	u3720
-u3721:
-	goto	l4003
-u3720:
+	goto	u3741
+	goto	u3740
+u3741:
+	goto	l4007
+u3740:
 	line	354
 	
-l4033:	
+l4037:	
 ;main.c: 353: }
 ;main.c: 354: adsum -= admax;
 	movf	(ADC_Sample@admax),w	;volatile
 	movwf	((??_ADC_Sample+0)+0)
 	movf	(ADC_Sample@admax+1),w	;volatile
-	movwf	((??_ADC_Sample+0)+0+1)
-	clrf	((??_ADC_Sample+0)+0+2)
-	clrf	((??_ADC_Sample+0)+0+3)
-	movf	0+(??_ADC_Sample+0)+0,w
-	subwf	(ADC_Sample@adsum),f	;volatile
-	movf	1+(??_ADC_Sample+0)+0,w
-	skipc
-	incfsz	1+(??_ADC_Sample+0)+0,w
-	goto	u3735
-	goto	u3736
-u3735:
-	subwf	(ADC_Sample@adsum+1),f	;volatile
-u3736:
-	movf	2+(??_ADC_Sample+0)+0,w
-	skipc
-	incfsz	2+(??_ADC_Sample+0)+0,w
-	goto	u3737
-	goto	u3738
-u3737:
-	subwf	(ADC_Sample@adsum+2),f	;volatile
-u3738:
-	movf	3+(??_ADC_Sample+0)+0,w
-	skipc
-	incfsz	3+(??_ADC_Sample+0)+0,w
-	goto	u3739
-	goto	u3730
-u3739:
-	subwf	(ADC_Sample@adsum+3),f	;volatile
-u3730:
-
-	line	355
-;main.c: 355: if (adsum >= admin)
-	movf	(ADC_Sample@admin),w	;volatile
-	movwf	((??_ADC_Sample+0)+0)
-	movf	(ADC_Sample@admin+1),w	;volatile
-	movwf	((??_ADC_Sample+0)+0+1)
-	clrf	((??_ADC_Sample+0)+0+2)
-	clrf	((??_ADC_Sample+0)+0+3)
-	movf	3+(??_ADC_Sample+0)+0,w
-	subwf	(ADC_Sample@adsum+3),w	;volatile
-	skipz
-	goto	u3745
-	movf	2+(??_ADC_Sample+0)+0,w
-	subwf	(ADC_Sample@adsum+2),w	;volatile
-	skipz
-	goto	u3745
-	movf	1+(??_ADC_Sample+0)+0,w
-	subwf	(ADC_Sample@adsum+1),w	;volatile
-	skipz
-	goto	u3745
-	movf	0+(??_ADC_Sample+0)+0,w
-	subwf	(ADC_Sample@adsum),w	;volatile
-u3745:
-	skipc
-	goto	u3741
-	goto	u3740
-u3741:
-	goto	l999
-u3740:
-	line	356
-	
-l4035:	
-;main.c: 356: adsum -= admin;
-	movf	(ADC_Sample@admin),w	;volatile
-	movwf	((??_ADC_Sample+0)+0)
-	movf	(ADC_Sample@admin+1),w	;volatile
 	movwf	((??_ADC_Sample+0)+0+1)
 	clrf	((??_ADC_Sample+0)+0+2)
 	clrf	((??_ADC_Sample+0)+0+3)
@@ -3578,7 +3534,73 @@ u3759:
 	subwf	(ADC_Sample@adsum+3),f	;volatile
 u3750:
 
-	goto	l4037
+	line	355
+;main.c: 355: if (adsum >= admin)
+	movf	(ADC_Sample@admin),w	;volatile
+	movwf	((??_ADC_Sample+0)+0)
+	movf	(ADC_Sample@admin+1),w	;volatile
+	movwf	((??_ADC_Sample+0)+0+1)
+	clrf	((??_ADC_Sample+0)+0+2)
+	clrf	((??_ADC_Sample+0)+0+3)
+	movf	3+(??_ADC_Sample+0)+0,w
+	subwf	(ADC_Sample@adsum+3),w	;volatile
+	skipz
+	goto	u3765
+	movf	2+(??_ADC_Sample+0)+0,w
+	subwf	(ADC_Sample@adsum+2),w	;volatile
+	skipz
+	goto	u3765
+	movf	1+(??_ADC_Sample+0)+0,w
+	subwf	(ADC_Sample@adsum+1),w	;volatile
+	skipz
+	goto	u3765
+	movf	0+(??_ADC_Sample+0)+0,w
+	subwf	(ADC_Sample@adsum),w	;volatile
+u3765:
+	skipc
+	goto	u3761
+	goto	u3760
+u3761:
+	goto	l999
+u3760:
+	line	356
+	
+l4039:	
+;main.c: 356: adsum -= admin;
+	movf	(ADC_Sample@admin),w	;volatile
+	movwf	((??_ADC_Sample+0)+0)
+	movf	(ADC_Sample@admin+1),w	;volatile
+	movwf	((??_ADC_Sample+0)+0+1)
+	clrf	((??_ADC_Sample+0)+0+2)
+	clrf	((??_ADC_Sample+0)+0+3)
+	movf	0+(??_ADC_Sample+0)+0,w
+	subwf	(ADC_Sample@adsum),f	;volatile
+	movf	1+(??_ADC_Sample+0)+0,w
+	skipc
+	incfsz	1+(??_ADC_Sample+0)+0,w
+	goto	u3775
+	goto	u3776
+u3775:
+	subwf	(ADC_Sample@adsum+1),f	;volatile
+u3776:
+	movf	2+(??_ADC_Sample+0)+0,w
+	skipc
+	incfsz	2+(??_ADC_Sample+0)+0,w
+	goto	u3777
+	goto	u3778
+u3777:
+	subwf	(ADC_Sample@adsum+2),f	;volatile
+u3778:
+	movf	3+(??_ADC_Sample+0)+0,w
+	skipc
+	incfsz	3+(??_ADC_Sample+0)+0,w
+	goto	u3779
+	goto	u3770
+u3779:
+	subwf	(ADC_Sample@adsum+3),f	;volatile
+u3770:
+
+	goto	l4041
 	line	357
 	
 l999:	
@@ -3591,7 +3613,7 @@ l999:
 	clrf	(ADC_Sample@adsum+3)	;volatile
 	line	360
 	
-l4037:	
+l4041:	
 ;main.c: 360: adresult = adsum >> 3;
 	movf	(ADC_Sample@adsum),w	;volatile
 	movwf	(??_ADC_Sample+0)+0
@@ -3602,23 +3624,23 @@ l4037:
 	movf	(ADC_Sample@adsum+3),w	;volatile
 	movwf	((??_ADC_Sample+0)+0+3)
 	movlw	03h
-u3765:
+u3785:
 	clrc
 	rrf	(??_ADC_Sample+0)+3,f
 	rrf	(??_ADC_Sample+0)+2,f
 	rrf	(??_ADC_Sample+0)+1,f
 	rrf	(??_ADC_Sample+0)+0,f
-u3760:
+u3780:
 	addlw	-1
 	skipz
-	goto	u3765
+	goto	u3785
 	movf	1+(??_ADC_Sample+0)+0,w
 	movwf	(_adresult+1)	;volatile
 	movf	0+(??_ADC_Sample+0)+0,w
 	movwf	(_adresult)	;volatile
 	line	362
 	
-l4039:	
+l4043:	
 ;main.c: 362: adsum = 0;
 	clrf	(ADC_Sample@adsum)	;volatile
 	clrf	(ADC_Sample@adsum+1)	;volatile
@@ -3626,19 +3648,19 @@ l4039:
 	clrf	(ADC_Sample@adsum+3)	;volatile
 	line	363
 	
-l4041:	
+l4045:	
 ;main.c: 363: admin = 0;
 	clrf	(ADC_Sample@admin)	;volatile
 	clrf	(ADC_Sample@admin+1)	;volatile
 	line	364
 	
-l4043:	
+l4047:	
 ;main.c: 364: admax = 0;
 	clrf	(ADC_Sample@admax)	;volatile
 	clrf	(ADC_Sample@admax+1)	;volatile
 	line	365
 	
-l4045:	
+l4049:	
 ;main.c: 365: return 0xA5;
 	movlw	low(0A5h)
 	line	367
@@ -3653,7 +3675,7 @@ GLOBAL	__end_of_ADC_Sample
 
 ;; *************** function _bujinCtr *****************
 ;; Defined at:
-;;		line 628 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
+;;		line 632 in file "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3681,12 +3703,12 @@ GLOBAL	__end_of_ADC_Sample
 ;; This function uses a non-reentrant model
 ;;
 psect	text12,local,class=CODE,delta=2,merge=1,group=0
-	line	628
+	line	632
 global __ptext12
 __ptext12:	;psect for function _bujinCtr
 psect	text12
 	file	"C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
-	line	628
+	line	632
 	global	__size_of_bujinCtr
 	__size_of_bujinCtr	equ	__end_of_bujinCtr-_bujinCtr
 	
@@ -3694,102 +3716,102 @@ _bujinCtr:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _bujinCtr: [wreg-fsr0h+status,2+status,0]
-	line	630
-	
-l4347:	
-;main.c: 630: if(bujinFlag || motorStep > 0)
-	bcf	status, 5	;RP0=0, select bank0
-	movf	((_bujinFlag)),w
-	btfss	status,2
-	goto	u4321
-	goto	u4320
-u4321:
-	goto	l4351
-u4320:
-	
-l4349:	
-	movf	((_motorStep)),w
-iorwf	((_motorStep+1)),w
-	btfsc	status,2
-	goto	u4331
-	goto	u4330
-u4331:
-	goto	l4383
-u4330:
-	line	632
-	
-l4351:	
-;main.c: 631: {
-;main.c: 632: if(bujinFlag == 1)
-		decf	((_bujinFlag)),w
-	btfss	status,2
-	goto	u4341
-	goto	u4340
-u4341:
-	goto	l4355
-u4340:
 	line	634
 	
 l4353:	
-;main.c: 633: {
-;main.c: 634: maxMotorStep = 512;
-	movlw	0
-	movwf	(_maxMotorStep)
-	movlw	02h
-	movwf	((_maxMotorStep))+1
-	line	635
-;main.c: 635: }
-	goto	l4363
-	line	636
-	
-l4355:	
-;main.c: 636: else if(bujinFlag == 2)
-		movlw	2
-	xorwf	((_bujinFlag)),w
+;main.c: 634: if(bujinFlag || motorStep > 0)
+	bcf	status, 5	;RP0=0, select bank0
+	movf	((_bujinFlag)),w
 	btfss	status,2
 	goto	u4351
 	goto	u4350
 u4351:
-	goto	l4359
+	goto	l4357
 u4350:
-	line	638
+	
+l4355:	
+	movf	((_motorStep)),w
+iorwf	((_motorStep+1)),w
+	btfsc	status,2
+	goto	u4361
+	goto	u4360
+u4361:
+	goto	l4389
+u4360:
+	line	636
 	
 l4357:	
+;main.c: 635: {
+;main.c: 636: if(bujinFlag == 1)
+		decf	((_bujinFlag)),w
+	btfss	status,2
+	goto	u4371
+	goto	u4370
+u4371:
+	goto	l4361
+u4370:
+	line	638
+	
+l4359:	
 ;main.c: 637: {
-;main.c: 638: maxMotorStep = 1024;
+;main.c: 638: maxMotorStep = 512;
+	movlw	0
+	movwf	(_maxMotorStep)
+	movlw	02h
+	movwf	((_maxMotorStep))+1
+	line	639
+;main.c: 639: }
+	goto	l4369
+	line	640
+	
+l4361:	
+;main.c: 640: else if(bujinFlag == 2)
+		movlw	2
+	xorwf	((_bujinFlag)),w
+	btfss	status,2
+	goto	u4381
+	goto	u4380
+u4381:
+	goto	l4365
+u4380:
+	line	642
+	
+l4363:	
+;main.c: 641: {
+;main.c: 642: maxMotorStep = 1024;
 	movlw	0
 	movwf	(_maxMotorStep)
 	movlw	04h
 	movwf	((_maxMotorStep))+1
-	line	639
-;main.c: 639: }
-	goto	l4363
-	line	640
+	line	643
+;main.c: 643: }
+	goto	l4369
+	line	644
 	
-l4359:	
-;main.c: 640: else if(bujinFlag == 3)
+l4365:	
+;main.c: 644: else if(bujinFlag == 3)
 		movlw	3
 	xorwf	((_bujinFlag)),w
 	btfss	status,2
-	goto	u4361
-	goto	u4360
-u4361:
-	goto	l4363
-u4360:
-	line	642
+	goto	u4391
+	goto	u4390
+u4391:
+	goto	l4369
+u4390:
+	line	646
 	
-l4361:	
-;main.c: 641: {
-;main.c: 642: maxMotorStep = 1360;
+l4367:	
+;main.c: 645: {
+;main.c: 646: maxMotorStep = 1360;
 	movlw	050h
 	movwf	(_maxMotorStep)
 	movlw	05h
 	movwf	((_maxMotorStep))+1
-	line	644
+	line	648
 	
-l4363:	
-;main.c: 643: }
-;main.c: 644: if(++motorStep >= (maxMotorStep*2))
+l4369:	
+;main.c: 647: }
+;main.c: 648: if(++motorStep >= (maxMotorStep*2))
 	movf	(_maxMotorStep+1),w
 	movwf	(??_bujinCtr+0)+0+1
 	movf	(_maxMotorStep),w
@@ -3803,176 +3825,176 @@ l4363:
 	movf	1+(??_bujinCtr+0)+0,w
 	subwf	((_motorStep+1)),w
 	skipz
-	goto	u4375
+	goto	u4405
 	movf	0+(??_bujinCtr+0)+0,w
 	subwf	((_motorStep)),w
-u4375:
+u4405:
 	skipc
-	goto	u4371
-	goto	u4370
-u4371:
-	goto	l4367
-u4370:
-	line	646
+	goto	u4401
+	goto	u4400
+u4401:
+	goto	l4373
+u4400:
+	line	650
 	
-l4365:	
-;main.c: 645: {
-;main.c: 646: motorStep = 0;
+l4371:	
+;main.c: 649: {
+;main.c: 650: motorStep = 0;
 	clrf	(_motorStep)
 	clrf	(_motorStep+1)
-	line	648
+	line	652
 	
-l4367:	
-;main.c: 647: }
-;main.c: 648: unsigned char tempStep = motorStep % 8;
+l4373:	
+;main.c: 651: }
+;main.c: 652: unsigned char tempStep = motorStep % 8;
 	movf	(_motorStep),w
 	movwf	(bujinCtr@tempStep)
 	
-l4369:	
+l4375:	
 	movlw	low(07h)
 	andwf	(bujinCtr@tempStep),f
-	line	649
+	line	653
 	
-l4371:	
-;main.c: 649: if(motorStep < maxMotorStep)
+l4377:	
+;main.c: 653: if(motorStep < maxMotorStep)
 	movf	(_maxMotorStep+1),w
 	subwf	(_motorStep+1),w
 	skipz
-	goto	u4385
+	goto	u4415
 	movf	(_maxMotorStep),w
 	subwf	(_motorStep),w
-u4385:
+u4415:
 	skipnc
-	goto	u4381
-	goto	u4380
-u4381:
-	goto	l4381
-u4380:
-	goto	l4377
-	line	654
-;main.c: 653: {
-;main.c: 654: case 0:
+	goto	u4411
+	goto	u4410
+u4411:
+	goto	l4387
+u4410:
+	goto	l4383
+	line	658
+;main.c: 657: {
+;main.c: 658: case 0:
 	
 l1089:	
-	line	655
-;main.c: 655: RA5 = 1;RA6 = 0;RA7 = 0;RB7 = 0;
+	line	659
+;main.c: 659: RA5 = 1;RA6 = 0;RA7 = 0;RB7 = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	bsf	(1077/8)^080h,(1077)&7	;volatile
 	bcf	(1078/8)^080h,(1078)&7	;volatile
 	bcf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(55/8),(55)&7	;volatile
-	line	656
-;main.c: 656: break;
+	line	660
+;main.c: 660: break;
 	goto	l1110
-	line	657
-;main.c: 657: case 1:
+	line	661
+;main.c: 661: case 1:
 	
 l1091:	
-	line	658
-;main.c: 658: RA5 = 1;RA6 = 1;RA7 = 0;RB7 = 0;
+	line	662
+;main.c: 662: RA5 = 1;RA6 = 1;RA7 = 0;RB7 = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	bsf	(1077/8)^080h,(1077)&7	;volatile
 	bsf	(1078/8)^080h,(1078)&7	;volatile
 	bcf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(55/8),(55)&7	;volatile
-	line	659
-;main.c: 659: break;
+	line	663
+;main.c: 663: break;
 	goto	l1110
-	line	660
-;main.c: 660: case 2:
+	line	664
+;main.c: 664: case 2:
 	
 l1092:	
-	line	661
-;main.c: 661: RA5 = 0;RA6 = 1;RA7 = 0;RB7 = 0;
+	line	665
+;main.c: 665: RA5 = 0;RA6 = 1;RA7 = 0;RB7 = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(1077/8)^080h,(1077)&7	;volatile
 	bsf	(1078/8)^080h,(1078)&7	;volatile
 	bcf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(55/8),(55)&7	;volatile
-	line	662
-;main.c: 662: break;
+	line	666
+;main.c: 666: break;
 	goto	l1110
-	line	663
-;main.c: 663: case 3:
+	line	667
+;main.c: 667: case 3:
 	
 l1093:	
-	line	664
-;main.c: 664: RA5 = 0;RA6 = 1;RA7 = 1;RB7 = 0;
+	line	668
+;main.c: 668: RA5 = 0;RA6 = 1;RA7 = 1;RB7 = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(1077/8)^080h,(1077)&7	;volatile
 	bsf	(1078/8)^080h,(1078)&7	;volatile
 	bsf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(55/8),(55)&7	;volatile
-	line	665
-;main.c: 665: break;
+	line	669
+;main.c: 669: break;
 	goto	l1110
-	line	666
-;main.c: 666: case 4:
+	line	670
+;main.c: 670: case 4:
 	
 l1094:	
-	line	667
-;main.c: 667: RA5 = 0;RA6 = 0;RA7 = 1;RB7 = 0;
+	line	671
+;main.c: 671: RA5 = 0;RA6 = 0;RA7 = 1;RB7 = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(1077/8)^080h,(1077)&7	;volatile
 	bcf	(1078/8)^080h,(1078)&7	;volatile
 	bsf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(55/8),(55)&7	;volatile
-	line	668
-;main.c: 668: break;
+	line	672
+;main.c: 672: break;
 	goto	l1110
-	line	669
-;main.c: 669: case 5:
+	line	673
+;main.c: 673: case 5:
 	
 l1095:	
-	line	670
-;main.c: 670: RA5 = 0;RA6 = 0;RA7 = 1;RB7 = 1;
+	line	674
+;main.c: 674: RA5 = 0;RA6 = 0;RA7 = 1;RB7 = 1;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(1077/8)^080h,(1077)&7	;volatile
 	bcf	(1078/8)^080h,(1078)&7	;volatile
 	bsf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bsf	(55/8),(55)&7	;volatile
-	line	671
-;main.c: 671: break;
+	line	675
+;main.c: 675: break;
 	goto	l1110
-	line	672
-;main.c: 672: case 6:
+	line	676
+;main.c: 676: case 6:
 	
 l1096:	
-	line	673
-;main.c: 673: RA5 = 0;RA6 = 0;RA7 = 0;RB7 = 1;
+	line	677
+;main.c: 677: RA5 = 0;RA6 = 0;RA7 = 0;RB7 = 1;
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	(1077/8)^080h,(1077)&7	;volatile
 	bcf	(1078/8)^080h,(1078)&7	;volatile
 	bcf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bsf	(55/8),(55)&7	;volatile
-	line	674
-;main.c: 674: break;
+	line	678
+;main.c: 678: break;
 	goto	l1110
-	line	675
-;main.c: 675: case 7:
+	line	679
+;main.c: 679: case 7:
 	
 l1097:	
-	line	676
-;main.c: 676: RA5 = 1;RA6 = 0;RA7 = 0;RB7 = 1;
+	line	680
+;main.c: 680: RA5 = 1;RA6 = 0;RA7 = 0;RB7 = 1;
 	bsf	status, 5	;RP0=1, select bank1
 	bsf	(1077/8)^080h,(1077)&7	;volatile
 	bcf	(1078/8)^080h,(1078)&7	;volatile
 	bcf	(1079/8)^080h,(1079)&7	;volatile
 	bcf	status, 5	;RP0=0, select bank0
 	bsf	(55/8),(55)&7	;volatile
-	line	677
-;main.c: 677: break;
+	line	681
+;main.c: 681: break;
 	goto	l1110
-	line	652
+	line	656
 	
-l4377:	
+l4383:	
 	movf	(bujinCtr@tempStep),w
 	; Switch size 1, requested type "space"
 ; Number of cases is 8, Range of values is 0 to 7
@@ -3988,16 +4010,16 @@ l4377:
 	subwf	fsr,w
 skipnc
 goto l1110
-movlw high(S4749)
+movlw high(S4755)
 movwf pclath
 	clrc
 	rlf fsr,w
-	addlw low(S4749)
+	addlw low(S4755)
 	movwf pc
 psect	swtext1,local,class=CONST,delta=2
 global __pswtext1
 __pswtext1:
-S4749:
+S4755:
 	ljmp	l1089
 	ljmp	l1091
 	ljmp	l1092
@@ -4008,9 +4030,9 @@ S4749:
 	ljmp	l1097
 psect	text12
 
-	line	683
+	line	687
 	
-l4381:	
+l4387:	
 	movf	(bujinCtr@tempStep),w
 	; Switch size 1, requested type "space"
 ; Number of cases is 8, Range of values is 0 to 7
@@ -4026,16 +4048,16 @@ l4381:
 	subwf	fsr,w
 skipnc
 goto l1110
-movlw high(S4751)
+movlw high(S4757)
 movwf pclath
 	clrc
 	rlf fsr,w
-	addlw low(S4751)
+	addlw low(S4757)
 	movwf pc
 psect	swtext2,local,class=CONST,delta=2
 global __pswtext2
 __pswtext2:
-S4751:
+S4757:
 	ljmp	l1097
 	ljmp	l1096
 	ljmp	l1095
@@ -4046,22 +4068,22 @@ S4751:
 	ljmp	l1089
 psect	text12
 
-	line	714
+	line	718
 	
-l4383:	
-;main.c: 712: else
-;main.c: 713: {
-;main.c: 714: PORTA &= 0x1F;
+l4389:	
+;main.c: 716: else
+;main.c: 717: {
+;main.c: 718: PORTA &= 0x1F;
 	movlw	low(01Fh)
 	bsf	status, 5	;RP0=1, select bank1
 	andwf	(134)^080h,f	;volatile
-	line	715
+	line	719
 	
-l4385:	
-;main.c: 715: PORTB &= 0x7F;
+l4391:	
+;main.c: 719: PORTB &= 0x7F;
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(6)+(7/8),(7)&7	;volatile
-	line	717
+	line	721
 	
 l1110:	
 	return
@@ -4117,7 +4139,7 @@ ___lwtoft:
 ; Regs used in ___lwtoft: [wreg+status,2+status,0+pclath+cstack]
 	line	30
 	
-l4545:	
+l4551:	
 	movf	(___lwtoft@c),w
 	movwf	(___ftpack@arg)
 	movf	(___lwtoft@c+1),w
@@ -4191,7 +4213,7 @@ ___fttol:
 ; Regs used in ___fttol: [wreg+status,2+status,0]
 	line	49
 	
-l4505:	
+l4511:	
 	movf	(___fttol@f1),w
 	movwf	((??___fttol+0)+0)
 	movf	(___fttol@f1+1),w
@@ -4204,14 +4226,14 @@ l4505:
 	movwf	(___fttol@exp1)
 	movf	(((___fttol@exp1))),w
 	btfss	status,2
-	goto	u4561
-	goto	u4560
-u4561:
-	goto	l4509
-u4560:
+	goto	u4591
+	goto	u4590
+u4591:
+	goto	l4515
+u4590:
 	line	50
 	
-l4507:	
+l4513:	
 	clrf	(?___fttol)
 	clrf	(?___fttol+1)
 	clrf	(?___fttol+2)
@@ -4219,7 +4241,7 @@ l4507:
 	goto	l1606
 	line	51
 	
-l4509:	
+l4515:	
 	movf	(___fttol@f1),w
 	movwf	((??___fttol+0)+0)
 	movf	(___fttol@f1+1),w
@@ -4227,24 +4249,24 @@ l4509:
 	movf	(___fttol@f1+2),w
 	movwf	((??___fttol+0)+0+2)
 	movlw	017h
-u4575:
+u4605:
 	clrc
 	rrf	(??___fttol+0)+2,f
 	rrf	(??___fttol+0)+1,f
 	rrf	(??___fttol+0)+0,f
-u4570:
+u4600:
 	addlw	-1
 	skipz
-	goto	u4575
+	goto	u4605
 	movf	0+(??___fttol+0)+0,w
 	movwf	(___fttol@sign1)
 	line	52
 	
-l4511:	
+l4517:	
 	bsf	(___fttol@f1)+(15/8),(15)&7
 	line	53
 	
-l4513:	
+l4519:	
 	movlw	0FFh
 	andwf	(___fttol@f1),f
 	movlw	0FFh
@@ -4253,7 +4275,7 @@ l4513:
 	andwf	(___fttol@f1+2),f
 	line	54
 	
-l4515:	
+l4521:	
 	movf	(___fttol@f1),w
 	movwf	(___fttol@lval)
 	movf	(___fttol@f1+1),w
@@ -4263,34 +4285,34 @@ l4515:
 	clrf	((___fttol@lval))+3
 	line	55
 	
-l4517:	
+l4523:	
 	movlw	08Eh
 	subwf	(___fttol@exp1),f
 	line	56
 	
-l4519:	
+l4525:	
 	btfss	(___fttol@exp1),7
-	goto	u4581
-	goto	u4580
-u4581:
-	goto	l4529
-u4580:
+	goto	u4611
+	goto	u4610
+u4611:
+	goto	l4535
+u4610:
 	line	57
 	
-l4521:	
+l4527:	
 	movf	(___fttol@exp1),w
 	xorlw	80h
 	addlw	-((-15)^80h)
 	skipnc
-	goto	u4591
-	goto	u4590
-u4591:
-	goto	l4525
-u4590:
-	goto	l4507
+	goto	u4621
+	goto	u4620
+u4621:
+	goto	l4531
+u4620:
+	goto	l4513
 	line	60
 	
-l4525:	
+l4531:	
 	clrc
 	rrf	(___fttol@lval+3),f
 	rrf	(___fttol@lval+2),f
@@ -4298,29 +4320,29 @@ l4525:
 	rrf	(___fttol@lval),f
 	line	61
 	
-l4527:	
+l4533:	
 	incfsz	(___fttol@exp1),f
-	goto	u4601
-	goto	u4600
-u4601:
-	goto	l4525
-u4600:
-	goto	l4537
+	goto	u4631
+	goto	u4630
+u4631:
+	goto	l4531
+u4630:
+	goto	l4543
 	line	63
 	
-l4529:	
+l4535:	
 	movlw	low(018h)
 	subwf	(___fttol@exp1),w
 	skipc
-	goto	u4611
-	goto	u4610
-u4611:
-	goto	l4535
-u4610:
-	goto	l4507
+	goto	u4641
+	goto	u4640
+u4641:
+	goto	l4541
+u4640:
+	goto	l4513
 	line	66
 	
-l4533:	
+l4539:	
 	clrc
 	rlf	(___fttol@lval),f
 	rlf	(___fttol@lval+1),f
@@ -4330,27 +4352,27 @@ l4533:
 	decf	(___fttol@exp1),f
 	line	65
 	
-l4535:	
+l4541:	
 	movf	((___fttol@exp1)),w
 	btfss	status,2
-	goto	u4621
-	goto	u4620
-u4621:
-	goto	l4533
-u4620:
+	goto	u4651
+	goto	u4650
+u4651:
+	goto	l4539
+u4650:
 	line	70
 	
-l4537:	
+l4543:	
 	movf	((___fttol@sign1)),w
 	btfsc	status,2
-	goto	u4631
-	goto	u4630
-u4631:
-	goto	l4541
-u4630:
+	goto	u4661
+	goto	u4660
+u4661:
+	goto	l4547
+u4660:
 	line	71
 	
-l4539:	
+l4545:	
 	comf	(___fttol@lval),f
 	comf	(___fttol@lval+1),f
 	comf	(___fttol@lval+2),f
@@ -4364,7 +4386,7 @@ l4539:
 	incf	(___fttol@lval+3),f
 	line	72
 	
-l4541:	
+l4547:	
 	movf	(___fttol@lval+3),w
 	movwf	(?___fttol+3)
 	movf	(___fttol@lval+2),w
@@ -4434,7 +4456,7 @@ ___ftdiv:
 ; Regs used in ___ftdiv: [wreg+status,2+status,0+pclath+cstack]
 	line	63
 	
-l4465:	
+l4471:	
 	movf	(___ftdiv@f1),w
 	movwf	((??___ftdiv+0)+0)
 	movf	(___ftdiv@f1+1),w
@@ -4447,21 +4469,21 @@ l4465:
 	movwf	(___ftdiv@exp)
 	movf	(((___ftdiv@exp))),w
 	btfss	status,2
-	goto	u4521
-	goto	u4520
-u4521:
-	goto	l4469
-u4520:
+	goto	u4551
+	goto	u4550
+u4551:
+	goto	l4475
+u4550:
 	line	64
 	
-l4467:	
+l4473:	
 	clrf	(?___ftdiv)
 	clrf	(?___ftdiv+1)
 	clrf	(?___ftdiv+2)
 	goto	l1570
 	line	65
 	
-l4469:	
+l4475:	
 	movf	(___ftdiv@f2),w
 	movwf	((??___ftdiv+0)+0)
 	movf	(___ftdiv@f2+1),w
@@ -4474,14 +4496,14 @@ l4469:
 	movwf	(___ftdiv@sign)
 	movf	(((___ftdiv@sign))),w
 	btfss	status,2
-	goto	u4531
-	goto	u4530
-u4531:
+	goto	u4561
+	goto	u4560
+u4561:
 	goto	l1571
-u4530:
+u4560:
 	line	66
 	
-l4471:	
+l4477:	
 	clrf	(?___ftdiv)
 	clrf	(?___ftdiv+1)
 	clrf	(?___ftdiv+2)
@@ -4494,7 +4516,7 @@ l1571:
 	clrf	(___ftdiv@f3+2)
 	line	68
 	
-l4473:	
+l4479:	
 	movlw	low(089h)
 	addwf	(___ftdiv@sign),w
 	movwf	(??___ftdiv+0)+0
@@ -4502,26 +4524,26 @@ l4473:
 	subwf	(___ftdiv@exp),f
 	line	69
 	
-l4475:	
+l4481:	
 	movf	0+(___ftdiv@f1)+02h,w
 	movwf	(___ftdiv@sign)
 	line	70
 	
-l4477:	
+l4483:	
 	movf	0+(___ftdiv@f2)+02h,w
 	xorwf	(___ftdiv@sign),f
 	line	71
 	
-l4479:	
+l4485:	
 	movlw	low(080h)
 	andwf	(___ftdiv@sign),f
 	line	72
 	
-l4481:	
+l4487:	
 	bsf	(___ftdiv@f1)+(15/8),(15)&7
 	line	73
 	
-l4483:	
+l4489:	
 	movlw	0FFh
 	andwf	(___ftdiv@f1),f
 	movlw	0FFh
@@ -4530,11 +4552,11 @@ l4483:
 	andwf	(___ftdiv@f1+2),f
 	line	74
 	
-l4485:	
+l4491:	
 	bsf	(___ftdiv@f2)+(15/8),(15)&7
 	line	75
 	
-l4487:	
+l4493:	
 	movlw	0FFh
 	andwf	(___ftdiv@f2),f
 	movlw	0FFh
@@ -4543,12 +4565,12 @@ l4487:
 	andwf	(___ftdiv@f2+2),f
 	line	76
 	
-l4489:	
+l4495:	
 	movlw	low(018h)
 	movwf	(___ftdiv@cntr)
 	line	78
 	
-l4491:	
+l4497:	
 	clrc
 	rlf	(___ftdiv@f3),f
 	rlf	(___ftdiv@f3+1),f
@@ -4557,23 +4579,23 @@ l4491:
 	movf	(___ftdiv@f2+2),w
 	subwf	(___ftdiv@f1+2),w
 	skipz
-	goto	u4545
+	goto	u4575
 	movf	(___ftdiv@f2+1),w
 	subwf	(___ftdiv@f1+1),w
 	skipz
-	goto	u4545
+	goto	u4575
 	movf	(___ftdiv@f2),w
 	subwf	(___ftdiv@f1),w
-u4545:
+u4575:
 	skipc
-	goto	u4541
-	goto	u4540
-u4541:
-	goto	l4497
-u4540:
+	goto	u4571
+	goto	u4570
+u4571:
+	goto	l4503
+u4570:
 	line	80
 	
-l4493:	
+l4499:	
 	movf	(___ftdiv@f2),w
 	subwf	(___ftdiv@f1),f
 	movf	(___ftdiv@f2+1),w
@@ -4586,27 +4608,27 @@ l4493:
 	subwf	(___ftdiv@f1+2),f
 	line	81
 	
-l4495:	
+l4501:	
 	bsf	(___ftdiv@f3)+(0/8),(0)&7
 	line	83
 	
-l4497:	
+l4503:	
 	clrc
 	rlf	(___ftdiv@f1),f
 	rlf	(___ftdiv@f1+1),f
 	rlf	(___ftdiv@f1+2),f
 	line	84
 	
-l4499:	
+l4505:	
 	decfsz	(___ftdiv@cntr),f
-	goto	u4551
-	goto	u4550
-u4551:
-	goto	l4491
-u4550:
+	goto	u4581
+	goto	u4580
+u4581:
+	goto	l4497
+u4580:
 	line	85
 	
-l4501:	
+l4507:	
 	movf	(___ftdiv@f3),w
 	movwf	(___ftpack@arg)
 	movf	(___ftdiv@f3+1),w
@@ -4683,25 +4705,25 @@ ___ftpack:
 ; Regs used in ___ftpack: [wreg+status,2+status,0]
 	line	64
 	
-l4095:	
+l4099:	
 	movf	((___ftpack@exp)),w
 	btfsc	status,2
-	goto	u3801
-	goto	u3800
-u3801:
+	goto	u3821
+	goto	u3820
+u3821:
 	goto	l1517
-u3800:
+u3820:
 	
-l4097:	
+l4101:	
 	movf	(___ftpack@arg+2),w
 	iorwf	(___ftpack@arg+1),w
 	iorwf	(___ftpack@arg),w
 	skipz
-	goto	u3811
-	goto	u3810
-u3811:
-	goto	l4101
-u3810:
+	goto	u3831
+	goto	u3830
+u3831:
+	goto	l4105
+u3830:
 	
 l1517:	
 	line	65
@@ -4711,7 +4733,7 @@ l1517:
 	goto	l1518
 	line	67
 	
-l4099:	
+l4103:	
 	incf	(___ftpack@exp),f
 	line	68
 	clrc
@@ -4720,19 +4742,19 @@ l4099:
 	rrf	(___ftpack@arg),f
 	line	66
 	
-l4101:	
+l4105:	
 	movlw	low highword(0FE0000h)
 	andwf	(___ftpack@arg+2),w
 	btfss	status,2
-	goto	u3821
-	goto	u3820
-u3821:
-	goto	l4099
-u3820:
-	goto	l4105
+	goto	u3841
+	goto	u3840
+u3841:
+	goto	l4103
+u3840:
+	goto	l4109
 	line	71
 	
-l4103:	
+l4107:	
 	incf	(___ftpack@exp),f
 	line	72
 	incf	(___ftpack@arg),f
@@ -4747,19 +4769,19 @@ l4103:
 	rrf	(___ftpack@arg),f
 	line	70
 	
-l4105:	
+l4109:	
 	movlw	low highword(0FF0000h)
 	andwf	(___ftpack@arg+2),w
 	btfss	status,2
-	goto	u3831
-	goto	u3830
-u3831:
-	goto	l4103
-u3830:
-	goto	l4109
+	goto	u3851
+	goto	u3850
+u3851:
+	goto	l4107
+u3850:
+	goto	l4113
 	line	76
 	
-l4107:	
+l4111:	
 	decf	(___ftpack@exp),f
 	line	77
 	clrc
@@ -4768,35 +4790,35 @@ l4107:
 	rlf	(___ftpack@arg+2),f
 	line	75
 	
-l4109:	
+l4113:	
 	btfsc	(___ftpack@arg+1),(15)&7
-	goto	u3841
-	goto	u3840
-u3841:
+	goto	u3861
+	goto	u3860
+u3861:
 	goto	l1529
-u3840:
+u3860:
 	
-l4111:	
+l4115:	
 	movlw	low(02h)
 	subwf	(___ftpack@exp),w
 	skipnc
-	goto	u3851
-	goto	u3850
-u3851:
-	goto	l4107
-u3850:
+	goto	u3871
+	goto	u3870
+u3871:
+	goto	l4111
+u3870:
 	
 l1529:	
 	line	79
 	btfsc	(___ftpack@exp),(0)&7
-	goto	u3861
-	goto	u3860
-u3861:
+	goto	u3881
+	goto	u3880
+u3881:
 	goto	l1530
-u3860:
+u3880:
 	line	80
 	
-l4113:	
+l4117:	
 	bcf	(___ftpack@arg)+(15/8),(15)&7
 	
 l1530:	
@@ -4805,7 +4827,7 @@ l1530:
 	rrf	(___ftpack@exp),f
 	line	82
 	
-l4115:	
+l4119:	
 	movf	(___ftpack@exp),w
 	movwf	((??___ftpack+0)+0+2)
 	clrf	((??___ftpack+0)+0+1)
@@ -4819,14 +4841,14 @@ l4115:
 	line	83
 	movf	((___ftpack@sign)),w
 	btfsc	status,2
-	goto	u3871
-	goto	u3870
-u3871:
+	goto	u3891
+	goto	u3890
+u3891:
 	goto	l1531
-u3870:
+u3890:
 	line	84
 	
-l4117:	
+l4121:	
 	bsf	(___ftpack@arg)+(23/8),(23)&7
 	
 l1531:	
@@ -4887,34 +4909,36 @@ _chrgCtr:
 ; Regs used in _chrgCtr: [wreg+status,2+status,0]
 	line	372
 	
-l3785:	
+l3789:	
 ;main.c: 372: if(PORTB & 0x20)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	btfss	(6),(5)&7	;volatile
-	goto	u3341
-	goto	u3340
-u3341:
-	goto	l3801
-u3340:
+	goto	u3361
+	goto	u3360
+u3361:
+	goto	l3805
+u3360:
 	line	374
 	
-l3787:	
+l3791:	
 ;main.c: 373: {
 ;main.c: 374: chrgFlag = 1;
 	clrf	(_chrgFlag)
 	incf	(_chrgFlag),f
 	line	375
 	
-l3789:	
+l3793:	
 ;main.c: 375: firstLock = 0;
-	clrf	(_firstLock)
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(_firstLock)^080h
 	line	376
 ;main.c: 376: lowBatLock = 0;
+	bcf	status, 5	;RP0=0, select bank0
 	clrf	(_lowBatLock)
 	line	377
 	
-l3791:	
+l3795:	
 ;main.c: 377: if(power_ad > 4140)
 	movlw	010h
 	subwf	(_power_ad+1),w	;volatile
@@ -4922,41 +4946,41 @@ l3791:
 	skipnz
 	subwf	(_power_ad),w	;volatile
 	skipc
-	goto	u3351
-	goto	u3350
-u3351:
-	goto	l3799
-u3350:
+	goto	u3371
+	goto	u3370
+u3371:
+	goto	l3803
+u3370:
 	line	379
 	
-l3793:	
+l3797:	
 ;main.c: 378: {
 ;main.c: 379: if(++chrgFullTime > 200)
 	movlw	low(0C9h)
 	incf	(_chrgFullTime),f
 	subwf	((_chrgFullTime)),w
 	skipc
-	goto	u3361
-	goto	u3360
-u3361:
+	goto	u3381
+	goto	u3380
+u3381:
 	goto	l1008
-u3360:
+u3380:
 	line	381
 	
-l3795:	
+l3799:	
 ;main.c: 380: {
 ;main.c: 381: chrgFullTime = 0;
 	clrf	(_chrgFullTime)
 	line	382
 	
-l3797:	
+l3801:	
 ;main.c: 382: chrgFullFlag = 1;
 	clrf	(_chrgFullFlag)
 	incf	(_chrgFullFlag),f
 	goto	l1008
 	line	387
 	
-l3799:	
+l3803:	
 ;main.c: 385: else
 ;main.c: 386: {
 ;main.c: 387: chrgFullTime = 0;
@@ -4964,7 +4988,7 @@ l3799:
 	goto	l1008
 	line	393
 	
-l3801:	
+l3805:	
 ;main.c: 391: else
 ;main.c: 392: {
 ;main.c: 393: chrgFlag = 0;
@@ -5031,34 +5055,34 @@ _WorkSleep:
 ; Regs used in _WorkSleep: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
 	line	227
 	
-l4549:	
+l4555:	
 ;main.c: 225: static unsigned char time;
 ;main.c: 227: if(B_OnOff)time = 0;
 	btfss	(_B_OnOff/8),(_B_OnOff)&7	;volatile
-	goto	u4641
-	goto	u4640
-u4641:
-	goto	l4553
-u4640:
+	goto	u4671
+	goto	u4670
+u4671:
+	goto	l4559
+u4670:
 	
-l4551:	
+l4557:	
 	clrf	(WorkSleep@time)
 	line	229
 	
-l4553:	
+l4559:	
 ;main.c: 229: if(++time >= 125)
 	movlw	low(07Dh)
 	incf	(WorkSleep@time),f
 	subwf	((WorkSleep@time)),w
 	skipc
-	goto	u4651
-	goto	u4650
-u4651:
+	goto	u4681
+	goto	u4680
+u4681:
 	goto	l981
-u4650:
+u4680:
 	line	231
 	
-l4555:	
+l4561:	
 ;main.c: 230: {
 ;main.c: 231: time = 0;
 	clrf	(WorkSleep@time)
@@ -5093,13 +5117,13 @@ l4555:
 	clrf	(149)^080h	;volatile
 	line	244
 	
-l4557:	
+l4563:	
 ;main.c: 244: PORTA = 0x01;
 	movlw	low(01h)
 	movwf	(134)^080h	;volatile
 	line	245
 	
-l4559:	
+l4565:	
 ;main.c: 245: PORTB = 0x02;
 	movlw	low(02h)
 	bcf	status, 5	;RP0=0, select bank0
@@ -5110,89 +5134,89 @@ l4559:
 	clrf	(261)^0100h	;volatile
 	line	247
 	
-l4561:	
+l4567:	
 ;main.c: 247: PORTC = 0x03;
 	movlw	low(03h)
 	movwf	(262)^0100h	;volatile
 	line	249
 	
-l4563:	
+l4569:	
 ;main.c: 249: TRISB5 =1;
 	bcf	status, 6	;RP1=0, select bank0
 	bsf	(45/8),(45)&7	;volatile
 	line	251
 	
-l4565:	
+l4571:	
 ;main.c: 251: RBIF = 0;
 	bcf	(88/8),(88)&7	;volatile
 	line	252
 	
-l4567:	
+l4573:	
 ;main.c: 252: RBIE = 1;
 	bsf	(91/8),(91)&7	;volatile
 	line	253
 	
-l4569:	
+l4575:	
 ;main.c: 253: IOCB5= 1;
 	bsf	(77/8),(77)&7	;volatile
 	line	254
 	
-l4571:	
+l4577:	
 ;main.c: 254: PORTB;
 	movf	(6),w	;volatile
 	line	255
 	
-l4573:	
+l4579:	
 ;main.c: 255: PORTB &= 0xFD;
 	bcf	(6)+(1/8),(1)&7	;volatile
 	line	267
 	
-l4575:	
+l4581:	
 ;main.c: 267: SystemEnterSleep();
 	fcall	_SystemEnterSleep
 	line	268
 	
-l4577:	
+l4583:	
 ;main.c: 268: if(RAIF)
 	btfss	(107/8),(107)&7	;volatile
-	goto	u4661
-	goto	u4660
-u4661:
-	goto	l4583
-u4660:
+	goto	u4691
+	goto	u4690
+u4691:
+	goto	l4589
+u4690:
 	line	270
 	
-l4579:	
+l4585:	
 ;main.c: 269: {
 ;main.c: 270: RAIF = 0;
 	bcf	(107/8),(107)&7	;volatile
 	line	271
 	
-l4581:	
+l4587:	
 ;main.c: 271: PORTA;
 	bsf	status, 5	;RP0=1, select bank1
 	movf	(134)^080h,w	;volatile
 	line	274
 	
-l4583:	
+l4589:	
 ;main.c: 272: }
 ;main.c: 274: Refurbish_Sfr();
 	fcall	_Refurbish_Sfr
 	line	275
 	
-l4585:	
+l4591:	
 ;main.c: 275: ADCON0 = 0X41;
 	movlw	low(041h)
 	bsf	status, 5	;RP0=1, select bank1
 	movwf	(149)^080h	;volatile
 	line	276
 	
-l4587:	
+l4593:	
 ;main.c: 276: ADON = 1;
 	bsf	(1192/8)^080h,(1192)&7	;volatile
 	line	277
 	
-l4589:	
+l4595:	
 ;main.c: 277: ADCON1 = 0x00;
 	clrf	(150)^080h	;volatile
 	line	280
@@ -5255,7 +5279,7 @@ _SystemEnterSleep:
 	opt	stack 3
 ; Regs used in _SystemEnterSleep: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
 	
-l4139:	
+l4143:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text19
@@ -5265,17 +5289,17 @@ l1342:
 clrwdt ;# 
 psect	text19
 	
-l4141:	
+l4145:	
 	bsf	status, 5	;RP0=1, select bank1
 	bcf	status, 6	;RP1=0, select bank1
 	clrf	(129)^080h	;volatile
 	
-l4143:	
+l4147:	
 	movlw	low(07h)
 	bcf	status, 5	;RP0=0, select bank0
 	iorwf	(1),f	;volatile
 	
-l4145:	
+l4149:	
 	bsf	(1)+(3/8),(3)&7	;volatile
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 clrwdt ;# 
@@ -5283,7 +5307,7 @@ psect	text19
 	file	"C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\TouchKeyConst.h"
 	line	5
 	
-l4147:	
+l4151:	
 	movlw	low(0Ah)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
@@ -5294,15 +5318,15 @@ l4147:
 clrwdt ;# 
 psect	text19
 	
-l4149:	
+l4153:	
 	bcf	status, 5	;RP0=0, select bank2
 	bsf	status, 6	;RP1=1, select bank2
 	clrf	(273)^0100h	;volatile
 	
-l4151:	
+l4155:	
 	clrf	(275)^0100h	;volatile
 	
-l4153:	
+l4157:	
 	movlw	low(02h)
 	bcf	status, 6	;RP1=0, select bank0
 	movwf	(20)	;volatile
@@ -5314,86 +5338,86 @@ nop ;#
 clrwdt ;# 
 psect	text19
 	
-l4155:	
+l4159:	
 	movlw	low(072h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movwf	(20)	;volatile
 	
-l4157:	
+l4161:	
 	movlw	low(079h)
 	bsf	status, 6	;RP1=1, select bank2
 	movwf	(275)^0100h	;volatile
 	
-l4159:	
+l4163:	
 	fcall	_ClearResSum
 	
-l4161:	
+l4165:	
 	bsf	(_b_ksleep/8),(_b_ksleep)&7	;volatile
 	
-l4163:	
+l4167:	
 	fcall	_GetTouchKeyValue
 	
-l4165:	
+l4169:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(SystemEnterSleep@91)
 	
-l4167:	
+l4171:	
 	clrf	(SystemEnterSleep@92)
 	incf	(SystemEnterSleep@92),f
 	clrf	(SystemEnterSleep@92+1)
 	
-l4169:	
-	btfsc	(88/8),(88)&7	;volatile
-	goto	u3921
-	goto	u3920
-u3921:
-	goto	l4175
-u3920:
-	
-l4171:	
-	btfsc	(89/8),(89)&7	;volatile
-	goto	u3931
-	goto	u3930
-u3931:
-	goto	l4175
-u3930:
-	
 l4173:	
-	btfss	(107/8),(107)&7	;volatile
+	btfsc	(88/8),(88)&7	;volatile
 	goto	u3941
 	goto	u3940
 u3941:
-	goto	l4187
+	goto	l4179
 u3940:
 	
 l4175:	
-	fcall	_ClearResSum
+	btfsc	(89/8),(89)&7	;volatile
+	goto	u3951
+	goto	u3950
+u3951:
+	goto	l4179
+u3950:
 	
 l4177:	
+	btfss	(107/8),(107)&7	;volatile
+	goto	u3961
+	goto	u3960
+u3961:
+	goto	l4191
+u3960:
+	
+l4179:	
+	fcall	_ClearResSum
+	
+l4181:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(_KeyCounter)
 	
-l4179:	
+l4183:	
 	bcf	(_b_kover/8),(_b_kover)&7	;volatile
 	
-l4181:	
+l4185:	
 	bcf	(_b_kover1/8),(_b_kover1)&7	;volatile
 	goto	l1346
 	
-l4187:	
+l4191:	
 	movf	(SystemEnterSleep@92),w
 	andlw	07h
 	btfsc	status,2
-	goto	u3951
-	goto	u3950
-u3951:
-	goto	l4221
-u3950:
+	goto	u3971
+	goto	u3970
+u3971:
+	goto	l4225
+u3970:
 	
-l4189:	
+l4193:	
 	clrc
 	rlf	(SystemEnterSleep@91),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
@@ -5409,17 +5433,17 @@ l4189:
 	movf	((SystemEnterSleep@93)),w
 	movwf	(SystemEnterSleep@94)
 	
-l4191:	
+l4195:	
 	movf	((SystemEnterSleep@93)),w
 iorwf	((SystemEnterSleep@93+1)),w
 	btfsc	status,2
-	goto	u3961
-	goto	u3960
-u3961:
-	goto	l4221
-u3960:
+	goto	u3981
+	goto	u3980
+u3981:
+	goto	l4225
+u3980:
 	
-l4193:	
+l4197:	
 	movf	(SystemEnterSleep@91),w
 	addlw	low((((_Table_KeyDown)-__stringbase)|8000h))
 	movwf	fsr0
@@ -5428,7 +5452,7 @@ l4193:
 	skipnc
 	incf	(SystemEnterSleep@94+1),f
 	
-l4195:	
+l4199:	
 	clrc
 	rlf	(SystemEnterSleep@91),w
 	addlw	low(_KeyOldValue2|((0x0)<<8))&0ffh
@@ -5441,59 +5465,59 @@ l4195:
 	movf	(SystemEnterSleep@94+1),w
 	subwf	1+(??_SystemEnterSleep+0)+0,w
 	skipz
-	goto	u3975
+	goto	u3995
 	movf	(SystemEnterSleep@94),w
 	subwf	0+(??_SystemEnterSleep+0)+0,w
-u3975:
+u3995:
 	skipc
-	goto	u3971
-	goto	u3970
-u3971:
-	goto	l4219
-u3970:
+	goto	u3991
+	goto	u3990
+u3991:
+	goto	l4223
+u3990:
 	
-l4197:	
+l4201:	
 	clrf	(SystemEnterSleep@91)
 	
-l4199:	
+l4203:	
 	clrf	(SystemEnterSleep@92)
 	incf	(SystemEnterSleep@92),f
 	clrf	(SystemEnterSleep@92+1)
 	
-l4201:	
+l4205:	
 	movf	(SystemEnterSleep@92),w
 	andlw	07h
 	btfss	status,2
-	goto	u3981
-	goto	u3980
-u3981:
-	goto	l4205
-u3980:
+	goto	u4001
+	goto	u4000
+u4001:
+	goto	l4209
+u4000:
 	
-l4203:	
+l4207:	
 	movf	(SystemEnterSleep@91),w
 	fcall	_KeyClearOne
 	
-l4205:	
+l4209:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrc
 	rlf	(SystemEnterSleep@92),f
 	rlf	(SystemEnterSleep@92+1),f
 	
-l4207:	
+l4211:	
 	movlw	low(03h)
 	incf	(SystemEnterSleep@91),f
 	subwf	((SystemEnterSleep@91)),w
 	skipc
-	goto	u3991
-	goto	u3990
-u3991:
-	goto	l4201
-u3990:
-	goto	l4175
+	goto	u4011
+	goto	u4010
+u4011:
+	goto	l4205
+u4010:
+	goto	l4179
 	
-l4219:	
+l4223:	
 	clrc
 	rlf	(SystemEnterSleep@91),w
 	addlw	low(_KeyOldValue1|((0x0)<<8))&0ffh
@@ -5540,21 +5564,21 @@ l4219:
 	movf	(SystemEnterSleep@93+1),w
 	movwf	indf
 	
-l4221:	
+l4225:	
 	clrc
 	rlf	(SystemEnterSleep@92),f
 	rlf	(SystemEnterSleep@92+1),f
 	
-l4223:	
+l4227:	
 	movlw	low(03h)
 	incf	(SystemEnterSleep@91),f
 	subwf	((SystemEnterSleep@91)),w
 	skipc
-	goto	u4001
-	goto	u4000
-u4001:
-	goto	l4187
-u4000:
+	goto	u4021
+	goto	u4020
+u4021:
+	goto	l4191
+u4020:
 	goto	l1342
 	
 l1346:	
@@ -5612,7 +5636,7 @@ _Refurbish_Sfr:
 ; Regs used in _Refurbish_Sfr: [wreg+status,2+status,0]
 	line	100
 	
-l3123:	
+l3125:	
 ;main.c: 100: PIE1 = 2;
 	movlw	low(02h)
 	bcf	status, 5	;RP0=0, select bank0
@@ -5627,19 +5651,19 @@ l3123:
 	movwf	(11)	;volatile
 	line	103
 	
-l3125:	
+l3127:	
 ;main.c: 103: if (4 != T2CON)
 		movlw	4
 	xorwf	((19)),w	;volatile
 	btfsc	status,2
-	goto	u2191
-	goto	u2190
-u2191:
+	goto	u2201
+	goto	u2200
+u2201:
 	goto	l939
-u2190:
+u2200:
 	line	104
 	
-l3127:	
+l3129:	
 ;main.c: 104: T2CON = 4;
 	movlw	low(04h)
 	movwf	(19)	;volatile
@@ -5666,7 +5690,7 @@ GLOBAL	__end_of_Refurbish_Sfr
 ;;		wreg, status,2, status,0
 ;; Tracked objects:
 ;;		On entry : 300/0
-;;		On exit  : 300/0
+;;		On exit  : 200/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK2
 ;;      Params:         0       0       0       0
@@ -5698,87 +5722,89 @@ _KeyServer:
 ; Regs used in _KeyServer: [wreg+status,2+status,0]
 	line	114
 	
-l3671:	
+l3675:	
 ;main.c: 113: static unsigned char KeyOldFlag = 0;
 ;main.c: 114: if (KeyFlag[0])
 	movf	((_KeyFlag)),w	;volatile
 	btfsc	status,2
-	goto	u3101
-	goto	u3100
-u3101:
-	goto	l3741
-u3100:
+	goto	u3121
+	goto	u3120
+u3121:
+	goto	l3745
+u3120:
 	line	116
 	
-l3673:	
+l3677:	
 ;main.c: 115: {
 ;main.c: 116: if (KeyFlag[0] != KeyOldFlag)
 	movf	(_KeyFlag),w	;volatile
 	xorwf	(KeyServer@KeyOldFlag),w
 	skipnz
-	goto	u3111
-	goto	u3110
-u3111:
-	goto	l3725
-u3110:
+	goto	u3131
+	goto	u3130
+u3131:
+	goto	l3729
+u3130:
 	line	119
 	
-l3675:	
+l3679:	
 ;main.c: 117: {
 ;main.c: 119: KeyOldFlag ^= KeyFlag[0];
 	movf	(_KeyFlag),w	;volatile
 	xorwf	(KeyServer@KeyOldFlag),f
 	line	120
 	
-l3677:	
+l3681:	
 ;main.c: 120: if ((KeyOldFlag & 0x1) && (KeyFlag[0] & 0x1) && firstLock == 0 && powerFlag > 0)
 	btfss	(KeyServer@KeyOldFlag),(0)&7
-	goto	u3121
-	goto	u3120
-u3121:
-	goto	l3701
-u3120:
-	
-l3679:	
-	btfss	(_KeyFlag),(0)&7	;volatile
-	goto	u3131
-	goto	u3130
-u3131:
-	goto	l3701
-u3130:
-	
-l3681:	
-	movf	((_firstLock)),w
-	btfss	status,2
 	goto	u3141
 	goto	u3140
 u3141:
-	goto	l3701
+	goto	l3705
 u3140:
 	
 l3683:	
-	movf	((_powerFlag)),w
-	btfsc	status,2
+	btfss	(_KeyFlag),(0)&7	;volatile
 	goto	u3151
 	goto	u3150
 u3151:
-	goto	l3701
+	goto	l3705
 u3150:
-	line	123
 	
 l3685:	
-;main.c: 121: {
-;main.c: 123: if(lowBatLock == 1)
-		decf	((_lowBatLock)),w
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstLock)^080h),w
 	btfss	status,2
 	goto	u3161
 	goto	u3160
 u3161:
-	goto	l3689
+	goto	l3705
 u3160:
-	line	125
 	
 l3687:	
+	bcf	status, 5	;RP0=0, select bank0
+	movf	((_powerFlag)),w
+	btfsc	status,2
+	goto	u3171
+	goto	u3170
+u3171:
+	goto	l3705
+u3170:
+	line	123
+	
+l3689:	
+;main.c: 121: {
+;main.c: 123: if(lowBatLock == 1)
+		decf	((_lowBatLock)),w
+	btfss	status,2
+	goto	u3181
+	goto	u3180
+u3181:
+	goto	l3693
+u3180:
+	line	125
+	
+l3691:	
 ;main.c: 124: {
 ;main.c: 125: shanshuoTime2 = 450;
 	movlw	0C2h
@@ -5787,42 +5813,42 @@ l3687:
 	movwf	((_shanshuoTime2))+1
 	line	126
 ;main.c: 126: }
-	goto	l3693
+	goto	l3697
 	line	127
 	
-l3689:	
+l3693:	
 ;main.c: 127: else if(++wuhuaFlag > 2)
 	movlw	low(03h)
 	incf	(_wuhuaFlag),f
 	subwf	((_wuhuaFlag)),w
 	skipc
-	goto	u3171
-	goto	u3170
-u3171:
-	goto	l3693
-u3170:
+	goto	u3191
+	goto	u3190
+u3191:
+	goto	l3697
+u3190:
 	line	129
 	
-l3691:	
+l3695:	
 ;main.c: 128: {
 ;main.c: 129: wuhuaFlag = 0;
 	clrf	(_wuhuaFlag)
 	line	131
 	
-l3693:	
+l3697:	
 ;main.c: 130: }
 ;main.c: 131: if(wuhuaFlag >= 2)
 	movlw	low(02h)
 	subwf	(_wuhuaFlag),w
 	skipc
-	goto	u3181
-	goto	u3180
-u3181:
-	goto	l3699
-u3180:
+	goto	u3201
+	goto	u3200
+u3201:
+	goto	l3703
+u3200:
 	line	133
 	
-l3695:	
+l3699:	
 ;main.c: 132: {
 ;main.c: 133: shanshuoTime2 = 450;
 	movlw	0C2h
@@ -5831,15 +5857,15 @@ l3695:
 	movwf	((_shanshuoTime2))+1
 	line	134
 	
-l3697:	
+l3701:	
 ;main.c: 134: count10s = 0;
 	clrf	(_count10s)
 	line	135
 ;main.c: 135: }
-	goto	l3701
+	goto	l3705
 	line	138
 	
-l3699:	
+l3703:	
 ;main.c: 136: else
 ;main.c: 137: {
 ;main.c: 138: shanshuoTime2 = 0;
@@ -5847,57 +5873,60 @@ l3699:
 	clrf	(_shanshuoTime2+1)
 	line	141
 	
-l3701:	
+l3705:	
 ;main.c: 139: }
 ;main.c: 140: }
 ;main.c: 141: if ((KeyOldFlag & 0x2) && (KeyFlag[0] & 0x2) && firstLock == 0 && powerFlag > 0)
+	bcf	status, 5	;RP0=0, select bank0
 	btfss	(KeyServer@KeyOldFlag),(1)&7
-	goto	u3191
-	goto	u3190
-u3191:
-	goto	l3723
-u3190:
-	
-l3703:	
-	btfss	(_KeyFlag),(1)&7	;volatile
-	goto	u3201
-	goto	u3200
-u3201:
-	goto	l3723
-u3200:
-	
-l3705:	
-	movf	((_firstLock)),w
-	btfss	status,2
 	goto	u3211
 	goto	u3210
 u3211:
-	goto	l3723
+	goto	l3727
 u3210:
 	
 l3707:	
-	movf	((_powerFlag)),w
-	btfsc	status,2
+	btfss	(_KeyFlag),(1)&7	;volatile
 	goto	u3221
 	goto	u3220
 u3221:
-	goto	l3723
+	goto	l3727
 u3220:
-	line	144
 	
 l3709:	
-;main.c: 142: {
-;main.c: 144: if(lowBatLock == 1)
-		decf	((_lowBatLock)),w
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstLock)^080h),w
 	btfss	status,2
 	goto	u3231
 	goto	u3230
 u3231:
-	goto	l3713
+	goto	l3727
 u3230:
-	line	146
 	
 l3711:	
+	bcf	status, 5	;RP0=0, select bank0
+	movf	((_powerFlag)),w
+	btfsc	status,2
+	goto	u3241
+	goto	u3240
+u3241:
+	goto	l3727
+u3240:
+	line	144
+	
+l3713:	
+;main.c: 142: {
+;main.c: 144: if(lowBatLock == 1)
+		decf	((_lowBatLock)),w
+	btfss	status,2
+	goto	u3251
+	goto	u3250
+u3251:
+	goto	l3717
+u3250:
+	line	146
+	
+l3715:	
 ;main.c: 145: {
 ;main.c: 146: shanshuoTime = 450;
 	movlw	0C2h
@@ -5906,23 +5935,23 @@ l3711:
 	movwf	((_shanshuoTime))+1
 	line	147
 ;main.c: 147: }
-	goto	l3717
+	goto	l3721
 	line	148
 	
-l3713:	
+l3717:	
 ;main.c: 148: else if(++workStep > 3)
 	movlw	low(04h)
 	incf	(_workStep),f
 	subwf	((_workStep)),w
 	skipc
-	goto	u3241
-	goto	u3240
-u3241:
-	goto	l3717
-u3240:
+	goto	u3261
+	goto	u3260
+u3261:
+	goto	l3721
+u3260:
 	line	150
 	
-l3715:	
+l3719:	
 ;main.c: 149: {
 ;main.c: 150: workStep = 0;
 	clrf	(_workStep)
@@ -5931,20 +5960,20 @@ l3715:
 	clrf	(_bujinFlag)
 	line	153
 	
-l3717:	
+l3721:	
 ;main.c: 152: }
 ;main.c: 153: if(workStep >= 2)
 	movlw	low(02h)
 	subwf	(_workStep),w
 	skipc
-	goto	u3251
-	goto	u3250
-u3251:
-	goto	l3721
-u3250:
+	goto	u3271
+	goto	u3270
+u3271:
+	goto	l3725
+u3270:
 	line	155
 	
-l3719:	
+l3723:	
 ;main.c: 154: {
 ;main.c: 155: shanshuoTime = 450;
 	movlw	0C2h
@@ -5953,10 +5982,10 @@ l3719:
 	movwf	((_shanshuoTime))+1
 	line	156
 ;main.c: 156: }
-	goto	l3723
+	goto	l3727
 	line	159
 	
-l3721:	
+l3725:	
 ;main.c: 157: else
 ;main.c: 158: {
 ;main.c: 159: shanshuoTime = 0;
@@ -5964,35 +5993,38 @@ l3721:
 	clrf	(_shanshuoTime+1)
 	line	164
 	
-l3723:	
+l3727:	
 ;main.c: 160: }
 ;main.c: 162: }
 ;main.c: 164: KeyOldFlag = KeyFlag[0];
+	bcf	status, 5	;RP0=0, select bank0
 	movf	(_KeyFlag),w	;volatile
 	movwf	(KeyServer@KeyOldFlag)
 	line	166
 	
-l3725:	
+l3729:	
 ;main.c: 165: }
 ;main.c: 166: if(firstLock == 0 && KeyOldFlag & 0x4)
-	movf	((_firstLock)),w
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstLock)^080h),w
 	btfss	status,2
-	goto	u3261
-	goto	u3260
-u3261:
+	goto	u3281
+	goto	u3280
+u3281:
 	goto	l964
-u3260:
+u3280:
 	
-l3727:	
+l3731:	
+	bcf	status, 5	;RP0=0, select bank0
 	btfss	(KeyServer@KeyOldFlag),(2)&7
-	goto	u3271
-	goto	u3270
-u3271:
+	goto	u3291
+	goto	u3290
+u3291:
 	goto	l964
-u3270:
+u3290:
 	line	168
 	
-l3729:	
+l3733:	
 ;main.c: 167: {
 ;main.c: 168: if(++keyCount >= 400)
 	incf	(_keyCount),f
@@ -6004,50 +6036,50 @@ l3729:
 	skipnz
 	subwf	((_keyCount)),w
 	skipc
-	goto	u3281
-	goto	u3280
-u3281:
+	goto	u3301
+	goto	u3300
+u3301:
 	goto	l964
-u3280:
+u3300:
 	line	170
 	
-l3731:	
+l3735:	
 ;main.c: 169: {
 ;main.c: 170: keyCount = 0;
 	clrf	(_keyCount)
 	clrf	(_keyCount+1)
 	line	171
 	
-l3733:	
+l3737:	
 ;main.c: 171: if(longKeyFlag == 0)
 	movf	((_longKeyFlag)),w
 	btfss	status,2
-	goto	u3291
-	goto	u3290
-u3291:
+	goto	u3311
+	goto	u3310
+u3311:
 	goto	l964
-u3290:
+u3310:
 	line	173
 	
-l3735:	
+l3739:	
 ;main.c: 172: {
 ;main.c: 173: longKeyFlag = 1;
 	clrf	(_longKeyFlag)
 	incf	(_longKeyFlag),f
 	line	174
 	
-l3737:	
+l3741:	
 ;main.c: 174: if(powerFlag > 0)
 	movf	((_powerFlag)),w
 	btfsc	status,2
-	goto	u3301
-	goto	u3300
-u3301:
+	goto	u3321
+	goto	u3320
+u3321:
 	goto	l961
-u3300:
+u3320:
 	line	176
 	
-l3739:	
+l3743:	
 ;main.c: 175: {
 ;main.c: 176: powerFlag = 0;
 	clrf	(_powerFlag)
@@ -6072,7 +6104,7 @@ l961:
 	goto	l964
 	line	190
 	
-l3741:	
+l3745:	
 ;main.c: 188: else
 ;main.c: 189: {
 ;main.c: 190: KeyOldFlag = 0;
@@ -6139,7 +6171,7 @@ _Init_System:
 ; Regs used in _Init_System: [wreg+status,2]
 	line	62
 	
-l3645:	
+l3649:	
 # 62 "C:\mcuproject\scm\zdt\D108_8F083_tssop20_无转头\D108_8F083_tssop20_\main.c"
 nop ;# 
 	line	63
@@ -6148,12 +6180,12 @@ clrwdt ;#
 psect	text22
 	line	64
 	
-l3647:	
+l3651:	
 ;main.c: 64: INTCON = 0;
 	clrf	(11)	;volatile
 	line	65
 	
-l3649:	
+l3653:	
 ;main.c: 65: OSCCON = 0X72;
 	movlw	low(072h)
 	bcf	status, 5	;RP0=0, select bank0
@@ -6161,7 +6193,7 @@ l3649:
 	movwf	(20)	;volatile
 	line	66
 	
-l3651:	
+l3655:	
 ;main.c: 66: OPTION_REG = 0;
 	clrf	(1)	;volatile
 	line	71
@@ -6171,12 +6203,12 @@ l3651:
 	movwf	(133)^080h	;volatile
 	line	72
 	
-l3653:	
+l3657:	
 ;main.c: 72: PORTA = 0;
 	clrf	(134)^080h	;volatile
 	line	73
 	
-l3655:	
+l3659:	
 ;main.c: 73: TRISB = 0x20;
 	movlw	low(020h)
 	bcf	status, 5	;RP0=0, select bank0
@@ -6196,44 +6228,44 @@ l3655:
 	clrf	(262)^0100h	;volatile
 	line	79
 	
-l3657:	
+l3661:	
 ;main.c: 79: PIE1 = 2;
 	movlw	low(02h)
 	bcf	status, 6	;RP1=0, select bank0
 	movwf	(14)	;volatile
 	line	80
 	
-l3659:	
+l3663:	
 ;main.c: 80: PR2 = 250;
 	movlw	low(0FAh)
 	movwf	(17)	;volatile
 	line	81
 	
-l3661:	
+l3665:	
 ;main.c: 81: T2CON = 4;
 	movlw	low(04h)
 	movwf	(19)	;volatile
 	line	83
 	
-l3663:	
+l3667:	
 ;main.c: 83: INTCON = 0XC0;
 	movlw	low(0C0h)
 	movwf	(11)	;volatile
 	line	84
 	
-l3665:	
+l3669:	
 ;main.c: 84: ADCON0 = 0X41;
 	movlw	low(041h)
 	bsf	status, 5	;RP0=1, select bank1
 	movwf	(149)^080h	;volatile
 	line	85
 	
-l3667:	
+l3671:	
 ;main.c: 85: ADON = 1;
 	bsf	(1192/8)^080h,(1192)&7	;volatile
 	line	86
 	
-l3669:	
+l3673:	
 ;main.c: 86: ADCON1 = 0x00;
 	clrf	(150)^080h	;volatile
 	line	87
@@ -6297,104 +6329,104 @@ _CheckTouchKey:
 	opt	stack 2
 ; Regs used in _CheckTouchKey: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
 	
-l4633:	
+l4639:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text23
 	btfsc	(_b_kover/8),(_b_kover)&7	;volatile
-	goto	u4741
-	goto	u4740
-u4741:
+	goto	u4771
+	goto	u4770
+u4771:
 	goto	l1330
-u4740:
+u4770:
 	
-l4635:	
+l4641:	
 	fcall	_GetTouchKeyValue
 	
-l4637:	
+l4643:	
 	movlw	low(08h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	incf	(_KeyCounter),f
 	subwf	((_KeyCounter)),w
 	skipc
-	goto	u4751
-	goto	u4750
-u4751:
-	goto	l4667
-u4750:
+	goto	u4781
+	goto	u4780
+u4781:
+	goto	l4673
+u4780:
 	
-l4639:	
+l4645:	
 	clrf	(_KeyCounter)
 	
-l4641:	
+l4647:	
 	bsf	(_b_kover/8),(_b_kover)&7	;volatile
-	goto	l4667
+	goto	l4673
 	
 l1330:	
 	btfsc	(_b_kover1/8),(_b_kover1)&7	;volatile
-	goto	u4761
-	goto	u4760
-u4761:
-	goto	l4661
-u4760:
+	goto	u4791
+	goto	u4790
+u4791:
+	goto	l4667
+u4790:
 	
-l4643:	
+l4649:	
 	fcall	_CheckOnceResult
 	fcall	_TurnKeyFlags
 	
-l4645:	
+l4651:	
 	bsf	(_b_kover1/8),(_b_kover1)&7	;volatile
 	
-l4647:	
+l4653:	
 	btfsc	(_b_kerr/8),(_b_kerr)&7	;volatile
-	goto	u4771
-	goto	u4770
-u4771:
-	goto	l4651
-u4770:
+	goto	u4801
+	goto	u4800
+u4801:
+	goto	l4657
+u4800:
 	
-l4649:	
+l4655:	
 	movlw	low(02h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	subwf	(_KeyCounter),w
 	skipc
-	goto	u4781
-	goto	u4780
-u4781:
-	goto	l4659
-u4780:
-	
-l4651:	
-	fcall	_KeyStopClear
-	
-l4653:	
-	bcf	(_b_kerr/8),(_b_kerr)&7	;volatile
-	
-l4655:	
-	bcf	(_b_kover/8),(_b_kover)&7	;volatile
+	goto	u4811
+	goto	u4810
+u4811:
+	goto	l4665
+u4810:
 	
 l4657:	
-	bcf	(_b_kover1/8),(_b_kover1)&7	;volatile
+	fcall	_KeyStopClear
 	
 l4659:	
+	bcf	(_b_kerr/8),(_b_kerr)&7	;volatile
+	
+l4661:	
+	bcf	(_b_kover/8),(_b_kover)&7	;volatile
+	
+l4663:	
+	bcf	(_b_kover1/8),(_b_kover1)&7	;volatile
+	
+l4665:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(_KeyCounter)
-	goto	l4667
+	goto	l4673
 	
-l4661:	
+l4667:	
 	fcall	_CheckKeyOldValue
 	fcall	_ClearResSum
 	
-l4663:	
+l4669:	
 	bcf	(_b_kover/8),(_b_kover)&7	;volatile
 	
-l4665:	
+l4671:	
 	bcf	(_b_kover1/8),(_b_kover1)&7	;volatile
 	
-l4667:	
+l4673:	
 	fcall	_CheckValidTime
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt list ;# 
@@ -6451,80 +6483,80 @@ _TurnKeyFlags:
 	opt	stack 2
 ; Regs used in _TurnKeyFlags: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	
-l3513:	
+l3517:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text24
 	
-l3515:	
+l3519:	
 	movf	0+(_KeyData)+01h,w	;volatile
 	iorwf	(_KeyData),w	;volatile
 	btfsc	status,2
-	goto	u2901
-	goto	u2900
-u2901:
-	goto	l3541
-u2900:
+	goto	u2921
+	goto	u2920
+u2921:
+	goto	l3545
+u2920:
 	
-l3517:	
+l3521:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(TurnKeyFlags@F84)
 	
-l3519:	
+l3523:	
 	movf	(_KeyData),w	;volatile
 	xorwf	(_KeyOldData),w	;volatile
 	skipz
-	goto	u2911
-	goto	u2910
-u2911:
+	goto	u2931
+	goto	u2930
+u2931:
 	goto	l1311
-u2910:
+u2930:
 	
-l3521:	
+l3525:	
 	movf	0+(_KeyData)+01h,w	;volatile
 	xorwf	0+(_KeyOldData)+01h,w	;volatile
 	skipz
-	goto	u2921
-	goto	u2920
-u2921:
+	goto	u2941
+	goto	u2940
+u2941:
 	goto	l1311
-u2920:
+u2940:
 	
-l3523:	
+l3527:	
 	movlw	low(02h)
 	incf	(TurnKeyFlags@F83),f
 	subwf	((TurnKeyFlags@F83)),w
 	skipc
-	goto	u2931
-	goto	u2930
-u2931:
+	goto	u2951
+	goto	u2950
+u2951:
 	goto	l1316
-u2930:
+u2950:
 	
-l3525:	
+l3529:	
 	clrf	(TurnKeyFlags@F83)
 	
-l3527:	
+l3531:	
 	movf	(_KeyData),w	;volatile
 	movwf	(_KeyFlag)	;volatile
 	
-l3529:	
+l3533:	
 	movf	0+(_KeyData)+01h,w	;volatile
 	movwf	0+(_KeyFlag)+01h	;volatile
 	
-l3531:	
+l3535:	
 	btfsc	(_b_kclr/8),(_b_kclr)&7	;volatile
-	goto	u2941
-	goto	u2940
-u2941:
+	goto	u2961
+	goto	u2960
+u2961:
 	goto	l1312
-u2940:
+u2960:
 	
-l3533:	
+l3537:	
 	bsf	(_b_kclr/8),(_b_kclr)&7	;volatile
 	
-l3535:	
+l3539:	
 	fcall	_KeyClearIn
 	goto	l1316
 	
@@ -6534,40 +6566,40 @@ l1312:
 l1311:	
 	bcf	(_b_kclr/8),(_b_kclr)&7	;volatile
 	
-l3537:	
+l3541:	
 	movf	(_KeyData),w	;volatile
 	movwf	(_KeyOldData)	;volatile
 	movf	0+(_KeyData)+01h,w	;volatile
 	movwf	0+(_KeyOldData)+01h	;volatile
 	
-l3539:	
+l3543:	
 	clrf	(TurnKeyFlags@F83)
 	goto	l1316
 	
-l3541:	
+l3545:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(TurnKeyFlags@F83)
 	clrf	(_KeyOldData)	;volatile
 	clrf	0+(_KeyOldData)+01h	;volatile
 	
-l3543:	
+l3547:	
 	movlw	low(02h)
 	incf	(TurnKeyFlags@F84),f
 	subwf	((TurnKeyFlags@F84)),w
 	skipc
-	goto	u2951
-	goto	u2950
-u2951:
+	goto	u2971
+	goto	u2970
+u2971:
 	goto	l1316
-u2950:
+u2970:
 	
-l3545:	
+l3549:	
 	clrf	(TurnKeyFlags@F84)
 	clrf	(_KeyFlag)	;volatile
 	clrf	0+(_KeyFlag)+01h	;volatile
 	
-l3547:	
+l3551:	
 	bcf	(_b_kclr/8),(_b_kclr)&7	;volatile
 	
 l1316:	
@@ -6627,41 +6659,41 @@ _KeyClearIn:
 	opt	stack 2
 ; Regs used in _KeyClearIn: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	
-l2991:	
+l2993:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text25
 	
-l2993:	
+l2995:	
 	clrf	(KeyClearIn@51)
 	
-l2999:	
+l3001:	
 	movf	(KeyClearIn@51),w
 	fcall	_KeyIsIn
 	xorlw	0
 	skipz
-	goto	u1961
-	goto	u1960
-u1961:
-	goto	l3003
-u1960:
-	
-l3001:	
-	movf	(KeyClearIn@51),w
-	fcall	_KeyClearOne
-	
-l3003:	
-	incf	(KeyClearIn@51),f
-	
-l3005:	
-	movlw	low(03h)
-	subwf	(KeyClearIn@51),w
-	skipc
 	goto	u1971
 	goto	u1970
 u1971:
-	goto	l2999
+	goto	l3005
 u1970:
+	
+l3003:	
+	movf	(KeyClearIn@51),w
+	fcall	_KeyClearOne
+	
+l3005:	
+	incf	(KeyClearIn@51),f
+	
+l3007:	
+	movlw	low(03h)
+	subwf	(KeyClearIn@51),w
+	skipc
+	goto	u1981
+	goto	u1980
+u1981:
+	goto	l3001
+u1980:
 	
 l1224:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
@@ -6719,19 +6751,19 @@ _KeyStopClear:
 	opt	stack 4
 ; Regs used in _KeyStopClear: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	
-l3385:	
+l3389:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text26
 	
-l3387:	
+l3391:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(_KeyFlag)	;volatile
 	clrf	0+(_KeyFlag)+01h	;volatile
 	clrf	(KeyStopClear@53)
 	
-l3393:	
+l3397:	
 	clrc
 	rlf	(KeyStopClear@53),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
@@ -6741,22 +6773,22 @@ l3393:
 	incf	fsr0,f
 	clrf	indf
 	
-l3395:	
+l3399:	
 	movf	(KeyStopClear@53),w
 	fcall	_KeyClearOne
 	
-l3397:	
+l3401:	
 	incf	(KeyStopClear@53),f
 	
-l3399:	
+l3403:	
 	movlw	low(03h)
 	subwf	(KeyStopClear@53),w
 	skipc
-	goto	u2671
-	goto	u2670
-u2671:
-	goto	l3393
-u2670:
+	goto	u2691
+	goto	u2690
+u2691:
+	goto	l3397
+u2690:
 	
 l1230:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
@@ -6817,52 +6849,52 @@ _GetTouchKeyValue:
 	opt	stack 3
 ; Regs used in _GetTouchKeyValue: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
 	
-l3025:	
+l3027:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text27
 	
-l3027:	
+l3029:	
 	clrf	(GetTouchKeyValue@62)
 	
-l3029:	
+l3031:	
 	clrf	(GetTouchKeyValue@63)
 	incf	(GetTouchKeyValue@63),f
 	clrf	(GetTouchKeyValue@63+1)
 	
-l3031:	
-	btfss	(_b_ksleep/8),(_b_ksleep)&7	;volatile
-	goto	u1991
-	goto	u1990
-u1991:
-	goto	l3035
-u1990:
-	
 l3033:	
-	movf	(GetTouchKeyValue@63),w
-	andlw	07h
-	btfsc	status,2
+	btfss	(_b_ksleep/8),(_b_ksleep)&7	;volatile
 	goto	u2001
 	goto	u2000
 u2001:
-	goto	l3063
+	goto	l3037
 u2000:
 	
 l3035:	
+	movf	(GetTouchKeyValue@63),w
+	andlw	07h
+	btfsc	status,2
+	goto	u2011
+	goto	u2010
+u2011:
+	goto	l3065
+u2010:
+	
+l3037:	
 	bcf	status, 5	;RP0=0, select bank2
 	bsf	status, 6	;RP1=1, select bank2
 	clrf	(273)^0100h	;volatile
 	clrf	(274)^0100h	;volatile
 	
-l3037:	
+l3039:	
 	movlw	low(079h)
 	movwf	(275)^0100h	;volatile
 	
-l3039:	
+l3041:	
 	bcf	status, 6	;RP1=0, select bank0
 	bcf	(46/8),(46)&7	;volatile
 	
-l3041:	
+l3043:	
 	bcf	(54/8),(54)&7	;volatile
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 nop ;# 
@@ -6882,12 +6914,12 @@ nop ;#
 nop ;# 
 psect	text27
 	
-l3043:	
+l3045:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	bsf	(46/8),(46)&7	;volatile
 	
-l3045:	
+l3047:	
 	movf	(GetTouchKeyValue@62),w
 	addlw	low((((_Table_KeyCap)-__stringbase)|8000h))
 	movwf	fsr0
@@ -6895,7 +6927,7 @@ l3045:
 	bsf	status, 6	;RP1=1, select bank2
 	movwf	(273)^0100h	;volatile
 	
-l3047:	
+l3049:	
 	movf	(GetTouchKeyValue@62),w
 	addlw	low((((_Table_KeyChannel)-__stringbase)|8000h))
 	movwf	fsr0
@@ -6911,19 +6943,19 @@ nop ;#
 nop ;# 
 psect	text27
 	
-l3049:	
+l3051:	
 	bcf	status, 5	;RP0=0, select bank2
 	bsf	status, 6	;RP1=1, select bank2
 	bsf	(273)^0100h+(0/8),(0)&7	;volatile
 	
-l3051:	
+l3053:	
 	movlw	0D0h
 	movwf	(GetTouchKeyValue@64)
 	movlw	07h
 	movwf	((GetTouchKeyValue@64))+1
 	goto	l1252
 	
-l3053:	
+l3055:	
 	movlw	01h
 	subwf	(GetTouchKeyValue@64),f
 	movlw	0
@@ -6933,30 +6965,30 @@ l3053:
 	movf	(((GetTouchKeyValue@64))),w
 iorwf	(((GetTouchKeyValue@64+1))),w
 	btfss	status,2
-	goto	u2011
-	goto	u2010
-u2011:
+	goto	u2021
+	goto	u2020
+u2021:
 	goto	l1252
-u2010:
+u2020:
 	
-l3055:	
+l3057:	
 	movlw	low(0FFh)
 	bcf	status, 6	;RP1=0, select bank0
 	movwf	(_KeyCounter)
 	
-l3057:	
+l3059:	
 	fcall	_ClearResSum
 	goto	l1255
 	
 l1252:	
 	btfss	(273)^0100h,(7)&7	;volatile
-	goto	u2021
-	goto	u2020
-u2021:
-	goto	l3053
-u2020:
+	goto	u2031
+	goto	u2030
+u2031:
+	goto	l3055
+u2030:
 	
-l3061:	
+l3063:	
 	clrc
 	rlf	(GetTouchKeyValue@62),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
@@ -6974,21 +7006,21 @@ l3061:
 	movwf	indf
 	decf	fsr0,f
 	
-l3063:	
+l3065:	
 	clrc
 	rlf	(GetTouchKeyValue@63),f
 	rlf	(GetTouchKeyValue@63+1),f
 	
-l3065:	
+l3067:	
 	movlw	low(03h)
 	incf	(GetTouchKeyValue@62),f
 	subwf	((GetTouchKeyValue@62)),w
 	skipc
-	goto	u2031
-	goto	u2030
-u2031:
-	goto	l3031
-u2030:
+	goto	u2041
+	goto	u2040
+u2041:
+	goto	l3033
+u2040:
 	
 l1257:	
 	bcf	(_b_ksleep/8),(_b_ksleep)&7	;volatile
@@ -7049,15 +7081,15 @@ _ClearResSum:
 	opt	stack 3
 ; Regs used in _ClearResSum: [wreg-fsr0h+status,2+status,0]
 	
-l2877:	
+l2879:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text28
 	
-l2879:	
+l2881:	
 	clrf	(ClearResSum@56)
 	
-l2881:	
+l2883:	
 	clrc
 	rlf	(ClearResSum@56),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
@@ -7067,16 +7099,16 @@ l2881:
 	incf	fsr0,f
 	clrf	indf
 	
-l2883:	
+l2885:	
 	movlw	low(03h)
 	incf	(ClearResSum@56),f
 	subwf	((ClearResSum@56)),w
 	skipc
-	goto	u1801
-	goto	u1800
-u1801:
-	goto	l2881
-u1800:
+	goto	u1811
+	goto	u1810
+u1811:
+	goto	l2883
+u1810:
 	
 l1235:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
@@ -7134,24 +7166,24 @@ _CheckValidTime:
 	opt	stack 5
 ; Regs used in _CheckValidTime: [wreg+status,2+status,0]
 	
-l3549:	
+l3553:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text29
 	
-l3551:	
+l3555:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movf	0+(_KeyFlag)+01h,w	;volatile
 	iorwf	(_KeyFlag),w	;volatile
 	btfsc	status,2
-	goto	u2961
-	goto	u2960
-u2961:
-	goto	l3557
-u2960:
+	goto	u2981
+	goto	u2980
+u2981:
+	goto	l3561
+u2980:
 	
-l3553:	
+l3557:	
 	bsf	status, 5	;RP0=1, select bank1
 	incf	(CheckValidTime@F87)^080h,f
 	skipnz
@@ -7162,16 +7194,16 @@ l3553:
 	skipnz
 	subwf	((CheckValidTime@F87)^080h),w
 	skipc
-	goto	u2971
-	goto	u2970
-u2971:
+	goto	u2991
+	goto	u2990
+u2991:
 	goto	l1323
-u2970:
+u2990:
 	
-l3555:	
+l3559:	
 	bsf	(_b_kerr/8),(_b_kerr)&7	;volatile
 	
-l3557:	
+l3561:	
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(CheckValidTime@F87)^080h
 	clrf	(CheckValidTime@F87+1)^080h
@@ -7239,12 +7271,12 @@ _CheckOnceResult:
 	opt	stack 3
 ; Regs used in _CheckOnceResult: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	
-l4395:	
+l4401:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text30
 	
-l4397:	
+l4403:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(CheckOnceResult@68)
@@ -7252,7 +7284,7 @@ l4397:
 	clrf	0+(_KeyData)+01h	;volatile
 	clrf	(_KeyMaxSub)
 	
-l4399:	
+l4405:	
 	movf	(CheckOnceResult@68),w
 	andlw	07h
 	addlw	low((((_Table_KeyFalg)-__stringbase)|8000h))
@@ -7260,25 +7292,25 @@ l4399:
 	fcall	stringdir
 	movwf	(CheckOnceResult@70)
 	
-l4401:	
+l4407:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
 	movwf	fsr0
 	movlw	03h
-u4395:
+u4425:
 	incf	fsr0,f
 	clrc
 	bcf	status, 7	;select IRP bank1
 	rrf	indf,f
 	decf	fsr0,f
 	rrf	indf,f
-u4390:
+u4420:
 	addlw	-1
 	skipz
-	goto	u4395
+	goto	u4425
 	
-l4403:	
+l4409:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
@@ -7289,19 +7321,19 @@ l4403:
 	movf	indf,w
 	movwf	(CheckOnceResult@71+1)
 	
-l4405:	
+l4411:	
 	movf	(CheckOnceResult@68),w
 	addlw	low((((_Table_KeyDown)-__stringbase)|8000h))
 	movwf	fsr0
 	fcall	stringdir
 	movwf	(CheckOnceResult@69)
 	
-l4407:	
+l4413:	
 	movf	(CheckOnceResult@69),w
 	movwf	(CheckOnceResult@72)
 	clrf	(CheckOnceResult@72+1)
 	
-l4409:	
+l4415:	
 	movf	(CheckOnceResult@71),w
 	addwf	(CheckOnceResult@72),f
 	skipnc
@@ -7309,18 +7341,18 @@ l4409:
 	movf	(CheckOnceResult@71+1),w
 	addwf	(CheckOnceResult@72+1),f
 	
-l4411:	
+l4417:	
 	movf	(CheckOnceResult@68),w
 	fcall	_KeyIsIn
 	xorlw	0
 	skipz
-	goto	u4401
-	goto	u4400
-u4401:
-	goto	l4441
-u4400:
+	goto	u4431
+	goto	u4430
+u4431:
+	goto	l4447
+u4430:
 	
-l4413:	
+l4419:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyOldValue2|((0x0)<<8))&0ffh
@@ -7343,18 +7375,18 @@ l4413:
 	movf	1+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@72+1),w
 	skipz
-	goto	u4415
+	goto	u4445
 	movf	0+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@72),w
-u4415:
+u4445:
 	skipnc
-	goto	u4411
-	goto	u4410
-u4411:
-	goto	l4417
-u4410:
+	goto	u4441
+	goto	u4440
+u4441:
+	goto	l4423
+u4440:
 	
-l4415:	
+l4421:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyReference|((0x0)<<8))&0ffh
@@ -7372,24 +7404,24 @@ l4415:
 	incf	(CheckOnceResult@71+1),w
 	subwf	1+(??_CheckOnceResult+0)+0,w
 	movwf	1+(CheckOnceResult@71)
-	goto	l4425
+	goto	l4431
 	
-l4417:	
+l4423:	
 	movf	(CheckOnceResult@73+1),w
 	subwf	(CheckOnceResult@72+1),w
 	skipz
-	goto	u4425
+	goto	u4455
 	movf	(CheckOnceResult@73),w
 	subwf	(CheckOnceResult@72),w
-u4425:
+u4455:
 	skipnc
-	goto	u4421
-	goto	u4420
-u4421:
-	goto	l4463
-u4420:
+	goto	u4451
+	goto	u4450
+u4451:
+	goto	l4469
+u4450:
 	
-l4419:	
+l4425:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyOldValue1|((0x0)<<8))&0ffh
@@ -7402,18 +7434,18 @@ l4419:
 	movf	1+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@72+1),w
 	skipz
-	goto	u4435
+	goto	u4465
 	movf	0+(??_CheckOnceResult+0)+0,w
 	subwf	(CheckOnceResult@72),w
-u4435:
+u4465:
 	skipnc
-	goto	u4431
-	goto	u4430
-u4431:
-	goto	l4463
-u4430:
+	goto	u4461
+	goto	u4460
+u4461:
+	goto	l4469
+u4460:
 	
-l4421:	
+l4427:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyReference|((0x0)<<8))&0ffh
@@ -7424,7 +7456,7 @@ l4421:
 	movf	(CheckOnceResult@73+1),w
 	movwf	indf
 	
-l4423:	
+l4429:	
 	movf	(CheckOnceResult@71),w
 	subwf	(CheckOnceResult@73),w
 	movwf	(CheckOnceResult@71)
@@ -7434,27 +7466,27 @@ l4423:
 	subwf	(CheckOnceResult@73+1),w
 	movwf	1+(CheckOnceResult@71)
 	
-l4425:	
+l4431:	
 	movf	(CheckOnceResult@68),w
 	addlw	low(_KeyUpShake|((0x0)<<8))&0ffh
 	movwf	fsr0
 	clrf	indf
 	
-l4427:	
+l4433:	
 	movf	(0+(CheckOnceResult@71)+01h),w
 	btfsc	status,2
-	goto	u4441
-	goto	u4440
-u4441:
-	goto	l4431
-u4440:
+	goto	u4471
+	goto	u4470
+u4471:
+	goto	l4437
+u4470:
 	
-l4429:	
+l4435:	
 	movlw	low(0FFh)
 	movwf	(CheckOnceResult@69)
 	goto	l1269
 	
-l4431:	
+l4437:	
 	movf	(CheckOnceResult@71),w
 	movwf	(CheckOnceResult@69)
 	
@@ -7462,29 +7494,29 @@ l1269:
 	movf	(CheckOnceResult@69),w
 	subwf	(_KeyMaxSub),w
 	skipnc
-	goto	u4451
-	goto	u4450
-u4451:
-	goto	l4437
-u4450:
+	goto	u4481
+	goto	u4480
+u4481:
+	goto	l4443
+u4480:
 	
-l4433:	
+l4439:	
 	movf	(CheckOnceResult@69),w
 	movwf	(_KeyMaxSub)
 	
-l4435:	
+l4441:	
 	movf	(CheckOnceResult@70),w
 	movwf	(KeyHave@59)
 	clrf	(KeyHave@59+1)
 	movf	(CheckOnceResult@68),w
 	fcall	_KeyHave
-	goto	l4463
+	goto	l4469
 	
-l4437:	
+l4443:	
 	incf	(_KeyCounter),f
-	goto	l4463
+	goto	l4469
 	
-l4441:	
+l4447:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyReference|((0x0)<<8))&0ffh
@@ -7506,19 +7538,19 @@ l4441:
 	movf	(CheckOnceResult@72+1),w
 	subwf	1+(??_CheckOnceResult+2)+0,w
 	skipz
-	goto	u4465
+	goto	u4495
 	movf	(CheckOnceResult@72),w
 	subwf	0+(??_CheckOnceResult+2)+0,w
-u4465:
+u4495:
 	skipnc
-	goto	u4461
-	goto	u4460
-u4461:
-	goto	l4447
-u4460:
-	goto	l4463
+	goto	u4491
+	goto	u4490
+u4491:
+	goto	l4453
+u4490:
+	goto	l4469
 	
-l4447:	
+l4453:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyOldValue2|((0x0)<<8))&0ffh
@@ -7538,18 +7570,18 @@ l4447:
 	movf	(CheckOnceResult@71+1),w
 	subwf	1+(??_CheckOnceResult+2)+0,w
 	skipz
-	goto	u4475
+	goto	u4505
 	movf	(CheckOnceResult@71),w
 	subwf	0+(??_CheckOnceResult+2)+0,w
-u4475:
+u4505:
 	skipc
-	goto	u4471
-	goto	u4470
-u4471:
-	goto	l4451
-u4470:
+	goto	u4501
+	goto	u4500
+u4501:
+	goto	l4457
+u4500:
 	
-l4449:	
+l4455:	
 	clrc
 	rlf	(CheckOnceResult@68),w
 	addlw	low(_KeyOldValue1|((0x0)<<8))&0ffh
@@ -7569,18 +7601,18 @@ l4449:
 	movf	(CheckOnceResult@71+1),w
 	subwf	1+(??_CheckOnceResult+2)+0,w
 	skipz
-	goto	u4485
+	goto	u4515
 	movf	(CheckOnceResult@71),w
 	subwf	0+(??_CheckOnceResult+2)+0,w
-u4485:
+u4515:
 	skipnc
-	goto	u4481
-	goto	u4480
-u4481:
-	goto	l4455
-u4480:
+	goto	u4511
+	goto	u4510
+u4511:
+	goto	l4461
+u4510:
 	
-l4451:	
+l4457:	
 	movf	(CheckOnceResult@68),w
 	addlw	low(_KeyUpShake|((0x0)<<8))&0ffh
 	movwf	fsr0
@@ -7588,55 +7620,55 @@ l4451:
 	movlw	low(09h)
 	subwf	(indf),w
 	skipc
-	goto	u4491
-	goto	u4490
-u4491:
+	goto	u4521
+	goto	u4520
+u4521:
 	goto	l1275
-u4490:
+u4520:
 	
-l4453:	
+l4459:	
 	movf	(CheckOnceResult@68),w
 	fcall	_KeyClearOne
-	goto	l4463
+	goto	l4469
 	
-l4455:	
+l4461:	
 	movf	(CheckOnceResult@68),w
 	addlw	low(_KeyUpShake|((0x0)<<8))&0ffh
 	movwf	fsr0
 	clrf	indf
-	goto	l4459
+	goto	l4465
 	
 l1275:	
 	
-l4459:	
+l4465:	
 	movf	0+(_KeyData)+01h,w	;volatile
 	iorwf	(_KeyData),w	;volatile
 	btfss	status,2
-	goto	u4501
-	goto	u4500
-u4501:
-	goto	l4463
-u4500:
+	goto	u4531
+	goto	u4530
+u4531:
+	goto	l4469
+u4530:
 	
-l4461:	
+l4467:	
 	movf	(CheckOnceResult@70),w
 	movwf	(KeyHave@59)
 	clrf	(KeyHave@59+1)
 	movf	(CheckOnceResult@68),w
 	fcall	_KeyHave
 	
-l4463:	
+l4469:	
 	movlw	low(03h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	incf	(CheckOnceResult@68),f
 	subwf	((CheckOnceResult@68)),w
 	skipc
-	goto	u4511
-	goto	u4510
-u4511:
-	goto	l4399
-u4510:
+	goto	u4541
+	goto	u4540
+u4541:
+	goto	l4405
+u4540:
 	
 l1284:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
@@ -7697,36 +7729,36 @@ _KeyHave:
 ;KeyHave@58 stored from wreg
 	movwf	(KeyHave@58)
 	
-l3007:	
+l3009:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text31
 	
-l3009:	
+l3011:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	incf	(_KeyCounter),f
 	
-l3011:	
+l3013:	
 	clrf	(_KeyData)	;volatile
 	
-l3013:	
+l3015:	
 	clrf	0+(_KeyData)+01h	;volatile
 	
-l3015:	
-	btfss	(KeyHave@58),(3)&7
-	goto	u1981
-	goto	u1980
-u1981:
-	goto	l3019
-u1980:
-	
 l3017:	
+	btfss	(KeyHave@58),(3)&7
+	goto	u1991
+	goto	u1990
+u1991:
+	goto	l3021
+u1990:
+	
+l3019:	
 	movf	(KeyHave@59),w
 	movwf	0+(_KeyData)+01h	;volatile
 	goto	l1242
 	
-l3019:	
+l3021:	
 	movf	(KeyHave@59),w
 	movwf	(_KeyData)	;volatile
 	
@@ -7791,12 +7823,12 @@ _KeyClearOne:
 ;KeyClearOne@49 stored from wreg
 	movwf	(KeyClearOne@49)
 	
-l2873:	
+l2875:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text32
 	
-l2875:	
+l2877:	
 	clrc
 	rlf	(KeyClearOne@49),w
 	addlw	low(_KeyOldValue0|((0x0)<<8))&0ffh
@@ -7883,32 +7915,32 @@ _CheckKeyOldValue:
 	opt	stack 3
 ; Regs used in _CheckKeyOldValue: [wreg-fsr0h+status,2+status,0+pclath+cstack]
 	
-l3471:	
+l3475:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text33
 	
-l3473:	
+l3477:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(CheckKeyOldValue@78)
 	
-l3475:	
+l3479:	
 	movlw	low(04h)
 	incf	(CheckKeyOldValue@F77),f
 	subwf	((CheckKeyOldValue@F77)),w
 	skipnc
-	goto	u2811
-	goto	u2810
-u2811:
-	goto	l3479
-u2810:
+	goto	u2831
+	goto	u2830
+u2831:
+	goto	l3483
+u2830:
 	goto	l1291
 	
-l3479:	
+l3483:	
 	clrf	(CheckKeyOldValue@F77)
 	
-l3481:	
+l3485:	
 	clrc
 	rlf	(CheckKeyOldValue@78),w
 	addlw	low(_KeyResSum|((0x0)<<8))&0ffh
@@ -7920,18 +7952,18 @@ l3481:
 	movf	indf,w
 	movwf	(CheckKeyOldValue@79+1)
 	
-l3483:	
+l3487:	
 	movf	(CheckKeyOldValue@78),w
 	fcall	_KeyIsIn
 	xorlw	0
 	skipz
-	goto	u2821
-	goto	u2820
-u2821:
+	goto	u2841
+	goto	u2840
+u2841:
 	goto	l1293
-u2820:
+u2840:
 	
-l3485:	
+l3489:	
 	clrc
 	rlf	(CheckKeyOldValue@78),w
 	addlw	low(_KeyOldValue0|((0x0)<<8))&0ffh
@@ -7943,59 +7975,15 @@ l3485:
 	movf	indf,w
 	movwf	(CheckKeyOldValue@80+1)
 	
-l3487:	
+l3491:	
 	movf	(CheckKeyOldValue@79),w
 	subwf	(CheckKeyOldValue@80),f
 	movf	(CheckKeyOldValue@79+1),w
 	skipc
 	decf	(CheckKeyOldValue@80+1),f
 	subwf	(CheckKeyOldValue@80+1),f
-	
-l3489:	
-	movlw	0
-	subwf	(CheckKeyOldValue@80+1),w
-	movlw	02h
-	skipnz
-	subwf	(CheckKeyOldValue@80),w
-	skipc
-	goto	u2831
-	goto	u2830
-u2831:
-	goto	l3493
-u2830:
-	
-l3491:	
-		incf	((CheckKeyOldValue@80)),w
-	skipz
-	goto	u2841
-	incf	((CheckKeyOldValue@80+1)),w
-	btfss	status,2
-	goto	u2841
-	goto	u2840
-u2841:
-	goto	l1293
-u2840:
 	
 l3493:	
-	clrc
-	rlf	(CheckKeyOldValue@78),w
-	addlw	low(_KeyOldValue1|((0x0)<<8))&0ffh
-	movwf	fsr0
-	movf	indf,w
-	movwf	(CheckKeyOldValue@80)
-	incf	fsr0,f
-	movf	indf,w
-	movwf	(CheckKeyOldValue@80+1)
-	
-l3495:	
-	movf	(CheckKeyOldValue@79),w
-	subwf	(CheckKeyOldValue@80),f
-	movf	(CheckKeyOldValue@79+1),w
-	skipc
-	decf	(CheckKeyOldValue@80+1),f
-	subwf	(CheckKeyOldValue@80+1),f
-	
-l3497:	
 	movlw	0
 	subwf	(CheckKeyOldValue@80+1),w
 	movlw	02h
@@ -8005,10 +7993,10 @@ l3497:
 	goto	u2851
 	goto	u2850
 u2851:
-	goto	l3501
+	goto	l3497
 u2850:
 	
-l3499:	
+l3495:	
 		incf	((CheckKeyOldValue@80)),w
 	skipz
 	goto	u2861
@@ -8020,10 +8008,10 @@ u2861:
 	goto	l1293
 u2860:
 	
-l3501:	
+l3497:	
 	clrc
 	rlf	(CheckKeyOldValue@78),w
-	addlw	low(_KeyOldValue2|((0x0)<<8))&0ffh
+	addlw	low(_KeyOldValue1|((0x0)<<8))&0ffh
 	movwf	fsr0
 	movf	indf,w
 	movwf	(CheckKeyOldValue@80)
@@ -8031,7 +8019,7 @@ l3501:
 	movf	indf,w
 	movwf	(CheckKeyOldValue@80+1)
 	
-l3503:	
+l3499:	
 	movf	(CheckKeyOldValue@79),w
 	subwf	(CheckKeyOldValue@80),f
 	movf	(CheckKeyOldValue@79+1),w
@@ -8039,7 +8027,7 @@ l3503:
 	decf	(CheckKeyOldValue@80+1),f
 	subwf	(CheckKeyOldValue@80+1),f
 	
-l3505:	
+l3501:	
 	movlw	0
 	subwf	(CheckKeyOldValue@80+1),w
 	movlw	02h
@@ -8049,10 +8037,10 @@ l3505:
 	goto	u2871
 	goto	u2870
 u2871:
-	goto	l3509
+	goto	l3505
 u2870:
 	
-l3507:	
+l3503:	
 		incf	((CheckKeyOldValue@80)),w
 	skipz
 	goto	u2881
@@ -8064,7 +8052,51 @@ u2881:
 	goto	l1293
 u2880:
 	
+l3505:	
+	clrc
+	rlf	(CheckKeyOldValue@78),w
+	addlw	low(_KeyOldValue2|((0x0)<<8))&0ffh
+	movwf	fsr0
+	movf	indf,w
+	movwf	(CheckKeyOldValue@80)
+	incf	fsr0,f
+	movf	indf,w
+	movwf	(CheckKeyOldValue@80+1)
+	
+l3507:	
+	movf	(CheckKeyOldValue@79),w
+	subwf	(CheckKeyOldValue@80),f
+	movf	(CheckKeyOldValue@79+1),w
+	skipc
+	decf	(CheckKeyOldValue@80+1),f
+	subwf	(CheckKeyOldValue@80+1),f
+	
 l3509:	
+	movlw	0
+	subwf	(CheckKeyOldValue@80+1),w
+	movlw	02h
+	skipnz
+	subwf	(CheckKeyOldValue@80),w
+	skipc
+	goto	u2891
+	goto	u2890
+u2891:
+	goto	l3513
+u2890:
+	
+l3511:	
+		incf	((CheckKeyOldValue@80)),w
+	skipz
+	goto	u2901
+	incf	((CheckKeyOldValue@80+1)),w
+	btfss	status,2
+	goto	u2901
+	goto	u2900
+u2901:
+	goto	l1293
+u2900:
+	
+l3513:	
 	clrc
 	rlf	(CheckKeyOldValue@78),w
 	addlw	low(_KeyReference|((0x0)<<8))&0ffh
@@ -8123,16 +8155,16 @@ l1293:
 	movf	(CheckKeyOldValue@79+1),w
 	movwf	indf
 	
-l3511:	
+l3515:	
 	movlw	low(03h)
 	incf	(CheckKeyOldValue@78),f
 	subwf	((CheckKeyOldValue@78)),w
 	skipc
-	goto	u2891
-	goto	u2890
-u2891:
-	goto	l3481
-u2890:
+	goto	u2911
+	goto	u2910
+u2911:
+	goto	l3485
+u2910:
 	
 l1303:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
@@ -8195,12 +8227,12 @@ _KeyIsIn:
 ;KeyIsIn@45 stored from wreg
 	movwf	(KeyIsIn@45)
 	
-l2857:	
+l2859:	
 # 1 "D:\TOOL_PUBLISH\SCMCU\SCMCU_IDE_V2\SCTouch_lib\Sleep\XC8\81A1\CheckTouchKey.c"
 opt nolist ;# 
 psect	text34
 	
-l2859:	
+l2861:	
 	movf	(KeyIsIn@45),w
 	andlw	07h
 	addlw	low((((_Table_KeyFalg)-__stringbase)|8000h))
@@ -8208,28 +8240,28 @@ l2859:
 	fcall	stringdir
 	movwf	(KeyIsIn@46)
 	
-l2861:	
-	btfss	(KeyIsIn@45),(3)&7
-	goto	u1791
-	goto	u1790
-u1791:
-	goto	l2865
-u1790:
-	
 l2863:	
+	btfss	(KeyIsIn@45),(3)&7
+	goto	u1801
+	goto	u1800
+u1801:
+	goto	l2867
+u1800:
+	
+l2865:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movf	0+(_KeyFlag)+01h,w	;volatile
 	andwf	(KeyIsIn@46),f
-	goto	l2867
+	goto	l2869
 	
-l2865:	
+l2867:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movf	(_KeyFlag),w	;volatile
 	andwf	(KeyIsIn@46),f
 	
-l2867:	
+l2869:	
 	movf	(KeyIsIn@46),w
 	
 l1217:	
@@ -8299,69 +8331,69 @@ interrupt_function:
 psect	text35
 	line	202
 	
-i1l3881:	
+i1l3885:	
 ;main.c: 202: if(TMR2IF)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	btfss	(105/8),(105)&7	;volatile
-	goto	u349_21
-	goto	u349_20
-u349_21:
-	goto	i1l3895
-u349_20:
+	goto	u351_21
+	goto	u351_20
+u351_21:
+	goto	i1l3899
+u351_20:
 	line	204
 	
-i1l3883:	
+i1l3887:	
 ;main.c: 203: {
 ;main.c: 204: TMR2IF = 0;
 	bcf	(105/8),(105)&7	;volatile
 	line	205
 	
-i1l3885:	
+i1l3889:	
 ;main.c: 205: if(++MainTime >= 32)
 	movlw	low(020h)
 	incf	(_MainTime),f	;volatile
 	subwf	((_MainTime)),w	;volatile
 	skipc
-	goto	u350_21
-	goto	u350_20
-u350_21:
+	goto	u352_21
+	goto	u352_20
+u352_21:
 	goto	i1l973
-u350_20:
+u352_20:
 	line	207
 	
-i1l3887:	
+i1l3891:	
 ;main.c: 206: {
 ;main.c: 207: MainTime = 0;
 	clrf	(_MainTime)	;volatile
 	line	208
 	
-i1l3889:	
+i1l3893:	
 ;main.c: 208: B_MainLoop = 1;
 	bsf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
 	line	209
 	
-i1l3891:	
+i1l3895:	
 ;main.c: 209: if(++count1s >= 250)
 	movlw	low(0FAh)
 	incf	(_count1s),f
 	subwf	((_count1s)),w
 	skipc
-	goto	u351_21
-	goto	u351_20
-u351_21:
+	goto	u353_21
+	goto	u353_20
+u353_21:
 	goto	i1l973
-u351_20:
+u353_20:
 	line	211
 	
-i1l3893:	
+i1l3897:	
 ;main.c: 210: {
 ;main.c: 211: count1s = 0;
 	clrf	(_count1s)
 	goto	i1l973
 	line	217
 	
-i1l3895:	
+i1l3899:	
 ;main.c: 215: else
 ;main.c: 216: {
 ;main.c: 217: PIR1 = 0;

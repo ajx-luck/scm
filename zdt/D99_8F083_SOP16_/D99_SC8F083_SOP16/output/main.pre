@@ -617,7 +617,7 @@ unsigned char chrgFullFlag = 0;
 unsigned char chrgFullTime = 0;
 unsigned char firstLock = 0;
 unsigned char lowBatLock = 0;
-unsigned char lowBatTime = 0;
+unsigned int lowBatTime = 0;
 unsigned char lowFanTime = 0;
 unsigned char ledCnt = 0;
 unsigned char showNumShi = 0x7F;
@@ -792,6 +792,8 @@ ADCON1 = 0;
 ADCON0 = 0;
 
 
+TRISA &= 0xE4;
+TRISB &= 0xEF;
 PORTA = 0x00;
 PORTB = 0x00;
 TRISC = 0;
@@ -804,7 +806,7 @@ RBIE = 1;
 IOCB0= 1;
 PORTB;
 
-# 267
+# 269
 SystemEnterSleep();
 if(RAIF)
 {
@@ -820,7 +822,7 @@ ADCON1 = 0x00;
 
 }
 
-# 301
+# 303
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo)
 {
 volatile unsigned long adsum = 0;
@@ -1101,7 +1103,7 @@ curBatStep = (power_ad - 2800)/80;
 }
 else
 {
-curBatStep = 20 + ((power_ad - 3600)/6);
+curBatStep = 20 + ((power_ad - 3600)/5);
 }
 if(curBatStep > 99)
 {
@@ -1302,9 +1304,9 @@ if(workStep > 0)
 {
 PORTA |= 0x04;
 unsigned char maxFanValue = 52;
-if(workStep == 1)
+if(workStep == 1 || power_ad < 3150)
 {
-maxFanValue = 40;
+maxFanValue = 38;
 }
 test_adc = ADC_Sample(13, 0);
 if (0xA5 == test_adc)
@@ -1360,7 +1362,7 @@ if(wuhuaFlag == 1 || (wuhuaFlag == 2 && count10s < 5))
 {
 pwmInit();
 
-# 853
+# 855
 }
 else
 {
@@ -1379,7 +1381,7 @@ volatile unsigned long power_temp;
 power_temp = (unsigned long)(((4096UL*1.2*1000))/adresult);
 power_ad = (unsigned int)(power_temp);
 }
-if(workStep == 2 && power_ad < 2900)
+if(workStep == 2 && power_ad < 3300)
 {
 if(++lowFanTime > 200)
 {
@@ -1391,9 +1393,9 @@ else
 {
 lowFanTime = 0;
 }
-if(power_ad < 2800)
+if(power_ad < 2900)
 {
-if(++lowBatTime > 200)
+if(++lowBatTime > 1000)
 {
 lowBatTime = 0;
 lowBatLock = 1;
@@ -1418,7 +1420,7 @@ wuhuaCtr();
 
 }
 
-# 913
+# 915
 void main()
 {
 Init_System();

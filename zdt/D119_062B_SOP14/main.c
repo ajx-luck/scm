@@ -27,7 +27,7 @@ AD检测范例程序
 #define		A_LED2_OUT					 TRISA	&= 0xEF
 #define		A_LED1_OUT					 TRISA	&= 0xDF
 
-const static unsigned char numArray[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x38,0x76};
+const static unsigned char numArray[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x73,0x76};
 
 volatile unsigned int adresult;
 volatile unsigned int result;
@@ -139,7 +139,7 @@ void main()
 			keyCtr();
 		}
 		workCtr();
-		if(chrgFlag == 0 && workStep == 0 && keyCount == 0 && firstTime == 0 && showBatTime == 0 )
+		if(chrgFlag == 0 && workStep == 0 && firstTime == 0 && showBatTime == 0)
 		{
 			baiweiNum = 0;
 			shiweiNum = geweiNum = 0;
@@ -386,50 +386,35 @@ char keyRead(char keyStatus)
 
 void keyCtr()
 {
-	char kclick = keyRead(0x04 & (~PORTB));
-	if(kclick == 1)
+	if(PORTB & 0x02)
 	{
-		if(workStep > 0)
-		{
-			if(++workStep > 2)
-			{
-				workStep = 1;
-			}
-		}
-		else if(showBatTime > 0)
-		{
-			showBatTime = 0;
-		}
-		else
-		{
-			showBatTime = 200;
-			count1s = 0;
-		}
-	}
-	else if(kclick == 2)
-	{
-		if(workStep > 0)
-		{
-			workStep = 0;
-		}
-		else
+		if(PORTB & 0x04)
 		{
 			workStep = 1;
-			showBatTime = 0;
-			count900s = 0;
+		}
+		else
+		{
+			workStep = 2;
 		}
 	}
+	else
+	{
+		workStep = 0;
+	}
+	
 	
 }
 
 
 void workCtr()
 {
+	/*
 	if(workStep > 0 && count1s == 0 && ++count900s >= 900)
 	{
 		count900s = 0;
 		workStep = 0;
 	}
+	*/
 	if(lowShanTime > 0)
 	{
 		if(--lowShanTime == 0)
@@ -463,7 +448,7 @@ void workCtr()
 		if(chrgFlag == 0)
 		{
 			shiweiNum = numArray[10];
-			geweiNum = numArray[10];
+			geweiNum = numArray[1];
 		}
 		if(motorPwmFlag == 0)
 		{
@@ -476,8 +461,8 @@ void workCtr()
 	{
 		if(chrgFlag == 0)
 		{
-			shiweiNum = numArray[11];
-			geweiNum = numArray[11];
+			shiweiNum = numArray[10];
+			geweiNum = numArray[2];
 		}
 		if(motorPwmFlag == 0)
 		{
@@ -646,7 +631,7 @@ void Init_System()
 
 	WPUA = 0x00;				//配置上拉，1为使能上拉
 	WPDA = 0x00;					//RA1开下拉
-	WPUB = 0x06;
+	WPUB = 0x04;
 
 	TRISA = 0x01;				//配置IO状态，0为输出，1为输入
 	TRISB = 0x37;
@@ -772,7 +757,7 @@ void Sleep_Mode()
 
 	PORTA = 0X00;
 	PORTB = 0X00;
-	WPUB  = 0x06;			//RB2 开上拉电阻
+	WPUB  = 0x04;			//RB2 开上拉电阻
    			
    	ADCON0 = 0;					//关闭所有模块
 	ADCON1 = 0;

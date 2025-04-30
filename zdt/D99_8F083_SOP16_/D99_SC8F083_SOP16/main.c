@@ -54,7 +54,7 @@ u8t		chrgFullFlag = 0;
 u8t		chrgFullTime = 0;
 u8t		firstLock = 0;
 u8t		lowBatLock = 0;
-u8t		lowBatTime = 0;	
+u16t		lowBatTime = 0;	
 u8t		lowFanTime = 0;//风扇降低为1档的时间
 u8t		ledCnt = 0;	
 u8t		showNumShi = 0x7F;
@@ -242,6 +242,8 @@ void WorkSleep()
 		ADCON0 = 0;
 	
 		//进入休眠前,必须固定口线电平,这儿全部输出低电平,并关闭所有上拉电阻
+		TRISA &= 0xE4;
+		TRISB &= 0xEF;
 		PORTA = 0x00;
 		PORTB = 0x00;
 		TRISC = 0;
@@ -578,7 +580,7 @@ void setBatStep()
 		}
 		else
 		{
-			curBatStep = 20 + ((power_ad - 3600)/6);
+			curBatStep = 20 + ((power_ad - 3600)/5);
 		}
 		if(curBatStep > 99)
 		{
@@ -779,9 +781,9 @@ void fanCtr()
 	{
 		PORTA |= 0x04;
 		u8t maxFanValue = 52;
-		if(workStep == 1)
+		if(workStep == 1 || power_ad < 3150)
 		{	
-			maxFanValue = 40;
+			maxFanValue = 38;
 		}
 		test_adc = ADC_Sample(13, 0);
 		if (0xA5 == test_adc)
@@ -868,7 +870,7 @@ void workCtr()
 		power_temp = (unsigned long)((POWER_RATIO)/adresult);		//1.2*4096/AD=VDD，参数放大1000倍 
 		power_ad = (unsigned int)(power_temp);		//通过内部基准电压推出芯片VDD电压
 	}
-	if(workStep == 2 && power_ad < 2900)
+	if(workStep == 2 && power_ad < 3300)
 	{
 		if(++lowFanTime > 200)
 		{
@@ -880,9 +882,9 @@ void workCtr()
 	{
 		lowFanTime = 0;
 	}	
-	if(power_ad < 2800)
+	if(power_ad < 2900)
 	{
-		if(++lowBatTime > 200)
+		if(++lowBatTime > 1000)
 		{
 			lowBatTime = 0;
 			lowBatLock = 1;

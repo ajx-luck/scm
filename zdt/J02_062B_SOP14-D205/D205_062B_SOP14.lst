@@ -1,0 +1,2822 @@
+---- C:\mcuproject\scm\zdt\J02_062B_SOP14-D205\main.c ----------------------------------------------------------------------
+1:                /**********************************************************
+2:                AD检测范例程序
+3:                **********************************************************/
+4:                #pragma warning disable 752
+5:                #pragma warning disable 373			//屏蔽掉编译的1个警告
+6:                #include <sc.h>
+7:                
+8:                #ifndef _XTAL_FREQ
+9:                #define _XTAL_FREQ 16000000			//16MHz,使用内置延时函数必须定义主频，
+10:               									//如用FCPU_DIV选择2T，则定时赋值减半
+11:               #endif
+12:               #define		u8t		unsigned char
+13:               #define		u16t	unsigned int
+14:               #define     POWER_RATIO  	(4096UL*1.2*1000)
+15:               
+16:               
+17:               #define		A_LED5						 RB0
+18:               #define		A_LED4						 RB1
+19:               #define		A_LED3						 RB5
+20:               #define		A_LED2						 RA4
+21:               #define		A_LED1						 RA5
+22:               
+23:               
+24:               #define		A_LED5_OUT					 TRISB	&= 0xFE
+25:               #define		A_LED4_OUT					 TRISB	&= 0xFD
+26:               #define		A_LED3_OUT					 TRISB	&= 0xDF
+27:               #define		A_LED2_OUT					 TRISA	&= 0xEF
+28:               #define		A_LED1_OUT					 TRISA	&= 0xDF
+29:               
+30:               const static unsigned char numArray[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x71,0x79,0x50,0x76};
+31:               
+32:               volatile unsigned int adresult;
+33:               volatile unsigned int result;
+34:               volatile unsigned char test_adc;
+35:               volatile unsigned int power_ad;
+36:               u8t	intCount;
+37:               u8t	count1s;
+38:               u8t	IntFlag;
+39:               u8t	chrgFlag;
+40:               u8t	chrgFullFlag;
+41:               u8t	intCount10;
+42:               u16t	outADValue;
+43:               u16t	batADValue;
+44:               u8t		countHalfFull;
+45:               u8t		protectFlag;
+46:               u8t		workOverOutTime;
+47:               u8t		workStep = 0;
+48:               u8t		ledCnt;
+49:               u8t		ledStep;
+50:               u8t		keyCount;
+51:               u8t		keyCount2;
+52:               u8t		longPressFlag;
+53:               u8t		longPressFlag2;
+54:               u8t		maxDuty;
+55:               u8t		overCount;
+56:               u8t		addPowerCount;
+57:               u8t		tempDuty;
+58:               u8t		startTime;
+59:               u8t		firstTime;
+60:               u8t		overChrgTime;
+61:               u8t		pwStep;
+62:               u8t		prePwStep;
+63:               u16t	count50s;
+64:               u8t		reChrgCount;
+65:               u8t		lockLedStep;
+66:               u8t		showBatTime;
+67:               u8t		chrgMode = 0;
+68:               u8t		chrgMaxAD = 0;
+69:               u8t		lockCount = 0;
+70:               u16t	fullCount = 0;
+71:               u8t addTime;
+72:               u8t subTime;
+73:               u8t chrgWaitTime;
+74:               u8t	chrgMaxDuty = 0;
+75:               u8t	ledCntTime;
+76:               u16t	count5s = 0;
+77:               u16t		overWorkTime;
+78:               u8t		preLedStep;
+79:               u16t	count8s;
+80:               u16t	count900s;
+81:               u8t		lowBatFlag = 0;
+82:               u8t		sleepTime;
+83:               u8t		startChrgTime = 0;
+84:               u8t shiweiNum = 0;	//十位
+85:               u8t	geweiNum = 0;	//个位
+86:               u8t	jrStep = 0;
+87:               u8t	preWorkStep = 0;
+88:               u8t	prejrStep = 0;
+89:               u8t	chrgPwmFlag = 0;
+90:               u8t	motorPwmFlag = 0;
+91:               u16t	jrStartTime = 0;
+92:               u8t		jrShowTime = 0;
+93:               u8t		jrPwmTime = 0;
+94:               u8t		jrDuty = 0;
+95:               u8t		jrDutyFX = 0;
+96:               u8t		jrWaitTime = 0;
+97:               
+98:               unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
+99:               void DelayXms(unsigned char x);
+100:              unsigned char ADC_Result(unsigned char adch);
+101:              void Init_System();
+102:              void AD_Init();
+103:              void Sleep_Mode();
+104:              void pwmInit();
+105:              void pwmStop();
+106:              void chrgPwmInit();
+107:              void chrgPwmStop();
+108:              void chrgCtr();
+109:              void checkOutA();
+110:              void checkBatAD();
+111:              void ledShow();
+112:              void keyCtr();
+113:              void workCtr();
+114:              void ledCtr();
+115:              char keyRead(char keyStatus);
+116:              
+117:              
+118:              
+119:              //#define _DEBUG			//调试程序用
+120:              
+121:              
+122:              /***********************************************************
+123:              中断服务函数
+124:              函数名称：Isr_Timer()
+125:              函数功能：中断处理函数
+126:              入口参数：
+127:              出口参数：
+128:              备    注：125US定时2中断
+129:              			所有中断都是在这个函数里面处理
+130:              ***********************************************************/
+131:              void interrupt Isr_Timer() 
+132:              {
+133:              	if(TMR2IF) 
+  0556    1283    CLRB	0x3,5
+  0557    1C8D    SNZB	0xD,1
+  0558    2D6A    JP	0x56A
+134:              	{			//若只使能了一个中断源,可以略去判断
+135:              		TMR2IF = 0;
+  0559    108D    CLRB	0xD,1
+136:              		if(++intCount >= 160)
+  055A    30A0    LDIA	0xA0
+  055B    0AD3    INCR	0x53
+  055C    0253    SUBA	0x53
+  055D    1C03    SNZB	0x3,0
+  055E    2D67    JP	0x567
+  055F    3064    LDIA	0x64
+137:              		{
+138:              			intCount = 0;
+  0560    01D3    CLR	0x53
+139:              			IntFlag = 1;
+  0561    01D1    CLR	0x51
+  0562    0AD1    INCR	0x51
+140:              			if(++count1s >= 100)
+  0563    0AD2    INCR	0x52
+  0564    0252    SUBA	0x52
+  0565    1803    SZB	0x3,0
+141:              			{
+142:              				count1s = 0;
+  0566    01D2    CLR	0x52
+143:              			}
+144:              		}
+145:              		ledShow();
+  0567    21EB    CALL	0x1EB
+146:              		intCount10++;
+  0568    1283    CLRB	0x3,5
+  0569    0ACE    INCR	0x4E
+  056A    0872    LD	A,0x72
+  056B    008A    LD	0xA,A
+  056C    0871    LD	A,0x71
+  056D    0084    LD	0x4,A
+  056E    0E70    SWAPA	0x70
+  056F    0083    LD	0x3,A
+  0570    0EFE    SWAPR	0x7E
+  0571    0E7E    SWAPA	0x7E
+  0572    0009    RETI
+147:              	}
+148:              
+149:              }
+150:              
+151:              
+152:              /***********************************************************
+153:              main主函数
+154:              ***********************************************************/
+155:              void main() 
+156:              {
+157:              	Init_System();
+  0450    25AA    CALL	0x5AA
+158:              	AD_Init();
+  0451    260E    CALL	0x60E
+159:              	shiweiNum = geweiNum = numArray[8];
+  0452    3009    LDIA	0x9
+  0453    0084    LD	0x4,A
+  0454    25C4    CALL	0x5C4
+  0455    1283    CLRB	0x3,5
+  0456    00E8    LD	0x68,A
+  0457    00E9    LD	0x69,A
+160:              	firstTime = 200;
+  0458    30C8    LDIA	0xC8
+  0459    00EA    LD	0x6A,A
+161:              	while (1) 
+  045A    0064    CLRWDT
+162:              	{
+163:              		asm("clrwdt");
+164:              		if(intCount10 > 10)
+  045B    300B    LDIA	0xB
+  045C    1283    CLRB	0x3,5
+  045D    024E    SUBA	0x4E
+  045E    1C03    SNZB	0x3,0
+  045F    2C62    JP	0x462
+165:              		{
+166:              			intCount10 = 0;
+  0460    01CE    CLR	0x4E
+167:              			checkOutA();
+  0461    22A8    CALL	0x2A8
+168:              		}
+169:              		if(!IntFlag)
+  0462    1283    CLRB	0x3,5
+  0463    0851    LD	A,0x51
+  0464    1903    SZB	0x3,2
+  0465    2C5A    JP	0x45A
+170:                  		continue;			//10ms执行一次
+171:                  	IntFlag = 0;
+  0466    01D1    CLR	0x51
+172:              		chrgCtr();
+  0467    2018    CALL	0x18
+173:              		checkBatAD();
+  0468    2350    CALL	0x350
+174:              		if(chrgFlag == 0 && lowBatFlag == 0 && firstTime == 0)
+  0469    1283    CLRB	0x3,5
+  046A    0850    LD	A,0x50
+  046B    1D03    SNZB	0x3,2
+  046C    2C74    JP	0x474
+  046D    0837    LD	A,0x37
+  046E    1D03    SNZB	0x3,2
+  046F    2C74    JP	0x474
+  0470    086A    LD	A,0x6A
+  0471    1D03    SNZB	0x3,2
+  0472    2C74    JP	0x474
+175:              		{
+176:              			keyCtr();
+  0473    250D    CALL	0x50D
+177:              		}
+178:              		workCtr();
+  0474    24D7    CALL	0x4D7
+179:              		ledCtr();
+  0475    23F3    CALL	0x3F3
+180:              		if(chrgFlag == 0 && workStep == 0 && keyCount == 0 && firstTime == 0 && showBatTime == 0 && overWorkTime == 0)
+  0476    0850    LD	A,0x50
+  0477    1D03    SNZB	0x3,2
+  0478    2C93    JP	0x493
+  0479    087A    LD	A,0x7A
+  047A    1D03    SNZB	0x3,2
+  047B    2C93    JP	0x493
+  047C    0849    LD	A,0x49
+  047D    1D03    SNZB	0x3,2
+  047E    2C93    JP	0x493
+  047F    086A    LD	A,0x6A
+  0480    1D03    SNZB	0x3,2
+  0481    2C93    JP	0x493
+  0482    0840    LD	A,0x40
+  0483    1D03    SNZB	0x3,2
+  0484    2C93    JP	0x493
+  0485    0824    LD	A,0x24
+  0486    0425    ORA	0x25
+  0487    1D03    SNZB	0x3,2
+  0488    2C93    JP	0x493
+  0489    30C8    LDIA	0xC8
+181:              		{
+182:              			shiweiNum = geweiNum = 0;
+  048A    01E8    CLR	0x68
+  048B    01E9    CLR	0x69
+183:              			if(++sleepTime >= 200)
+  048C    0AB6    INCR	0x36
+  048D    0236    SUBA	0x36
+  048E    1C03    SNZB	0x3,0
+  048F    2C5A    JP	0x45A
+184:              			{
+185:              				sleepTime = 0;
+  0490    01B6    CLR	0x36
+186:              				Sleep_Mode();
+  0491    2495    CALL	0x495
+  0492    2C5A    JP	0x45A
+187:              			}
+188:              		}
+189:              		else
+190:              		{
+191:              			sleepTime = 0;
+  0493    01B6    CLR	0x36
+  0494    2C5A    JP	0x45A
+192:              		}
+193:              	}
+194:              }
+195:              
+196:              void ledShow()
+197:              {
+198:              	if(++ledCntTime > 5)
+  01EB    3006    LDIA	0x6
+  01EC    0AB8    INCR	0x38
+  01ED    0238    SUBA	0x38
+  01EE    1C03    SNZB	0x3,0
+  01EF    0008    RET
+  01F0    300F    LDIA	0xF
+199:              	{
+200:              		ledCntTime = 0;
+  01F1    01B8    CLR	0x38
+201:              		if(++ledCnt > 14)
+  01F2    0ACA    INCR	0x4A
+  01F3    024A    SUBA	0x4A
+  01F4    1803    SZB	0x3,0
+202:              		{
+203:              			ledCnt = 0;
+  01F5    01CA    CLR	0x4A
+204:              		}
+205:              		PORTA &= 0x3F;
+  01F6    303F    LDIA	0x3F
+  01F7    1683    SETB	0x3,5
+  01F8    0586    ANDR	0x6
+206:              		PORTB &= 0xDC;
+  01F9    30DC    LDIA	0xDC
+  01FA    1283    CLRB	0x3,5
+  01FB    0586    ANDR	0x6
+207:              		TRISA |= 0x30;
+  01FC    3030    LDIA	0x30
+  01FD    1683    SETB	0x3,5
+  01FE    0485    ORR	0x5
+208:              		TRISB |= 0x23;
+  01FF    3023    LDIA	0x23
+  0200    1283    CLRB	0x3,5
+  0201    0485    ORR	0x5
+209:              		switch(ledCnt)
+  0202    2A9C    JP	0x29C
+210:              		{
+211:              			case 1:
+212:              			if(shiweiNum & 0x01)
+  0203    1C69    SNZB	0x69,0
+  0204    0008    RET
+213:              			{
+214:              				A_LED3_OUT;
+  0205    1285    CLRB	0x5,5
+215:              				A_LED2_OUT;
+  0206    1683    SETB	0x3,5
+  0207    1205    CLRB	0x5,4
+216:              				A_LED3 = 1;
+  0208    1283    CLRB	0x3,5
+  0209    1686    SETB	0x6,5
+217:              				A_LED2 = 0;
+  020A    1683    SETB	0x3,5
+  020B    1206    CLRB	0x6,4
+  020C    0008    RET
+218:              			}
+219:              			break;
+220:              			case 2:
+221:              			if(shiweiNum & 0x02)
+  020D    1CE9    SNZB	0x69,1
+  020E    0008    RET
+222:              			{
+223:              				A_LED3_OUT;
+  020F    1285    CLRB	0x5,5
+224:              				A_LED2_OUT;
+  0210    1683    SETB	0x3,5
+  0211    1205    CLRB	0x5,4
+225:              				A_LED2 = 1;
+  0212    1606    SETB	0x6,4
+226:              				A_LED3 = 0;
+  0213    1283    CLRB	0x3,5
+  0214    1286    CLRB	0x6,5
+  0215    0008    RET
+227:              			}
+228:              			break;
+229:              			case 3:
+230:              			if(shiweiNum & 0x04)
+  0216    1D69    SNZB	0x69,2
+  0217    0008    RET
+231:              			{
+232:              				A_LED3_OUT;
+  0218    1285    CLRB	0x5,5
+233:              				A_LED4_OUT;
+  0219    1085    CLRB	0x5,1
+234:              				A_LED3 = 1;
+  021A    1686    SETB	0x6,5
+235:              				A_LED4 = 0;
+  021B    1086    CLRB	0x6,1
+  021C    0008    RET
+236:              			}
+237:              			break;
+238:              			case 4:
+239:              			if(shiweiNum & 0x08)
+  021D    1DE9    SNZB	0x69,3
+  021E    0008    RET
+240:              			{
+241:              				A_LED2_OUT;
+  021F    1683    SETB	0x3,5
+  0220    1205    CLRB	0x5,4
+242:              				A_LED4_OUT;
+  0221    1283    CLRB	0x3,5
+  0222    1085    CLRB	0x5,1
+243:              				A_LED2 = 1;
+  0223    1683    SETB	0x3,5
+  0224    1606    SETB	0x6,4
+244:              				A_LED4 = 0;
+  0225    1283    CLRB	0x3,5
+  0226    1086    CLRB	0x6,1
+  0227    0008    RET
+245:              			}
+246:              			break;
+247:              			case 5:
+248:              			if(shiweiNum & 0x10)
+  0228    1E69    SNZB	0x69,4
+  0229    0008    RET
+249:              			{
+250:              				A_LED2_OUT;
+  022A    1683    SETB	0x3,5
+  022B    1205    CLRB	0x5,4
+251:              				A_LED5_OUT;
+  022C    1283    CLRB	0x3,5
+  022D    1005    CLRB	0x5,0
+252:              				A_LED2 = 1;
+  022E    1683    SETB	0x3,5
+  022F    1606    SETB	0x6,4
+253:              				A_LED5 = 0;
+  0230    1283    CLRB	0x3,5
+  0231    1006    CLRB	0x6,0
+  0232    0008    RET
+254:              			}
+255:              			break;
+256:              			case 6:
+257:              			if(shiweiNum & 0x20)
+  0233    1EE9    SNZB	0x69,5
+  0234    0008    RET
+258:              			{
+259:              				A_LED3_OUT;
+  0235    1285    CLRB	0x5,5
+260:              				A_LED5_OUT;
+  0236    1005    CLRB	0x5,0
+261:              				A_LED3 = 1;
+  0237    1686    SETB	0x6,5
+262:              				A_LED5 = 0;
+  0238    1006    CLRB	0x6,0
+  0239    0008    RET
+263:              			}
+264:              			break;
+265:              			case 7:
+266:              			if(shiweiNum & 0x40)
+  023A    1F69    SNZB	0x69,6
+  023B    0008    RET
+267:              			{
+268:              				A_LED4_OUT;
+  023C    1085    CLRB	0x5,1
+269:              				A_LED5_OUT;
+  023D    1005    CLRB	0x5,0
+270:              				A_LED4 = 1;
+  023E    1486    SETB	0x6,1
+271:              				A_LED5 = 0;
+  023F    1006    CLRB	0x6,0
+  0240    0008    RET
+272:              			}
+273:              			break;
+274:              			case 8:
+275:              			if(geweiNum & 0x01)
+  0241    1C68    SNZB	0x68,0
+  0242    0008    RET
+276:              			{
+277:              				A_LED1_OUT;
+  0243    1683    SETB	0x3,5
+  0244    1285    CLRB	0x5,5
+278:              				A_LED2_OUT;
+  0245    1205    CLRB	0x5,4
+279:              				A_LED2 = 1;
+  0246    1606    SETB	0x6,4
+280:              				A_LED1 = 0;
+  0247    1286    CLRB	0x6,5
+  0248    0008    RET
+281:              			}
+282:              			break;
+283:              			case 9:
+284:              			if(geweiNum & 0x02)
+  0249    1CE8    SNZB	0x68,1
+  024A    0008    RET
+285:              			{
+286:              				A_LED1_OUT;
+  024B    1683    SETB	0x3,5
+  024C    1285    CLRB	0x5,5
+287:              				A_LED2_OUT;
+  024D    1205    CLRB	0x5,4
+288:              				A_LED1 = 1;
+  024E    1686    SETB	0x6,5
+289:              				A_LED2 = 0;
+  024F    1206    CLRB	0x6,4
+  0250    0008    RET
+290:              			}
+291:              			break;
+292:              			case 10:
+293:              			if(geweiNum & 0x04)
+  0251    1D68    SNZB	0x68,2
+  0252    0008    RET
+294:              			{
+295:              				A_LED1_OUT;
+  0253    1683    SETB	0x3,5
+  0254    1285    CLRB	0x5,5
+296:              				A_LED3_OUT;
+  0255    1283    CLRB	0x3,5
+  0256    1285    CLRB	0x5,5
+297:              				A_LED3 = 1;
+  0257    1686    SETB	0x6,5
+298:              				A_LED1 = 0;
+  0258    1683    SETB	0x3,5
+  0259    1286    CLRB	0x6,5
+  025A    0008    RET
+299:              			}
+300:              			break;
+301:              			case 11:
+302:              			if(geweiNum & 0x08)
+  025B    1DE8    SNZB	0x68,3
+  025C    0008    RET
+303:              			{
+304:              				A_LED1_OUT;
+  025D    1683    SETB	0x3,5
+  025E    1285    CLRB	0x5,5
+305:              				A_LED3_OUT;
+  025F    1283    CLRB	0x3,5
+  0260    1285    CLRB	0x5,5
+306:              				A_LED1 = 1;
+  0261    1683    SETB	0x3,5
+  0262    1686    SETB	0x6,5
+307:              				A_LED3 = 0;
+  0263    1283    CLRB	0x3,5
+  0264    1286    CLRB	0x6,5
+  0265    0008    RET
+308:              			}
+309:              			break;
+310:              			case 12:
+311:              			if(geweiNum & 0x10)
+  0266    1E68    SNZB	0x68,4
+  0267    0008    RET
+312:              			{
+313:              				A_LED1_OUT;
+  0268    1683    SETB	0x3,5
+  0269    1285    CLRB	0x5,5
+314:              				A_LED4_OUT;
+  026A    1283    CLRB	0x3,5
+  026B    1085    CLRB	0x5,1
+315:              				A_LED4 = 1;
+  026C    1486    SETB	0x6,1
+316:              				A_LED1 = 0;
+  026D    1683    SETB	0x3,5
+  026E    1286    CLRB	0x6,5
+  026F    0008    RET
+317:              			}
+318:              			break;
+319:              			case 13:
+320:              			if(geweiNum & 0x20)
+  0270    1EE8    SNZB	0x68,5
+  0271    0008    RET
+321:              			{
+322:              				A_LED1_OUT;
+  0272    1683    SETB	0x3,5
+  0273    1285    CLRB	0x5,5
+323:              				A_LED4_OUT;
+  0274    1283    CLRB	0x3,5
+  0275    1085    CLRB	0x5,1
+324:              				A_LED1 = 1;
+  0276    1683    SETB	0x3,5
+  0277    1686    SETB	0x6,5
+325:              				A_LED4 = 0;
+  0278    1283    CLRB	0x3,5
+  0279    1086    CLRB	0x6,1
+  027A    0008    RET
+326:              			}
+327:              			break;
+328:              			case 14:
+329:              			if(geweiNum & 0x40)
+  027B    1F68    SNZB	0x68,6
+  027C    0008    RET
+330:              			{
+331:              				A_LED1_OUT;
+  027D    1683    SETB	0x3,5
+  027E    1285    CLRB	0x5,5
+332:              				A_LED5_OUT;
+  027F    1283    CLRB	0x3,5
+  0280    1005    CLRB	0x5,0
+333:              				A_LED1 = 1;
+  0281    1683    SETB	0x3,5
+  0282    1686    SETB	0x6,5
+334:              				A_LED5 = 0;
+  0283    1283    CLRB	0x3,5
+  0284    1006    CLRB	0x6,0
+  0285    0008    RET
+335:              			}
+336:              			break;
+337:              			case 15:
+338:              			if(workStep > 0)
+  0286    087A    LD	A,0x7A
+  0287    1903    SZB	0x3,2
+  0288    0008    RET
+339:              			{
+340:              				A_LED2_OUT;
+  0289    1683    SETB	0x3,5
+  028A    1205    CLRB	0x5,4
+341:              				A_LED5_OUT;
+  028B    1283    CLRB	0x3,5
+  028C    1005    CLRB	0x5,0
+342:              				A_LED5 = 1;
+  028D    1406    SETB	0x6,0
+343:              				A_LED2 = 0;
+  028E    1683    SETB	0x3,5
+  028F    1206    CLRB	0x6,4
+  0290    0008    RET
+344:              			}
+345:              			break;
+346:              			case 0:
+347:              			if(workStep > 0)
+  0291    087A    LD	A,0x7A
+  0292    1903    SZB	0x3,2
+  0293    0008    RET
+348:              			{
+349:              				A_LED1_OUT;
+  0294    1683    SETB	0x3,5
+  0295    1285    CLRB	0x5,5
+350:              				A_LED5_OUT;
+  0296    1283    CLRB	0x3,5
+  0297    1005    CLRB	0x5,0
+351:              				A_LED5 = 1;
+  0298    1406    SETB	0x6,0
+352:              				A_LED1 = 0;
+  0299    1683    SETB	0x3,5
+  029A    1286    CLRB	0x6,5
+  029B    0008    RET
+  029C    084A    LD	A,0x4A
+  029D    0084    LD	0x4,A
+  029E    3010    LDIA	0x10
+  029F    0204    SUBA	0x4
+  02A0    1803    SZB	0x3,0
+  02A1    0008    RET
+  02A2    3005    LDIA	0x5
+  02A3    008A    LD	0xA,A
+  02A4    30E9    LDIA	0xE9
+  02A5    0704    ADDA	0x4
+  02A6    0082    LD	0x2,A
+  02A7    0008    RET
+353:              			}
+354:              			break;
+355:              			default:
+356:              			break;
+357:              		}
+358:              	}
+359:              	
+360:              	
+361:              }
+362:              
+363:              
+364:              void ledCtr()
+365:              {
+366:              	if(firstTime > 0)
+  03F3    086A    LD	A,0x6A
+  03F4    1903    SZB	0x3,2
+  03F5    2BFE    JP	0x3FE
+367:              	{
+368:              		firstTime--;
+  03F6    03EA    DECR	0x6A
+369:              		if(prePwStep < pwStep)
+  03F7    0842    LD	A,0x42
+  03F8    0279    SUBA	0x79
+  03F9    1803    SZB	0x3,0
+  03FA    0008    RET
+370:              		{
+371:              			prePwStep = pwStep;
+  03FB    0842    LD	A,0x42
+  03FC    00F9    LD	0x79,A
+  03FD    0008    RET
+372:              		}
+373:              	}
+374:              	else if(overWorkTime > 0)
+  03FE    0824    LD	A,0x24
+  03FF    0425    ORA	0x25
+  0400    1903    SZB	0x3,2
+  0401    2C11    JP	0x411
+375:              	{
+376:              		overWorkTime--;
+  0402    3001    LDIA	0x1
+  0403    02A4    SUBR	0x24
+  0404    3000    LDIA	0x0
+  0405    1C03    SNZB	0x3,0
+  0406    03A5    DECR	0x25
+  0407    02A5    SUBR	0x25
+377:              		shiweiNum = numArray[11];
+  0408    300C    LDIA	0xC
+  0409    0084    LD	0x4,A
+  040A    25C4    CALL	0x5C4
+  040B    00E9    LD	0x69,A
+378:              		geweiNum = numArray[12];
+  040C    300D    LDIA	0xD
+  040D    0084    LD	0x4,A
+  040E    25C4    CALL	0x5C4
+  040F    00E8    LD	0x68,A
+379:              	}
+  0410    0008    RET
+380:              	else if(showBatTime > 0)
+  0411    0840    LD	A,0x40
+  0412    1903    SZB	0x3,2
+  0413    2C23    JP	0x423
+  0414    300A    LDIA	0xA
+381:              	{
+382:              		showBatTime--;
+  0415    03C0    DECR	0x40
+383:              		shiweiNum = numArray[prePwStep/10];
+  0416    00F3    LD	0x73,A
+  0417    0879    LD	A,0x79
+  0418    258F    CALL	0x58F
+  0419    3E01    ADDIA	0x1
+  041A    0084    LD	0x4,A
+  041B    25C4    CALL	0x5C4
+384:              		geweiNum = numArray[prePwStep%10];
+  041C    244B    CALL	0x44B
+  041D    2573    CALL	0x573
+  041E    3E01    ADDIA	0x1
+  041F    0084    LD	0x4,A
+  0420    25C4    CALL	0x5C4
+  0421    00E8    LD	0x68,A
+385:              	}
+  0422    0008    RET
+386:              	else if(workStep > 0)
+  0423    087A    LD	A,0x7A
+  0424    1903    SZB	0x3,2
+  0425    2C37    JP	0x437
+387:              	{
+388:              		
+389:              
+390:              		shiweiNum = numArray[workStep/10];
+  0426    300A    LDIA	0xA
+  0427    00F3    LD	0x73,A
+  0428    087A    LD	A,0x7A
+  0429    258F    CALL	0x58F
+  042A    3E01    ADDIA	0x1
+  042B    0084    LD	0x4,A
+  042C    25C4    CALL	0x5C4
+  042D    00E9    LD	0x69,A
+391:              		geweiNum = numArray[workStep%10];
+  042E    300A    LDIA	0xA
+  042F    00F3    LD	0x73,A
+  0430    087A    LD	A,0x7A
+  0431    2573    CALL	0x573
+  0432    3E01    ADDIA	0x1
+  0433    0084    LD	0x4,A
+  0434    25C4    CALL	0x5C4
+  0435    00E8    LD	0x68,A
+392:              
+393:              	}
+  0436    0008    RET
+394:              	else if(chrgFlag)
+  0437    0850    LD	A,0x50
+  0438    1903    SZB	0x3,2
+  0439    2C48    JP	0x448
+395:              	{
+396:              		shiweiNum = numArray[prePwStep/10];
+  043A    300A    LDIA	0xA
+  043B    00F3    LD	0x73,A
+  043C    0879    LD	A,0x79
+  043D    258F    CALL	0x58F
+  043E    3E01    ADDIA	0x1
+  043F    0084    LD	0x4,A
+  0440    25C4    CALL	0x5C4
+397:              		geweiNum = numArray[prePwStep%10];
+  0441    244B    CALL	0x44B
+  0442    2573    CALL	0x573
+  0443    3E01    ADDIA	0x1
+  0444    0084    LD	0x4,A
+  0445    25C4    CALL	0x5C4
+  0446    00E8    LD	0x68,A
+398:              	}
+  0447    0008    RET
+399:              	else
+400:              	{
+401:              		shiweiNum = 0;
+  0448    01E9    CLR	0x69
+402:              		geweiNum = 0;
+  0449    01E8    CLR	0x68
+  044A    0008    RET
+403:              	}
+404:              }
+405:              
+406:              
+407:              
+408:              void chrgCtr()
+409:              {
+410:              	if(PORTA & 0x02)
+  0018    1683    SETB	0x3,5
+  0019    1C86    SNZB	0x6,1
+  001A    28DE    JP	0xDE
+411:              	{
+412:              		if(chrgFlag == 0)
+  001B    1283    CLRB	0x3,5
+  001C    0850    LD	A,0x50
+  001D    1D03    SNZB	0x3,2
+  001E    2823    JP	0x23
+413:              		{
+414:              			chrgFlag = 1;
+  001F    01D0    CLR	0x50
+  0020    0AD0    INCR	0x50
+415:              			chrgMaxDuty = 0;
+  0021    01B9    CLR	0x39
+416:              			chrgPwmStop();
+  0022    261D    CALL	0x61D
+417:              		}
+418:              		jrStep = 0;
+419:              		workStep = 0;
+  0023    01FA    CLR	0x7A
+420:              		pwmStop();
+  0024    2616    CALL	0x616
+421:              		lowBatFlag = 0;
+  0025    01B7    CLR	0x37
+422:              		if(prePwStep < pwStep)
+  0026    0842    LD	A,0x42
+  0027    0279    SUBA	0x79
+  0028    1803    SZB	0x3,0
+  0029    2833    JP	0x33
+423:              		{
+424:              			if(++count50s > 3000)
+  002A    20FC    CALL	0xFC
+  002B    1903    SZB	0x3,2
+  002C    022A    SUBA	0x2A
+  002D    1C03    SNZB	0x3,0
+  002E    2835    JP	0x35
+425:              			{
+426:              				count50s = 0;
+  002F    01AA    CLR	0x2A
+  0030    01AB    CLR	0x2B
+427:              				prePwStep++;
+  0031    0AF9    INCR	0x79
+  0032    2835    JP	0x35
+428:              			}
+429:              		}
+430:              		else
+431:              		{
+432:              			count50s = 0;
+  0033    01AA    CLR	0x2A
+  0034    01AB    CLR	0x2B
+433:              		}
+434:              		if(protectFlag)
+  0035    084C    LD	A,0x4C
+  0036    1903    SZB	0x3,2
+  0037    284A    JP	0x4A
+435:              		{
+436:              			chrgPwmStop();
+  0038    261D    CALL	0x61D
+437:              			if(prePwStep < 99 && protectFlag == 1)
+  0039    3063    LDIA	0x63
+  003A    0279    SUBA	0x79
+  003B    1803    SZB	0x3,0
+  003C    2848    JP	0x48
+  003D    0B4C    SZDECA	0x4C
+  003E    2848    JP	0x48
+438:              			{
+439:              				if(++reChrgCount > 250)
+  003F    30FB    LDIA	0xFB
+  0040    0AC1    INCR	0x41
+  0041    0241    SUBA	0x41
+  0042    1C03    SNZB	0x3,0
+  0043    0008    RET
+440:              				{
+441:              					reChrgCount = 0;
+  0044    01C1    CLR	0x41
+442:              					chrgFullFlag = 0;
+  0045    01CF    CLR	0x4F
+443:              					protectFlag = 0;
+  0046    01CC    CLR	0x4C
+  0047    0008    RET
+444:              				}
+445:              			}
+446:              			else
+447:              			{
+448:              				reChrgCount = 0;
+  0048    01C1    CLR	0x41
+  0049    0008    RET
+449:              			}
+450:              			return;
+451:              		}
+452:              		if(batADValue < 1118)
+  004A    3004    LDIA	0x4
+  004B    0278    SUBA	0x78
+  004C    305E    LDIA	0x5E
+  004D    1903    SZB	0x3,2
+  004E    0277    SUBA	0x77
+  004F    1803    SZB	0x3,0
+  0050    2854    JP	0x54
+  0051    300F    LDIA	0xF
+453:              		{
+454:              			chrgMode = 0;
+  0052    01BF    CLR	0x3F
+455:              			chrgMaxAD = 15;
+  0053    286D    JP	0x6D
+456:              		}
+457:              		else if(batADValue < 1530)
+  0054    3005    LDIA	0x5
+  0055    0278    SUBA	0x78
+  0056    30FA    LDIA	0xFA
+  0057    1903    SZB	0x3,2
+  0058    0277    SUBA	0x77
+  0059    1803    SZB	0x3,0
+  005A    2861    JP	0x61
+  005B    303C    LDIA	0x3C
+458:              		{
+459:              			chrgMode = 1;
+  005C    01BF    CLR	0x3F
+  005D    0ABF    INCR	0x3F
+460:              			chrgMaxAD = 60;
+  005E    00BE    LD	0x3E,A
+461:              			lockCount = 0;
+  005F    01BD    CLR	0x3D
+462:              		}
+  0060    286E    JP	0x6E
+463:              		else if(count1s == 0)
+  0061    0852    LD	A,0x52
+  0062    1D03    SNZB	0x3,2
+  0063    286E    JP	0x6E
+464:              		{
+465:              			if(++lockCount > 200)
+  0064    30C9    LDIA	0xC9
+  0065    0ABD    INCR	0x3D
+  0066    023D    SUBA	0x3D
+  0067    1C03    SNZB	0x3,0
+  0068    286C    JP	0x6C
+  0069    3002    LDIA	0x2
+466:              			{
+467:              				lockCount = 0;
+  006A    01BD    CLR	0x3D
+468:              				chrgMode = 2;
+  006B    00BF    LD	0x3F,A
+469:              			}
+470:              			
+471:              			chrgMaxAD = 60;
+  006C    303C    LDIA	0x3C
+  006D    00BE    LD	0x3E,A
+472:              		}
+473:              		if(chrgMode == 2 && outADValue < 8)
+  006E    3002    LDIA	0x2
+  006F    063F    XORA	0x3F
+  0070    1D03    SNZB	0x3,2
+  0071    2888    JP	0x88
+  0072    3000    LDIA	0x0
+  0073    022D    SUBA	0x2D
+  0074    3008    LDIA	0x8
+  0075    1903    SZB	0x3,2
+  0076    022C    SUBA	0x2C
+  0077    1803    SZB	0x3,0
+  0078    2888    JP	0x88
+474:              		{
+475:              			if(++fullCount >= 200)
+  0079    0AA8    INCR	0x28
+  007A    1903    SZB	0x3,2
+  007B    0AA9    INCR	0x29
+  007C    3000    LDIA	0x0
+  007D    0229    SUBA	0x29
+  007E    30C8    LDIA	0xC8
+  007F    1903    SZB	0x3,2
+  0080    0228    SUBA	0x28
+  0081    1C03    SNZB	0x3,0
+  0082    288A    JP	0x8A
+476:              			{
+477:              				fullCount = 0;
+  0083    01A8    CLR	0x28
+  0084    01A9    CLR	0x29
+478:              				chrgFullFlag = 1;
+  0085    01CF    CLR	0x4F
+  0086    0ACF    INCR	0x4F
+  0087    288A    JP	0x8A
+479:              			}
+480:              		}
+481:              		else
+482:              		{
+483:              			fullCount = 0;
+  0088    01A8    CLR	0x28
+  0089    01A9    CLR	0x29
+484:              		}
+485:              		if(chrgFullFlag)
+  008A    084F    LD	A,0x4F
+  008B    1903    SZB	0x3,2
+  008C    288E    JP	0x8E
+486:              		{
+487:              			chrgPwmStop();
+  008D    2E1D    JP	0x61D
+488:              		}
+489:              		else
+490:              		{
+491:              				if(batADValue > 1550 || outADValue > (chrgMaxAD + 2))
+  008E    3006    LDIA	0x6
+  008F    0278    SUBA	0x78
+  0090    300F    LDIA	0xF
+  0091    1903    SZB	0x3,2
+  0092    0277    SUBA	0x77
+  0093    1803    SZB	0x3,0
+  0094    28A4    JP	0xA4
+  0095    083E    LD	A,0x3E
+  0096    3E02    ADDIA	0x2
+  0097    00F3    LD	0x73,A
+  0098    3000    LDIA	0x0
+  0099    1803    SZB	0x3,0
+  009A    3001    LDIA	0x1
+  009B    00F4    LD	0x74,A
+  009C    082D    LD	A,0x2D
+  009D    0274    SUBA	0x74
+  009E    1D03    SNZB	0x3,2
+  009F    28A2    JP	0xA2
+  00A0    082C    LD	A,0x2C
+  00A1    0273    SUBA	0x73
+  00A2    1803    SZB	0x3,0
+  00A3    28B3    JP	0xB3
+492:              				{
+493:              					if(++subTime > chrgWaitTime)
+  00A4    0ABB    INCR	0x3B
+  00A5    083B    LD	A,0x3B
+  00A6    023A    SUBA	0x3A
+  00A7    1803    SZB	0x3,0
+  00A8    28B1    JP	0xB1
+494:              					{
+495:              						if(chrgMaxDuty > 1)
+  00A9    3002    LDIA	0x2
+  00AA    0239    SUBA	0x39
+  00AB    1C03    SNZB	0x3,0
+  00AC    28AE    JP	0xAE
+496:              						{
+497:              							chrgMaxDuty--;
+  00AD    03B9    DECR	0x39
+  00AE    3032    LDIA	0x32
+498:              						}
+499:              						subTime = 0;
+  00AF    01BB    CLR	0x3B
+500:              						chrgWaitTime = 50;
+  00B0    00BA    LD	0x3A,A
+501:              					}
+502:              					addTime = 0;
+  00B1    01BC    CLR	0x3C
+503:              				}
+  00B2    28D3    JP	0xD3
+504:              				else if(batADValue < 1550 && outADValue < (chrgMaxAD - 4))
+  00B3    3006    LDIA	0x6
+  00B4    0278    SUBA	0x78
+  00B5    300E    LDIA	0xE
+  00B6    1903    SZB	0x3,2
+  00B7    0277    SUBA	0x77
+  00B8    1803    SZB	0x3,0
+  00B9    28D3    JP	0xD3
+  00BA    083E    LD	A,0x3E
+  00BB    3EFC    ADDIA	0xFC
+  00BC    00F3    LD	0x73,A
+  00BD    30FF    LDIA	0xFF
+  00BE    1803    SZB	0x3,0
+  00BF    3000    LDIA	0x0
+  00C0    00F4    LD	0x74,A
+  00C1    022D    SUBA	0x2D
+  00C2    1D03    SNZB	0x3,2
+  00C3    28C6    JP	0xC6
+  00C4    0873    LD	A,0x73
+  00C5    022C    SUBA	0x2C
+  00C6    1803    SZB	0x3,0
+  00C7    28D3    JP	0xD3
+505:              				{
+506:              					if(++addTime > chrgWaitTime)
+  00C8    0ABC    INCR	0x3C
+  00C9    083C    LD	A,0x3C
+  00CA    023A    SUBA	0x3A
+  00CB    1803    SZB	0x3,0
+  00CC    28D2    JP	0xD2
+  00CD    304B    LDIA	0x4B
+507:              					{
+508:              						addTime = 0;
+  00CE    01BC    CLR	0x3C
+509:              						if(chrgMaxDuty < 75)
+  00CF    0239    SUBA	0x39
+  00D0    1C03    SNZB	0x3,0
+510:              						{
+511:              							chrgMaxDuty++;
+  00D1    0AB9    INCR	0x39
+512:              						}
+513:              					}
+514:              					subTime = 0;
+  00D2    01BB    CLR	0x3B
+515:              				}
+516:              				
+517:              	
+518:              				if(chrgPwmFlag == 0)
+  00D3    0835    LD	A,0x35
+  00D4    1D03    SNZB	0x3,2
+  00D5    28D7    JP	0xD7
+519:              				{
+520:              					chrgPwmInit();
+  00D6    25D8    CALL	0x5D8
+521:              				}
+522:              				PWMD23H = 0X00;
+  00D7    1683    SETB	0x3,5
+  00D8    019E    CLR	0x1E
+523:              				PWMD2L = chrgMaxDuty;
+  00D9    1283    CLRB	0x3,5
+  00DA    0839    LD	A,0x39
+  00DB    1683    SETB	0x3,5
+  00DC    009B    LD	0x1B,A
+  00DD    0008    RET
+  00DE    3014    LDIA	0x14
+524:              		}
+525:              	}
+526:              	else
+527:              	{
+528:              		startChrgTime = 0;
+529:              		chrgFlag = 0;
+  00DF    1283    CLRB	0x3,5
+  00E0    01D0    CLR	0x50
+530:              		chrgFullFlag = 0;
+  00E1    01CF    CLR	0x4F
+531:              		protectFlag = 0;
+  00E2    01CC    CLR	0x4C
+532:              		chrgMode = 0;
+  00E3    01BF    CLR	0x3F
+533:              		chrgMaxAD = 0;
+  00E4    01BE    CLR	0x3E
+534:              		chrgMaxDuty = 0;
+  00E5    01B9    CLR	0x39
+535:              		lockCount = 0;
+536:              		lockLedStep = 0;
+  00E6    01BD    CLR	0x3D
+537:              		chrgWaitTime = 20;
+  00E7    00BA    LD	0x3A,A
+538:              		chrgPwmStop();
+  00E8    261D    CALL	0x61D
+539:              		if(prePwStep > 0 && prePwStep > pwStep)
+  00E9    0879    LD	A,0x79
+  00EA    1903    SZB	0x3,2
+  00EB    28F9    JP	0xF9
+  00EC    0879    LD	A,0x79
+  00ED    0242    SUBA	0x42
+  00EE    1803    SZB	0x3,0
+  00EF    28F9    JP	0xF9
+540:              		{
+541:              			if(++count50s > 3000)
+  00F0    20FC    CALL	0xFC
+  00F1    1903    SZB	0x3,2
+  00F2    022A    SUBA	0x2A
+  00F3    1C03    SNZB	0x3,0
+  00F4    0008    RET
+542:              			{
+543:              				count50s = 0;
+  00F5    01AA    CLR	0x2A
+  00F6    01AB    CLR	0x2B
+544:              				prePwStep--;
+  00F7    03F9    DECR	0x79
+  00F8    0008    RET
+545:              			}
+546:              		}
+547:              		else
+548:              		{
+549:              			count50s = 0;
+  00F9    01AA    CLR	0x2A
+  00FA    01AB    CLR	0x2B
+  00FB    0008    RET
+550:              		}
+551:              	}
+552:              }
+553:              
+554:              
+555:              
+556:              char keyRead(char keyStatus)	
+  0538    00F3    LD	0x73,A
+557:              { 
+558:              	if(keyStatus)
+  0539    0873    LD	A,0x73
+  053A    3064    LDIA	0x64
+  053B    1903    SZB	0x3,2
+  053C    2D4A    JP	0x54A
+559:              	{
+560:              		keyCount++;
+  053D    0AC9    INCR	0x49
+561:              		if(keyCount >= 100)
+  053E    0249    SUBA	0x49
+  053F    1C03    SNZB	0x3,0
+  0540    3400    RET	0x0
+562:              		{
+563:              			keyCount = 100;
+  0541    3064    LDIA	0x64
+  0542    00C9    LD	0x49,A
+564:              			if(!longPressFlag)
+  0543    0848    LD	A,0x48
+  0544    1D03    SNZB	0x3,2
+  0545    3400    RET	0x0
+  0546    3002    LDIA	0x2
+565:              			{
+566:              				longPressFlag = 1;
+  0547    01C8    CLR	0x48
+  0548    0AC8    INCR	0x48
+567:              				return 2;
+  0549    0008    RET
+568:              			}
+569:              		}
+570:              	}
+571:              	else
+572:              	{
+573:              		if(keyCount >= 100)
+  054A    0249    SUBA	0x49
+  054B    1C03    SNZB	0x3,0
+  054C    2D50    JP	0x550
+574:              		{
+575:              			keyCount = 0;
+  054D    01C9    CLR	0x49
+576:              			longPressFlag = 0;
+  054E    01C8    CLR	0x48
+577:              			return	0;
+  054F    3400    RET	0x0
+578:              		}
+579:              		else if(keyCount >= 6)
+  0550    3006    LDIA	0x6
+  0551    0249    SUBA	0x49
+580:              		{
+581:              			keyCount = 0;
+  0552    01C9    CLR	0x49
+  0553    1803    SZB	0x3,0
+582:              			return	1;
+  0554    3401    RET	0x1
+  0555    3400    RET	0x0
+583:              		}
+584:              		keyCount = 0;
+585:              	}
+586:              	return 0;
+587:              }
+588:              
+589:              
+590:              char keyRead2(char keyStatus)	
+591:              { 
+592:              	if(keyStatus)
+593:              	{
+594:              		keyCount2++;
+595:              		if(keyCount2 >= 100)
+596:              		{
+597:              			keyCount2 = 100;
+598:              			if(!longPressFlag2)
+599:              			{
+600:              				longPressFlag2 = 1;
+601:              				return 2;
+602:              			}
+603:              		}
+604:              	}
+605:              	else
+606:              	{
+607:              		if(keyCount2 >= 100)
+608:              		{
+609:              			keyCount2 = 0;
+610:              			longPressFlag2 = 0;
+611:              			return	0;
+612:              		}
+613:              		else if(keyCount2 >= 5)
+614:              		{
+615:              			keyCount2 = 0;
+616:              			return	1;
+617:              		}
+618:              		keyCount2 = 0;
+619:              	}
+620:              	return 0;
+621:              }
+622:              
+623:              
+624:              void keyCtr()
+625:              {
+626:              	char kclick = keyRead(0x04 & (~PORTB));
+  050D    0906    COMA	0x6
+  050E    3904    ANDIA	0x4
+  050F    2538    CALL	0x538
+  0510    00F4    LD	0x74,A
+627:              	if(kclick == 1)
+  0511    0B74    SZDECA	0x74
+  0512    2D27    JP	0x527
+628:              	{
+629:              		if(workStep > 0)
+  0513    087A    LD	A,0x7A
+  0514    1903    SZB	0x3,2
+  0515    2D1E    JP	0x51E
+630:              		{
+631:              			if(++workStep > 32)
+  0516    3021    LDIA	0x21
+  0517    0AFA    INCR	0x7A
+  0518    027A    SUBA	0x7A
+  0519    1C03    SNZB	0x3,0
+  051A    0008    RET
+632:              			{
+633:              				workStep = 1;
+  051B    01FA    CLR	0x7A
+  051C    0AFA    INCR	0x7A
+  051D    0008    RET
+634:              			}
+635:              		}
+636:              		else if(showBatTime > 0)
+  051E    0840    LD	A,0x40
+  051F    1903    SZB	0x3,2
+  0520    2D23    JP	0x523
+637:              		{
+638:              			showBatTime = 0;
+  0521    01C0    CLR	0x40
+639:              		}
+  0522    0008    RET
+640:              		else
+641:              		{
+642:              			showBatTime = 200;
+  0523    30C8    LDIA	0xC8
+  0524    00C0    LD	0x40,A
+643:              			count1s = 0;
+  0525    01D2    CLR	0x52
+  0526    0008    RET
+644:              		}
+645:              	}
+646:              	else if(kclick == 2)
+  0527    3002    LDIA	0x2
+  0528    0674    XORA	0x74
+  0529    1D03    SNZB	0x3,2
+  052A    0008    RET
+647:              	{
+648:              		if(workStep > 0)
+  052B    087A    LD	A,0x7A
+  052C    1903    SZB	0x3,2
+  052D    2D30    JP	0x530
+649:              		{
+650:              			workStep = 0;
+  052E    01FA    CLR	0x7A
+651:              		}
+  052F    0008    RET
+  0530    301E    LDIA	0x1E
+652:              		else
+653:              		{
+654:              			workStep = 1;
+  0531    01FA    CLR	0x7A
+  0532    0AFA    INCR	0x7A
+655:              			startTime = 30;
+  0533    00C4    LD	0x44,A
+656:              			showBatTime = 0;
+  0534    01C0    CLR	0x40
+657:              			overWorkTime = 0;
+  0535    01A4    CLR	0x24
+  0536    01A5    CLR	0x25
+  0537    0008    RET
+658:              		}
+659:              	}
+660:              }
+661:              
+662:              void workCtr()
+663:              {
+664:              
+665:              	if(startTime > 0)
+  04D7    0844    LD	A,0x44
+  04D8    1D03    SNZB	0x3,2
+666:              	{
+667:              		startTime--;
+  04D9    03C4    DECR	0x44
+668:              	}
+669:              	if(workStep > 0)
+  04DA    087A    LD	A,0x7A
+  04DB    1903    SZB	0x3,2
+  04DC    2D09    JP	0x509
+670:              	{
+671:              		if(motorPwmFlag == 0)
+  04DD    0834    LD	A,0x34
+  04DE    1D03    SNZB	0x3,2
+  04DF    2CE1    JP	0x4E1
+672:              		{
+673:              			pwmInit();
+  04E0    25F9    CALL	0x5F9
+674:              			
+675:              		}
+676:              		maxDuty = 60 + (workStep/2);
+  04E1    1003    CLRB	0x3,0
+  04E2    0C7A    RRCA	0x7A
+  04E3    3E3C    ADDIA	0x3C
+  04E4    00C7    LD	0x47,A
+677:              		if(overCount >= 5)
+  04E5    3005    LDIA	0x5
+  04E6    0246    SUBA	0x46
+  04E7    1C03    SNZB	0x3,0
+  04E8    2CF9    JP	0x4F9
+678:              		{
+679:              			if(++count5s > 600)
+  04E9    0AA6    INCR	0x26
+  04EA    1903    SZB	0x3,2
+  04EB    0AA7    INCR	0x27
+  04EC    3002    LDIA	0x2
+  04ED    0227    SUBA	0x27
+  04EE    3059    LDIA	0x59
+  04EF    1903    SZB	0x3,2
+  04F0    0226    SUBA	0x26
+  04F1    1C03    SNZB	0x3,0
+  04F2    2CFB    JP	0x4FB
+680:              			{
+681:              				count5s = 0;
+  04F3    01A6    CLR	0x26
+  04F4    01A7    CLR	0x27
+682:              				overWorkTime = 0;
+683:              				preWorkStep = workStep;
+684:                  			prejrStep = jrStep;
+  04F5    01A4    CLR	0x24
+  04F6    01A5    CLR	0x25
+685:              				workStep = 0;
+686:              				jrStep = 0;
+  04F7    01FA    CLR	0x7A
+  04F8    2CFB    JP	0x4FB
+687:              			}
+688:              		}
+689:              		else
+690:              		{
+691:              			count5s = 0;
+  04F9    01A6    CLR	0x26
+  04FA    01A7    CLR	0x27
+692:              		}
+693:              		if(count1s == 0 && ++count900s >= 900)
+  04FB    0852    LD	A,0x52
+  04FC    1D03    SNZB	0x3,2
+  04FD    0008    RET
+  04FE    0AA0    INCR	0x20
+  04FF    1903    SZB	0x3,2
+  0500    0AA1    INCR	0x21
+  0501    3003    LDIA	0x3
+  0502    0221    SUBA	0x21
+  0503    3084    LDIA	0x84
+  0504    1903    SZB	0x3,2
+  0505    0220    SUBA	0x20
+  0506    1803    SZB	0x3,0
+694:              		{
+695:              			workStep = 0;
+696:              			jrStep = 0;
+  0507    01FA    CLR	0x7A
+  0508    0008    RET
+697:              		}
+698:              	}
+699:              	else
+700:              	{
+701:              		pwmStop();
+  0509    2616    CALL	0x616
+702:              		count900s = 0;
+  050A    01A0    CLR	0x20
+  050B    01A1    CLR	0x21
+  050C    0008    RET
+703:              	}
+704:              	
+705:              }
+706:              
+707:              void checkOutA()
+708:              {
+709:              	test_adc = ADC_Sample(0, 5);		//测试AN0口的AD值，参考电压2V
+  02A8    3005    LDIA	0x5
+  02A9    00F3    LD	0x73,A
+  02AA    3000    LDIA	0x0
+  02AB    2102    CALL	0x102
+  02AC    00D4    LD	0x54,A
+710:              	if (0xA5 == test_adc)				//测试完成，如因其他原因导致AD转换没有完成，则不处理
+  02AD    30A5    LDIA	0xA5
+  02AE    0654    XORA	0x54
+  02AF    1D03    SNZB	0x3,2
+  02B0    2B48    JP	0x348
+711:              	{
+712:              		if(chrgFlag && adresult > 210)
+  02B1    0850    LD	A,0x50
+  02B2    1903    SZB	0x3,2
+  02B3    2AC4    JP	0x2C4
+  02B4    3000    LDIA	0x0
+  02B5    0233    SUBA	0x33
+  02B6    30D3    LDIA	0xD3
+  02B7    1903    SZB	0x3,2
+  02B8    0232    SUBA	0x32
+  02B9    1C03    SNZB	0x3,0
+  02BA    2AC4    JP	0x2C4
+713:              		{
+714:              			if(++overChrgTime > 10)
+  02BB    300B    LDIA	0xB
+  02BC    0AC3    INCR	0x43
+  02BD    0243    SUBA	0x43
+  02BE    1C03    SNZB	0x3,0
+  02BF    2AC5    JP	0x2C5
+  02C0    3002    LDIA	0x2
+715:              			{
+716:              				overChrgTime = 0;
+  02C1    01C3    CLR	0x43
+717:              				protectFlag = 2;
+  02C2    00CC    LD	0x4C,A
+  02C3    2AC5    JP	0x2C5
+718:              			}
+719:              			
+720:              		}
+721:              		else
+722:              		{
+723:              			overChrgTime = 0;
+  02C4    01C3    CLR	0x43
+724:              		}
+725:              		outADValue = adresult;
+  02C5    0833    LD	A,0x33
+  02C6    00AD    LD	0x2D,A
+  02C7    0832    LD	A,0x32
+  02C8    00AC    LD	0x2C,A
+726:              		//电机坏了过载保护
+727:                      if(workStep && (outADValue > 600))
+  02C9    087A    LD	A,0x7A
+  02CA    1903    SZB	0x3,2
+  02CB    2ADB    JP	0x2DB
+  02CC    3002    LDIA	0x2
+  02CD    022D    SUBA	0x2D
+  02CE    3059    LDIA	0x59
+  02CF    1903    SZB	0x3,2
+  02D0    022C    SUBA	0x2C
+  02D1    1C03    SNZB	0x3,0
+  02D2    2ADB    JP	0x2DB
+728:                      {
+729:                      	if(++workOverOutTime > 50)
+  02D3    3033    LDIA	0x33
+  02D4    0ACB    INCR	0x4B
+  02D5    024B    SUBA	0x4B
+  02D6    1C03    SNZB	0x3,0
+  02D7    2ADD    JP	0x2DD
+730:                      	{
+731:                      		workOverOutTime = 0;
+  02D8    01CB    CLR	0x4B
+732:                      		workStep = 0;
+  02D9    01FA    CLR	0x7A
+  02DA    2ADC    JP	0x2DC
+733:                      	}
+734:                      }
+735:              		else
+736:              		{
+737:              			workOverOutTime = 0;
+  02DB    01CB    CLR	0x4B
+738:              		}
+739:              		u8t maxtempV = 130 + (workStep * 2);
+  02DC    1003    CLRB	0x3,0
+  02DD    0D7A    RLCA	0x7A
+  02DE    3E82    ADDIA	0x82
+  02DF    00E6    LD	0x66,A
+740:              		if(outADValue > maxtempV)
+  02E0    00F4    LD	0x74,A
+  02E1    01F5    CLR	0x75
+  02E2    082D    LD	A,0x2D
+  02E3    0275    SUBA	0x75
+  02E4    1D03    SNZB	0x3,2
+  02E5    2AE8    JP	0x2E8
+  02E6    082C    LD	A,0x2C
+  02E7    0274    SUBA	0x74
+  02E8    1803    SZB	0x3,0
+  02E9    2AF2    JP	0x2F2
+741:                      {
+742:                      	if(++overCount > 5)
+  02EA    3006    LDIA	0x6
+  02EB    0AC6    INCR	0x46
+  02EC    0246    SUBA	0x46
+  02ED    1C03    SNZB	0x3,0
+  02EE    2B41    JP	0x341
+743:                      	{
+744:                      		overCount = 5;
+  02EF    3005    LDIA	0x5
+  02F0    00C6    LD	0x46,A
+  02F1    2B41    JP	0x341
+745:                      	}
+746:                      }
+747:                      else
+748:                      {
+749:                      	
+750:                      	if(overCount > 0)
+  02F2    0846    LD	A,0x46
+  02F3    1903    SZB	0x3,2
+  02F4    2AF6    JP	0x2F6
+751:                      	{
+752:                      		overCount--;
+  02F5    03C6    DECR	0x46
+753:                      	}
+754:              			u8t maxAout = 25;
+  02F6    3019    LDIA	0x19
+  02F7    00E7    LD	0x67,A
+755:                      	if(pwStep > 30)
+  02F8    301F    LDIA	0x1F
+  02F9    0242    SUBA	0x42
+  02FA    1C03    SNZB	0x3,0
+  02FB    2AFE    JP	0x2FE
+756:                      		maxAout = 27;
+  02FC    301B    LDIA	0x1B
+  02FD    00E7    LD	0x67,A
+757:                      	if(workStep < 5)
+  02FE    3005    LDIA	0x5
+  02FF    027A    SUBA	0x7A
+  0300    1803    SZB	0x3,0
+  0301    2B04    JP	0x304
+758:                  		{
+759:                  			maxAout = maxAout - 1;
+  0302    30FF    LDIA	0xFF
+  0303    2B2D    JP	0x32D
+760:                  		}
+761:                  		else if(workStep < 9)
+  0304    3009    LDIA	0x9
+  0305    027A    SUBA	0x7A
+  0306    1803    SZB	0x3,0
+  0307    2B0A    JP	0x30A
+762:                  		{
+763:                  			maxAout = maxAout + 3;
+  0308    3003    LDIA	0x3
+  0309    2B2D    JP	0x32D
+764:                  		}
+765:                  		else if(workStep < 13)
+  030A    300D    LDIA	0xD
+  030B    027A    SUBA	0x7A
+  030C    1803    SZB	0x3,0
+  030D    2B10    JP	0x310
+766:                  		{
+767:                  			maxAout = maxAout + 4;
+  030E    3004    LDIA	0x4
+  030F    2B2D    JP	0x32D
+768:                  		}
+769:                  		else if(workStep < 17)
+  0310    3011    LDIA	0x11
+  0311    027A    SUBA	0x7A
+  0312    1803    SZB	0x3,0
+  0313    2B16    JP	0x316
+770:                  		{
+771:                  			maxAout = maxAout + 5;
+  0314    3005    LDIA	0x5
+  0315    2B2D    JP	0x32D
+772:                  		}
+773:                  		else if(workStep < 21)
+  0316    3015    LDIA	0x15
+  0317    027A    SUBA	0x7A
+  0318    1803    SZB	0x3,0
+  0319    2B1C    JP	0x31C
+774:                  		{
+775:                  			maxAout = maxAout + 7;
+  031A    3007    LDIA	0x7
+  031B    2B2D    JP	0x32D
+776:                  		}
+777:                  		else if(workStep < 25)
+  031C    3019    LDIA	0x19
+  031D    027A    SUBA	0x7A
+  031E    1803    SZB	0x3,0
+  031F    2B22    JP	0x322
+778:                  		{
+779:                  			maxAout = maxAout + 9;
+  0320    3009    LDIA	0x9
+  0321    2B2D    JP	0x32D
+780:                  		}
+781:                  		else if(workStep < 29)
+  0322    301D    LDIA	0x1D
+  0323    027A    SUBA	0x7A
+  0324    1803    SZB	0x3,0
+  0325    2B28    JP	0x328
+782:                  		{
+783:                  			maxAout = maxAout + 10;
+  0326    300A    LDIA	0xA
+  0327    2B2D    JP	0x32D
+784:                  		}
+785:                  		else if(workStep < 33)
+  0328    3021    LDIA	0x21
+  0329    027A    SUBA	0x7A
+  032A    1803    SZB	0x3,0
+  032B    2B2E    JP	0x32E
+786:                  		{
+787:                  			maxAout = maxAout + 11;
+  032C    300B    LDIA	0xB
+  032D    07E7    ADDR	0x67
+788:                  		}
+789:              			if(outADValue > maxAout)
+  032E    0867    LD	A,0x67
+  032F    00F4    LD	0x74,A
+  0330    01F5    CLR	0x75
+  0331    082D    LD	A,0x2D
+  0332    0275    SUBA	0x75
+  0333    1D03    SNZB	0x3,2
+  0334    2B37    JP	0x337
+  0335    082C    LD	A,0x2C
+  0336    0274    SUBA	0x74
+  0337    1803    SZB	0x3,0
+  0338    2B3F    JP	0x33F
+790:                      	{
+791:              				if(startTime == 0)
+  0339    0844    LD	A,0x44
+  033A    1D03    SNZB	0x3,2
+  033B    2B3F    JP	0x33F
+792:              				{
+793:              					tempDuty = 167 + workStep;
+  033C    087A    LD	A,0x7A
+  033D    3EA7    ADDIA	0xA7
+  033E    2B40    JP	0x340
+794:              				}
+795:              				else
+796:              				{
+797:              					tempDuty = maxDuty;
+  033F    0847    LD	A,0x47
+  0340    00C5    LD	0x45,A
+798:              				}
+799:                      	}
+800:                      	else 
+801:                      	{
+802:                      		tempDuty = maxDuty;
+803:                      	}
+804:                 
+805:                      }
+806:              		PWMD23H = 0X00;
+  0341    1683    SETB	0x3,5
+  0342    019E    CLR	0x1E
+807:              		PWMD3L = tempDuty;
+  0343    1283    CLRB	0x3,5
+  0344    0845    LD	A,0x45
+  0345    1683    SETB	0x3,5
+  0346    009C    LD	0x1C,A
+808:              	}
+  0347    0008    RET
+809:              	else
+810:              	{
+811:              		ADCON0 = 0;						//如果转换没有完成，需初始化ADCON0,1
+  0348    1683    SETB	0x3,5
+  0349    0195    CLR	0x15
+812:              		ADCON1 = 0;				
+  034A    0196    CLR	0x16
+813:              		__delay_us(100);				//延时100us(编译器内置函数)
+  034B    3085    LDIA	0x85
+  034C    00F4    LD	0x74,A
+  034D    0BF4    SZDECR	0x74
+  034E    2B4D    JP	0x34D
+  034F    0008    RET
+814:              	}
+815:              }
+816:              
+817:              void checkBatAD()
+818:              {
+819:              	test_adc = ADC_Sample(2, 5);		//测试AN2口的AD值，参考电压2V
+  0350    3005    LDIA	0x5
+  0351    00F3    LD	0x73,A
+  0352    3002    LDIA	0x2
+  0353    2102    CALL	0x102
+  0354    00D4    LD	0x54,A
+820:              	if (0xA5 == test_adc)				//测试完成，如因其他原因导致AD转换没有完成，则不处理
+  0355    30A5    LDIA	0xA5
+  0356    0654    XORA	0x54
+  0357    1D03    SNZB	0x3,2
+  0358    2BB0    JP	0x3B0
+821:              	{
+822:              		batADValue = adresult;
+  0359    0833    LD	A,0x33
+  035A    00F8    LD	0x78,A
+  035B    0832    LD	A,0x32
+  035C    00F7    LD	0x77,A
+823:              		if(batADValue < 1117)
+  035D    3004    LDIA	0x4
+  035E    0278    SUBA	0x78
+  035F    305D    LDIA	0x5D
+  0360    1903    SZB	0x3,2
+  0361    0277    SUBA	0x77
+  0362    1803    SZB	0x3,0
+  0363    2B76    JP	0x376
+824:                      {
+825:                      	pwStep = 0;
+  0364    01C2    CLR	0x42
+826:              			if(++count8s > 800)
+  0365    0AA2    INCR	0x22
+  0366    1903    SZB	0x3,2
+  0367    0AA3    INCR	0x23
+  0368    3003    LDIA	0x3
+  0369    0223    SUBA	0x23
+  036A    3021    LDIA	0x21
+  036B    1903    SZB	0x3,2
+  036C    0222    SUBA	0x22
+  036D    1C03    SNZB	0x3,0
+  036E    2BA3    JP	0x3A3
+827:              			{
+828:              				count8s = 0;
+  036F    01A2    CLR	0x22
+  0370    01A3    CLR	0x23
+829:              				lowBatFlag = 1;
+  0371    01B7    CLR	0x37
+  0372    0AB7    INCR	0x37
+830:              				prePwStep = 0;
+  0373    01F9    CLR	0x79
+831:              				workStep = 0;
+832:              				jrStep = 0;
+  0374    01FA    CLR	0x7A
+  0375    2BA3    JP	0x3A3
+  0376    3005    LDIA	0x5
+833:              			}
+834:                      }
+835:                      else
+836:                      {
+837:              	        count8s = 0;
+  0377    01A2    CLR	0x22
+  0378    01A3    CLR	0x23
+838:              			if(batADValue >= 1340)
+  0379    0278    SUBA	0x78
+  037A    303C    LDIA	0x3C
+  037B    1903    SZB	0x3,2
+  037C    0277    SUBA	0x77
+839:              	    	{
+840:              	    		pwStep = ((batADValue - 1340) /2) + 13;
+  037D    0877    LD	A,0x77
+  037E    1C03    SNZB	0x3,0
+  037F    2B8D    JP	0x38D
+  0380    3EC4    ADDIA	0xC4
+  0381    00F4    LD	0x74,A
+  0382    0878    LD	A,0x78
+  0383    1803    SZB	0x3,0
+  0384    3E01    ADDIA	0x1
+  0385    3EFA    ADDIA	0xFA
+  0386    00F5    LD	0x75,A
+  0387    1003    CLRB	0x3,0
+  0388    0CF5    RRCR	0x75
+  0389    0CF4    RRCR	0x74
+  038A    0874    LD	A,0x74
+  038B    3E0D    ADDIA	0xD
+  038C    2B9C    JP	0x39C
+841:              	    	}
+  038D    3EA3    ADDIA	0xA3
+  038E    00F4    LD	0x74,A
+  038F    0878    LD	A,0x78
+  0390    1803    SZB	0x3,0
+  0391    3E01    ADDIA	0x1
+  0392    3EFB    ADDIA	0xFB
+  0393    00F5    LD	0x75,A
+  0394    3004    LDIA	0x4
+  0395    1003    CLRB	0x3,0
+  0396    0CF5    RRCR	0x75
+  0397    0CF4    RRCR	0x74
+  0398    3EFF    ADDIA	0xFF
+  0399    1D03    SNZB	0x3,2
+  039A    2B95    JP	0x395
+  039B    0874    LD	A,0x74
+  039C    00C2    LD	0x42,A
+842:              	    	else
+843:              	    	{
+844:              	    		pwStep = (batADValue - 1117) / 16;
+845:              	    	}
+846:              	    	if(pwStep > 99)
+  039D    3064    LDIA	0x64
+  039E    0242    SUBA	0x42
+  039F    1C03    SNZB	0x3,0
+  03A0    2BA3    JP	0x3A3
+847:              	    	{
+848:              	    		pwStep = 99;
+  03A1    3063    LDIA	0x63
+  03A2    00C2    LD	0x42,A
+849:              	    	}
+850:                  	}
+851:              		if(chrgFlag && batADValue > 1861)
+  03A3    0850    LD	A,0x50
+  03A4    1903    SZB	0x3,2
+  03A5    2BB7    JP	0x3B7
+  03A6    3007    LDIA	0x7
+  03A7    0278    SUBA	0x78
+  03A8    3046    LDIA	0x46
+  03A9    1903    SZB	0x3,2
+  03AA    0277    SUBA	0x77
+  03AB    1C03    SNZB	0x3,0
+  03AC    2BB7    JP	0x3B7
+852:                      {
+853:              	        protectFlag = 1;
+  03AD    01CC    CLR	0x4C
+  03AE    0ACC    INCR	0x4C
+  03AF    2BB7    JP	0x3B7
+854:                      }
+855:              	}
+856:              	else
+857:              	{
+858:              		ADCON0 = 0;						//如果转换没有完成，需初始化ADCON0,1
+  03B0    1683    SETB	0x3,5
+  03B1    0195    CLR	0x15
+859:              		ADCON1 = 0;				
+  03B2    0196    CLR	0x16
+860:              		__delay_us(100);				//延时100us(编译器内置函数)
+  03B3    3085    LDIA	0x85
+  03B4    00F4    LD	0x74,A
+  03B5    0BF4    SZDECR	0x74
+  03B6    2BB5    JP	0x3B5
+861:              	}
+862:              
+863:              	test_adc = ADC_Sample(3, 5);		//测试AN2口的AD值，参考电压2V
+  03B7    3005    LDIA	0x5
+  03B8    00F3    LD	0x73,A
+  03B9    3003    LDIA	0x3
+  03BA    2102    CALL	0x102
+  03BB    00D4    LD	0x54,A
+864:              	if (0xA5 == test_adc)				//测试完成，如因其他原因导致AD转换没有完成，则不处理
+  03BC    30A5    LDIA	0xA5
+  03BD    0654    XORA	0x54
+  03BE    1D03    SNZB	0x3,2
+  03BF    2BEB    JP	0x3EB
+865:              	{
+866:              		if(chrgFlag && adresult > 100)
+  03C0    0850    LD	A,0x50
+  03C1    1903    SZB	0x3,2
+  03C2    0008    RET
+  03C3    3000    LDIA	0x0
+  03C4    0233    SUBA	0x33
+  03C5    3065    LDIA	0x65
+  03C6    1903    SZB	0x3,2
+  03C7    0232    SUBA	0x32
+  03C8    1C03    SNZB	0x3,0
+  03C9    0008    RET
+867:              	    {
+868:              	    	//有电池
+869:              	    	if(adresult > 810 || (batADValue - adresult) > 810)
+  03CA    3003    LDIA	0x3
+  03CB    0233    SUBA	0x33
+  03CC    302B    LDIA	0x2B
+  03CD    1903    SZB	0x3,2
+  03CE    0232    SUBA	0x32
+  03CF    1803    SZB	0x3,0
+  03D0    2BE0    JP	0x3E0
+  03D1    0832    LD	A,0x32
+  03D2    0277    SUBA	0x77
+  03D3    00F4    LD	0x74,A
+  03D4    0833    LD	A,0x33
+  03D5    1C03    SNZB	0x3,0
+  03D6    0A33    INCA	0x33
+  03D7    0278    SUBA	0x78
+  03D8    00F5    LD	0x75,A
+  03D9    3003    LDIA	0x3
+  03DA    0275    SUBA	0x75
+  03DB    302B    LDIA	0x2B
+  03DC    1903    SZB	0x3,2
+  03DD    0274    SUBA	0x74
+  03DE    1C03    SNZB	0x3,0
+  03DF    2BE9    JP	0x3E9
+870:              	    	{
+871:              	    		//有一节电池已经满了
+872:              	    		if(++countHalfFull > 250)
+  03E0    30FB    LDIA	0xFB
+  03E1    0ACD    INCR	0x4D
+  03E2    024D    SUBA	0x4D
+  03E3    1C03    SNZB	0x3,0
+  03E4    0008    RET
+  03E5    3002    LDIA	0x2
+873:              	    		{
+874:              	    			countHalfFull = 0;
+  03E6    01CD    CLR	0x4D
+875:              					protectFlag = 2;
+  03E7    00CC    LD	0x4C,A
+  03E8    0008    RET
+876:              	    		}
+877:              	    	}
+878:              	    	else
+879:              	    	{
+880:              	    		countHalfFull = 0;
+  03E9    01CD    CLR	0x4D
+881:              	    	}
+882:              	    }
+883:              	}
+  03EA    0008    RET
+884:              	else
+885:              	{
+886:              		ADCON0 = 0;						//如果转换没有完成，需初始化ADCON0,1
+  03EB    1683    SETB	0x3,5
+  03EC    0195    CLR	0x15
+887:              		ADCON1 = 0;				
+  03ED    0196    CLR	0x16
+888:              		__delay_us(100);				//延时100us(编译器内置函数)
+  03EE    3085    LDIA	0x85
+  03EF    00F4    LD	0x74,A
+  03F0    0BF4    SZDECR	0x74
+  03F1    2BF0    JP	0x3F0
+  03F2    0008    RET
+889:              	}
+890:              	
+891:              }
+892:              
+893:              
+894:              
+895:              /**********************************************************
+896:              函数名称：Init_System
+897:              函数功能：系统初始化
+898:              入口参数：无
+899:              出口参数：无
+900:              备    注：
+901:              **********************************************************/
+902:              void Init_System() 
+  05AA    0000    NOP
+  05AB    0064    CLRWDT
+903:              {
+904:              	asm("nop");
+905:              	asm("clrwdt");
+906:              	OPTION_REG = 0;					//预分频给TMR0 ，Timer0使用内部时钟Focs/4，预分频比为1:2
+  05AC    1283    CLRB	0x3,5
+  05AD    0181    CLR	0x1
+  05AE    0064    CLRWDT
+907:              	asm("clrwdt");
+908:              	OSCCON = 0X72;					//内部振荡器8M
+  05AF    3072    LDIA	0x72
+  05B0    1283    CLRB	0x3,5
+  05B1    0094    LD	0x14,A
+909:              
+910:              	WPUA = 0B00000000;				//配置上拉，1为使能上拉
+  05B2    1683    SETB	0x3,5
+  05B3    0188    CLR	0x8
+911:              	WPDA = 0x00;					//RA1开下拉
+  05B4    0187    CLR	0x7
+912:              	WPUB = 0x04;
+  05B5    3004    LDIA	0x4
+  05B6    1283    CLRB	0x3,5
+  05B7    0088    LD	0x8,A
+913:              
+914:              	TRISA = 0x0F;				//配置IO状态，0为输出，1为输入
+  05B8    300F    LDIA	0xF
+  05B9    1683    SETB	0x3,5
+915:              	TRISB = 0x04;
+916:              
+917:              	PORTA = 0X00;
+918:              	PORTB = 0X00;
+  05BA    24CE    CALL	0x4CE
+919:              
+920:              //---------------------------------------
+921:              //125us中断初始化
+922:              	PR2 = 249;					//设定Timer初始值，定时周期是250*2/8M=62.5uS
+  05BB    30F9    LDIA	0xF9
+  05BC    0091    LD	0x11,A
+923:              	TMR2IF = 0;
+  05BD    108D    CLRB	0xD,1
+924:              	TMR2IE = 1;					//使能Timer2溢出中断
+  05BE    148E    SETB	0xE,1
+925:              
+926:              	T2CON = 0B00000100;			//开启Timer2,设置TMR2的分频比为1:1
+  05BF    3004    LDIA	0x4
+  05C0    0093    LD	0x13,A
+927:              	INTCON = 0XC0;				//开启总中断
+  05C1    30C0    LDIA	0xC0
+  05C2    008B    LD	0xB,A
+  05C3    0008    RET
+928:              }
+929:              
+930:              /***********************************************************
+931:              中断服务函数
+932:              函数名称：AD_Init()
+933:              函数功能：AD初始化处理函数
+934:              入口参数：
+935:              出口参数：
+936:              备    注：第一次打开AD允许位ADON，需延时20uS以上才能进入AD采样
+937:              			如后继程序不关闭ADON，则不需要延时
+938:              ***********************************************************/
+939:              void AD_Init() 
+940:              {
+941:              	/*********** ADCON0 ****************************
+942:              		Bit7~Bit6  ADCS<1:0>:  AD转换时钟选择位。
+943:              			00=  F HSI /16
+944:              			01=  F HSI /32
+945:              			10=  F HSI /64
+946:              			11=  F HSI /128
+947:              		Bit5~Bit2  CHS<3:0>:  模拟通道选择位。与ADCON1寄存器CHS4组合CHS<3:0>
+948:              			CHS<4:0>: 
+949:              			00000=  AN0
+950:              			00001=  AN1
+951:              			00010=  AN2
+952:              			00011=  AN3
+953:              			00100=  AN4
+954:              			00101=  AN5
+955:              			00110=  保留
+956:              			00111=  保留
+957:              			01000=  AN8
+958:              			… 
+959:              			01101=  AN13
+960:              			01110=  AN14
+961:              			01111=  AN15
+962:              			11111=  1.2V（固定参考电压）
+963:              			其他=  保留
+964:              		Bit1  GO/DONE: AD转换状态位。
+965:              			1=  AD转换正在进行。将该位置1启动AD转换。当AD转换完成以后，该位由硬件自动清零。
+966:              				当GO/DONE位从1变0或ADIF从0变1时，需至少等待两个TAD时间，才能再次启动AD转换。
+967:              			0=  AD转换完成/或不在进行中。
+968:              		Bit0  ADON:  ADC使能位。
+969:              			1=  使能ADC；
+970:              			0=  禁止ADC，不消耗工作电流。
+971:              	*********************************************/
+972:              	ADCON0 = 0X41;		//ADON开启，AD采样时间选为FSYS/16
+  060E    3041    LDIA	0x41
+  060F    1683    SETB	0x3,5
+  0610    0095    LD	0x15,A
+973:              	
+974:              	/*********** ADCON1 ****************************
+975:              		Bit7  ADFM:  AD转换结果格式选择位；
+976:              			1=  右对齐；
+977:              			0=  左对齐。
+978:              		Bit6  CHS4:  通道选择位
+979:              		Bit5~Bit3  未用 
+980:              		Bit2  LDO_EN:  内部参考电压使能位。
+981:              			1=  使能ADC内部LDO参考电压；
+982:              				当选择内部LDO作参考电压时，ADC最大有效精度为8位。
+983:              			0=  VDD作为ADC参考电压。
+984:              		Bit1~Bit0  LDO_SEL<1:0>:  参考电压选择位
+985:              			0X=  2.0V
+986:              			10=  2.4V
+987:              			11=  3.0V
+988:              	*********************************************/
+989:              	ADCON1 = 0;
+  0611    0196    CLR	0x16
+990:              	ANSEL0 = 0X0D;
+  0612    300D    LDIA	0xD
+  0613    0093    LD	0x13,A
+991:              	ANSEL1 = 0x00;	
+  0614    0194    CLR	0x14
+  0615    0008    RET
+992:              }
+993:              
+994:              
+995:              void chrgPwmInit()
+996:              {
+997:              		chrgPwmFlag = 1;
+  05D8    01B5    CLR	0x35
+  05D9    0AB5    INCR	0x35
+998:              		PWMCON1 = 0B00000000;	//PWM选择D组，死区2禁止，死区1使能，死区时钟源为Fosc/4
+  05DA    0196    CLR	0x16
+999:              		
+1000:             		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
+  05DB    0198    CLR	0x18
+1001:             		PWMTL = 100;			//PWM 周期=[PWMT+1]*Tosc*(CLKDIV 分频值)
+  05DC    3064    LDIA	0x64
+  05DD    0097    LD	0x17,A
+1002:             		
+1003:             	
+1004:             		
+1005:             		PWMD23H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+  05DE    1683    SETB	0x3,5
+  05DF    019E    CLR	0x1E
+1006:             		PWMD2L = 10;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
+  05E0    300A    LDIA	0xA
+  05E1    009B    LD	0x1B,A
+1007:             		PWM23DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
+  05E2    019D    CLR	0x1D
+1008:             		
+1009:             		PWMCON0 = 0X04;			//打开PWM2 分频比为1
+  05E3    3004    LDIA	0x4
+1010:             		PWMCON2 =0X00;			//PWM4输出反向
+  05E4    2DE5    JP	0x5E5
+1011:             }
+1012:             
+1013:             void chrgPwmStop()
+1014:             {
+1015:             	if(chrgPwmFlag)
+  061D    0835    LD	A,0x35
+  061E    1903    SZB	0x3,2
+  061F    0008    RET
+1016:             	{
+1017:             		chrgPwmFlag = 0;
+  0620    01B5    CLR	0x35
+1018:             		PWMCON0 &= 0xFB;	//关闭PWM2
+  0621    1115    CLRB	0x15,2
+1019:             		RB3 = 0;
+  0622    1186    CLRB	0x6,3
+  0623    0008    RET
+1020:             	}
+1021:             }
+1022:             
+1023:             void pwmInit()
+1024:             {
+1025:             		motorPwmFlag = 1;
+  05F9    01B4    CLR	0x34
+  05FA    0AB4    INCR	0x34
+1026:             		PWMCON1 = 0B00000000;	//PWM选择A组，死区2禁止，死区1使能，死区时钟源为Fosc/4
+  05FB    0196    CLR	0x16
+1027:             		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
+  05FC    0198    CLR	0x18
+1028:             		PWMTL = 200;			//PWM 周期=[PWMT+1]*Tosc*(CLKDIV 分频值)
+  05FD    30C8    LDIA	0xC8
+  05FE    0097    LD	0x17,A
+1029:             		
+1030:             		
+1031:             		PWMD23H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+  05FF    1683    SETB	0x3,5
+  0600    019E    CLR	0x1E
+1032:             		PWMD3L = 80;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
+  0601    3050    LDIA	0x50
+  0602    009C    LD	0x1C,A
+1033:             		PWM23DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
+  0603    019D    CLR	0x1D
+1034:             
+1035:             		PWMCON0 = 0X48;			//打开PWM1 分频比为8
+  0604    3048    LDIA	0x48
+1036:             		PWMCON2 =0X00;			//PWM4输出反向
+  0605    2DE5    JP	0x5E5
+1037:             }
+1038:             
+1039:             void pwmStop()
+1040:             {
+1041:             	if(motorPwmFlag)
+  0616    0834    LD	A,0x34
+  0617    1903    SZB	0x3,2
+  0618    0008    RET
+1042:             	{
+1043:             		motorPwmFlag = 0;
+  0619    01B4    CLR	0x34
+1044:             		PWMCON0 &= 0XF7;
+  061A    1195    CLRB	0x15,3
+1045:             		RB4 = 0;
+  061B    1206    CLRB	0x6,4
+  061C    0008    RET
+1046:             	}
+1047:             }
+1048:             
+1049:             
+1050:             /***********************************************
+1051:             函数名称：Sleep_Mode
+1052:             函数功能：进入休眠模式
+1053:             入口参数：无
+1054:             出口参数：无
+1055:             备注：
+1056:             ************************************************/
+1057:             void Sleep_Mode()
+1058:             {
+1059:             	INTCON = 0;		
+  0495    018B    CLR	0xB
+1060:             	
+1061:             	OPTION_REG = 0;
+  0496    0181    CLR	0x1
+1062:             
+1063:             	WPUA  = 0B00000000;			//RA0 开上拉电阻
+  0497    1683    SETB	0x3,5
+  0498    0188    CLR	0x8
+1064:             	TRISA = 0x0F;				//配置IO状态，0为输出，1为输入
+  0499    300F    LDIA	0xF
+1065:             	TRISB = 0x04;
+1066:             
+1067:             	PORTA = 0X00;
+1068:             	PORTB = 0X00;
+  049A    24CE    CALL	0x4CE
+1069:             	WPUB  = 0x04;			//RB2 开上拉电阻
+  049B    0088    LD	0x8,A
+1070:                			
+1071:                	ADCON0 = 0;					//关闭所有模块
+  049C    1683    SETB	0x3,5
+  049D    0195    CLR	0x15
+1072:             	ADCON1 = 0;
+  049E    0196    CLR	0x16
+1073:             	
+1074:             	PWMCON0 = 0;
+  049F    1283    CLRB	0x3,5
+  04A0    0195    CLR	0x15
+1075:             		
+1076:             	OSCCON = 0X70;				//配置振荡为8M,关闭WDT，需注意芯片工程选项里WDT必须选为DISABLE,否则无法软件关掉WDT
+  04A1    3070    LDIA	0x70
+  04A2    0094    LD	0x14,A
+1077:             	
+1078:             	IOCA = 0x02;			//允许RA1的IO电平变化中断
+  04A3    3002    LDIA	0x2
+  04A4    1683    SETB	0x3,5
+  04A5    0089    LD	0x9,A
+1079:             	IOCB = 0x04;			//允许RB3的IO口电平变化中断
+  04A6    3004    LDIA	0x4
+  04A7    1283    CLRB	0x3,5
+  04A8    0089    LD	0x9,A
+1080:             	
+1081:             	RAIE = 1;					//允许PORTA的IO电平变化中断
+  04A9    158E    SETB	0xE,3
+1082:             	PEIE = 1;					//要用RORTA中断唤醒，则PEIE必须设为1
+  04AA    170B    SETB	0xB,6
+1083:             	RBIE = 1;					//允许PORTB电平变化中断
+  04AB    158B    SETB	0xB,3
+1084:             	GIE = 0;					//唤醒后执行SLEEP后程序;
+  04AC    138B    CLRB	0xB,7
+1085:             	
+1086:             	PIE1 &= 0X08;				//关闭不需要的中断
+  04AD    3008    LDIA	0x8
+  04AE    058E    ANDR	0xE
+1087:             	PIR1 = 0;					//必须清不需要的中断标志位
+  04AF    018D    CLR	0xD
+1088:             	INTCON &= 0XC8;				//必须清不需要的中断标志位
+  04B0    30C8    LDIA	0xC8
+  04B1    058B    ANDR	0xB
+1089:             
+1090:             	PORTA;						//读PORTA值并锁存,用电平变化中断必须执行这一步
+  04B2    1683    SETB	0x3,5
+  04B3    0806    LD	A,0x6
+1091:             	RAIF = 0;					//清PORTA中断标志位
+  04B4    1283    CLRB	0x3,5
+  04B5    118D    CLRB	0xD,3
+1092:             	PORTB;						//读PORTB值并锁存	
+  04B6    0806    LD	A,0x6
+1093:             	RBIF = 0;					//清PORTB中断标志位		
+  04B7    100B    CLRB	0xB,0
+  04B8    0064    CLRWDT
+  04B9    0063    STOP
+  04BA    0000    NOP
+  04BB    0064    CLRWDT
+  04BC    0000    NOP
+  04BD    0000    NOP
+  04BE    0000    NOP
+  04BF    0000    NOP
+  04C0    0000    NOP
+1094:             	asm("clrwdt");
+1095:             
+1096:             	asm("sleep");				//进入休眠模式
+1097:             	
+1098:             	asm("nop");
+1099:             	asm("clrwdt");
+1100:             	asm("nop");
+1101:             	asm("nop");
+1102:             	asm("nop");
+1103:             	asm("nop");
+1104:             	asm("nop");
+1105:             	if(RAIF)  RAIF = 0;			//清中断标志
+  04C1    1283    CLRB	0x3,5
+  04C2    198D    SZB	0xD,3
+  04C3    118D    CLRB	0xD,3
+1106:             	if(RBIF)  RBIF = 0;			//清中断标志
+  04C4    180B    SZB	0xB,0
+  04C5    100B    CLRB	0xB,0
+1107:             	if(TMR2IF) TMR2IF = 0;
+  04C6    188D    SZB	0xD,1
+  04C7    108D    CLRB	0xD,1
+1108:             	IOCA = 0B00000000;			//允许RA1的IO电平变化中断
+  04C8    1683    SETB	0x3,5
+  04C9    0189    CLR	0x9
+1109:             	IOCB = 0B00000000;			//允许RB3的IO口电平变化中断
+  04CA    1283    CLRB	0x3,5
+  04CB    0189    CLR	0x9
+1110:             	Init_System();
+  04CC    25AA    CALL	0x5AA
+1111:             	AD_Init();
+  04CD    2E0E    JP	0x60E
+1112:             }
+1113:             
+1114:             
+1115:             
+1116:             /**********************************************************
+1117:             函数名称：AD_Sample
+1118:             函数功能：AD检测
+1119:             入口参数：adch - 检测通道
+1120:             出口参数：无
+1121:             备    注：采样通道需自行设置为输入口
+1122:             	      采样10次,取中间八次的平均值为采样结果存于adresult中
+1123:             
+1124:             	      adch 为输入AD通道 0-15，31
+1125:                          31  检测内部1.2V
+1126:             	
+1127:              		  adldo =5,开启内部LDO 2V 作为ADC 参考
+1128:              		  adldo =6,开启内部LDO 2.4V 作为ADC 参考
+1129:             		  adldo =7,开启内部LDO 3V 作为ADC 参考
+1130:              		  adldo =0,VDD 作为ADC 参考
+1131:              		  AD转换结果左对齐
+1132:              		  ADC参考电压从VDD切换到LDO时需要延时100us以上，才能进行AD转换
+1133:             **********************************************************/
+1134:             unsigned char ADC_Sample(unsigned char adch, unsigned char adldo) 
+  0102    1283    CLRB	0x3,5
+  0103    00DA    LD	0x5A,A
+1135:             {
+1136:             	volatile unsigned long adsum = 0;
+1137:             	volatile unsigned int admin = 0, admax = 0;
+  0104    21DD    CALL	0x1DD
+1138:             	volatile unsigned int ad_temp = 0;
+  0105    01E4    CLR	0x64
+  0106    01E5    CLR	0x65
+1139:             
+1140:             	if ((!LDO_EN) && (adldo & 0x04) ) 
+  0107    1683    SETB	0x3,5
+  0108    1D16    SNZB	0x16,2
+  0109    1D73    SNZB	0x73,2
+  010A    2914    JP	0x114
+1141:             	{
+1142:             								//如果AD参考从VDD换到内部LDO，需要延时100US以上
+1143:             		ADCON1 = adldo;			//左对齐,AD值取12位
+  010B    0873    LD	A,0x73
+  010C    0096    LD	0x16,A
+1144:             		__delay_us(100);		//IDE内置延时函数，延时100us
+  010D    3084    LDIA	0x84
+  010E    1283    CLRB	0x3,5
+  010F    00D5    LD	0x55,A
+  0110    0BD5    SZDECR	0x55
+  0111    2910    JP	0x110
+  0112    2913    JP	0x113
+1145:             	} 
+  0113    2916    JP	0x116
+1146:             	else
+1147:             		ADCON1 = adldo;			//如果ADCON1.7(ADFM)=1为右对齐，,AD值取10位
+  0114    0873    LD	A,0x73
+  0115    0096    LD	0x16,A
+1148:             
+1149:             	if(adch & 0x10) 
+  0116    1283    CLRB	0x3,5
+  0117    1E5A    SNZB	0x5A,4
+  0118    291E    JP	0x11E
+1150:             	{
+1151:             		CHS4 = 1;
+  0119    1683    SETB	0x3,5
+  011A    1716    SETB	0x16,6
+1152:             		adch &= 0x0f;
+  011B    300F    LDIA	0xF
+  011C    1283    CLRB	0x3,5
+  011D    05DA    ANDR	0x5A
+1153:             	}
+1154:             	unsigned char i = 0;
+1155:             	for (i = 0; i < 10; i++) 
+  011E    01DB    CLR	0x5B
+1156:             	{
+1157:             		ADCON0 = (unsigned char)(0X41 | (adch << 2));	//16分频，如果主频为16M，则必须选16分频或以上
+  011F    085A    LD	A,0x5A
+  0120    00D5    LD	0x55,A
+  0121    3001    LDIA	0x1
+  0122    1003    CLRB	0x3,0
+  0123    0DD5    RLCR	0x55
+  0124    3EFF    ADDIA	0xFF
+  0125    1003    CLRB	0x3,0
+  0126    1D03    SNZB	0x3,2
+  0127    2923    JP	0x123
+  0128    0D55    RLCA	0x55
+  0129    3841    ORIA	0x41
+  012A    1683    SETB	0x3,5
+  012B    0095    LD	0x15,A
+  012C    0000    NOP
+  012D    0000    NOP
+  012E    0000    NOP
+  012F    0000    NOP
+1158:             		asm("nop");
+1159:             		asm("nop");
+1160:             		asm("nop");
+1161:             		asm("nop");				//选择通道后需延时1uS以上
+1162:             		GODONE = 1;				//开始转换
+  0130    1683    SETB	0x3,5
+  0131    1495    SETB	0x15,1
+1163:             
+1164:             		unsigned char j = 0;
+  0132    1283    CLRB	0x3,5
+  0133    01D9    CLR	0x59
+1165:             		while (GODONE) 
+  0134    1683    SETB	0x3,5
+  0135    1C95    SNZB	0x15,1
+  0136    293F    JP	0x13F
+1166:             		{
+1167:             			__delay_us(2);		//延时2us(编译器内置函数)
+  0137    2938    JP	0x138
+  0138    2939    JP	0x139
+  0139    293A    JP	0x13A
+  013A    293B    JP	0x13B
+1168:             
+1169:             			if (0 == (--j))		//延时0.5ms仍没有AD转换结束，跳出程序
+  013B    1283    CLRB	0x3,5
+  013C    0BD9    SZDECR	0x59
+  013D    2934    JP	0x134
+1170:             			return 0;
+  013E    3400    RET	0x0
+1171:             		}
+1172:             
+1173:             		ad_temp = (unsigned int)((ADRESH << 4) + (ADRESL >> 4));	//计算12位AD值
+  013F    0819    LD	A,0x19
+  0140    1283    CLRB	0x3,5
+  0141    00E4    LD	0x64,A
+  0142    01E5    CLR	0x65
+  0143    0EE4    SWAPR	0x64
+  0144    0EE5    SWAPR	0x65
+  0145    30F0    LDIA	0xF0
+  0146    05E5    ANDR	0x65
+  0147    0864    LD	A,0x64
+  0148    390F    ANDIA	0xF
+  0149    04E5    ORR	0x65
+  014A    30F0    LDIA	0xF0
+  014B    05E4    ANDR	0x64
+  014C    1683    SETB	0x3,5
+  014D    0E18    SWAPA	0x18
+  014E    390F    ANDIA	0xF
+  014F    1283    CLRB	0x3,5
+  0150    07E4    ADDR	0x64
+  0151    1803    SZB	0x3,0
+  0152    0AE5    INCR	0x65
+1174:             
+1175:             		if (0 == admax) 
+  0153    0862    LD	A,0x62
+  0154    0463    ORA	0x63
+  0155    1D03    SNZB	0x3,2
+  0156    2959    JP	0x159
+1176:             		{
+1177:             			admax = ad_temp;
+  0157    21E6    CALL	0x1E6
+  0158    296B    JP	0x16B
+1178:             			admin = ad_temp;
+1179:             		} 
+1180:             		else if (ad_temp > admax)
+  0159    0865    LD	A,0x65
+  015A    0263    SUBA	0x63
+  015B    1D03    SNZB	0x3,2
+  015C    295F    JP	0x15F
+  015D    0864    LD	A,0x64
+  015E    0262    SUBA	0x62
+  015F    1803    SZB	0x3,0
+  0160    2963    JP	0x163
+1181:             			admax = ad_temp;				//AD采样最大值
+  0161    21E6    CALL	0x1E6
+  0162    296F    JP	0x16F
+1182:             		else if (ad_temp < admin)
+  0163    0861    LD	A,0x61
+  0164    0265    SUBA	0x65
+  0165    1D03    SNZB	0x3,2
+  0166    2969    JP	0x169
+  0167    0860    LD	A,0x60
+  0168    0264    SUBA	0x64
+  0169    1803    SZB	0x3,0
+  016A    296F    JP	0x16F
+1183:             			admin = ad_temp;				//AD采样最小值
+  016B    0865    LD	A,0x65
+  016C    00E1    LD	0x61,A
+  016D    0864    LD	A,0x64
+  016E    00E0    LD	0x60,A
+1184:             
+1185:             		adsum += ad_temp;
+  016F    0864    LD	A,0x64
+  0170    00D5    LD	0x55,A
+  0171    0865    LD	A,0x65
+  0172    00D6    LD	0x56,A
+  0173    01D7    CLR	0x57
+  0174    01D8    CLR	0x58
+  0175    0855    LD	A,0x55
+  0176    07DC    ADDR	0x5C
+  0177    0856    LD	A,0x56
+  0178    1103    CLRB	0x3,2
+  0179    1803    SZB	0x3,0
+  017A    3E01    ADDIA	0x1
+  017B    1D03    SNZB	0x3,2
+  017C    07DD    ADDR	0x5D
+  017D    0857    LD	A,0x57
+  017E    1103    CLRB	0x3,2
+  017F    1803    SZB	0x3,0
+  0180    3E01    ADDIA	0x1
+  0181    1D03    SNZB	0x3,2
+  0182    07DE    ADDR	0x5E
+  0183    0858    LD	A,0x58
+  0184    1103    CLRB	0x3,2
+  0185    1803    SZB	0x3,0
+  0186    3E01    ADDIA	0x1
+  0187    1D03    SNZB	0x3,2
+  0188    07DF    ADDR	0x5F
+  0189    300A    LDIA	0xA
+  018A    0ADB    INCR	0x5B
+  018B    025B    SUBA	0x5B
+  018C    1C03    SNZB	0x3,0
+  018D    291F    JP	0x11F
+1186:             	}
+1187:             		adsum -= admax;
+  018E    0862    LD	A,0x62
+  018F    00D5    LD	0x55,A
+  0190    0863    LD	A,0x63
+  0191    21CE    CALL	0x1CE
+  0192    1C03    SNZB	0x3,0
+  0193    0F58    SZINCA	0x58
+  0194    02DF    SUBR	0x5F
+1188:             		if (adsum >= admin)
+  0195    0860    LD	A,0x60
+  0196    00D5    LD	0x55,A
+  0197    0861    LD	A,0x61
+  0198    00D6    LD	0x56,A
+  0199    01D7    CLR	0x57
+  019A    01D8    CLR	0x58
+  019B    0858    LD	A,0x58
+  019C    025F    SUBA	0x5F
+  019D    1D03    SNZB	0x3,2
+  019E    29A9    JP	0x1A9
+  019F    0857    LD	A,0x57
+  01A0    025E    SUBA	0x5E
+  01A1    1D03    SNZB	0x3,2
+  01A2    29A9    JP	0x1A9
+  01A3    0856    LD	A,0x56
+  01A4    025D    SUBA	0x5D
+  01A5    1D03    SNZB	0x3,2
+  01A6    29A9    JP	0x1A9
+  01A7    0855    LD	A,0x55
+  01A8    025C    SUBA	0x5C
+  01A9    1C03    SNZB	0x3,0
+  01AA    29B3    JP	0x1B3
+1189:             			adsum -= admin;
+  01AB    0860    LD	A,0x60
+  01AC    00D5    LD	0x55,A
+  01AD    0861    LD	A,0x61
+  01AE    21CE    CALL	0x1CE
+  01AF    1C03    SNZB	0x3,0
+  01B0    0F58    SZINCA	0x58
+  01B1    02DF    SUBR	0x5F
+  01B2    29B7    JP	0x1B7
+1190:             		else
+1191:             			adsum = 0;
+  01B3    01DC    CLR	0x5C
+  01B4    01DD    CLR	0x5D
+  01B5    01DE    CLR	0x5E
+  01B6    01DF    CLR	0x5F
+1192:             
+1193:             		adresult = adsum >> 3;		//8次平均值作为最终结果
+  01B7    085C    LD	A,0x5C
+  01B8    00D5    LD	0x55,A
+  01B9    085D    LD	A,0x5D
+  01BA    00D6    LD	0x56,A
+  01BB    085E    LD	A,0x5E
+  01BC    00D7    LD	0x57,A
+  01BD    085F    LD	A,0x5F
+  01BE    00D8    LD	0x58,A
+  01BF    3003    LDIA	0x3
+  01C0    1003    CLRB	0x3,0
+  01C1    0CD8    RRCR	0x58
+  01C2    0CD7    RRCR	0x57
+  01C3    0CD6    RRCR	0x56
+  01C4    0CD5    RRCR	0x55
+  01C5    3EFF    ADDIA	0xFF
+  01C6    1D03    SNZB	0x3,2
+  01C7    29C0    JP	0x1C0
+  01C8    0856    LD	A,0x56
+  01C9    00B3    LD	0x33,A
+  01CA    0855    LD	A,0x55
+  01CB    00B2    LD	0x32,A
+1194:             
+1195:             		adsum = 0;
+1196:             		admin = 0;
+1197:             		admax = 0;
+  01CC    21DD    CALL	0x1DD
+1198:             		return 0xA5;
+  01CD    34A5    RET	0xA5
+1199:             		
+1200:             }
+1201:             
+---- C:\mcuproject\scm\SCMCU_IDE_V2.00.16_Beta5\SCMCU_IDE_V2.00.16_Beta5\data\sources\common\lbmod.c ----------------------------------------------------------------------
+1:                // byte unsigned modulus
+2:                
+3:                unsigned char
+4:                __lbmod(unsigned char dividend, unsigned char divisor)
+  0573    00D5    LD	0x55,A
+  0574    3008    LDIA	0x8
+  0575    00D6    LD	0x56,A
+  0576    01D7    CLR	0x57
+  0577    0855    LD	A,0x55
+  0578    00F4    LD	0x74,A
+  0579    3007    LDIA	0x7
+  057A    1003    CLRB	0x3,0
+  057B    0CF4    RRCR	0x74
+  057C    3EFF    ADDIA	0xFF
+  057D    1003    CLRB	0x3,0
+  057E    1D03    SNZB	0x3,2
+  057F    2D7B    JP	0x57B
+  0580    0D57    RLCA	0x57
+  0581    0474    ORA	0x74
+  0582    00D7    LD	0x57,A
+  0583    1003    CLRB	0x3,0
+  0584    0DD5    RLCR	0x55
+  0585    0873    LD	A,0x73
+  0586    0257    SUBA	0x57
+  0587    1C03    SNZB	0x3,0
+  0588    2D8B    JP	0x58B
+  0589    0873    LD	A,0x73
+  058A    02D7    SUBR	0x57
+  058B    0BD6    SZDECR	0x56
+  058C    2D77    JP	0x577
+  058D    0857    LD	A,0x57
+  058E    0008    RET
+5:                {
+6:                	unsigned char	rem;
+7:                	unsigned char	counter;
+8:                
+9:                	counter = 8;
+10:               	rem = 0;
+11:               	do {
+12:               		rem = (rem << 1) | (dividend >> 7);
+13:               		dividend <<= 1;
+14:               		if(divisor <= rem)
+15:               			rem -= divisor;
+16:               	} while(--counter != 0);
+17:               	return rem;
+18:               }
+---- C:\mcuproject\scm\SCMCU_IDE_V2.00.16_Beta5\SCMCU_IDE_V2.00.16_Beta5\data\sources\common\lbdiv.c ----------------------------------------------------------------------
+1:                // byte unsigned division
+2:                
+3:                unsigned char
+4:                __lbdiv(unsigned char dividend, unsigned char divisor)
+  058F    00F4    LD	0x74,A
+  0590    01F6    CLR	0x76
+  0591    0873    LD	A,0x73
+  0592    1903    SZB	0x3,2
+  0593    2DA8    JP	0x5A8
+  0594    01F5    CLR	0x75
+  0595    0AF5    INCR	0x75
+  0596    1BF3    SZB	0x73,7
+  0597    2D9B    JP	0x59B
+  0598    1003    CLRB	0x3,0
+  0599    0DF3    RLCR	0x73
+  059A    2D95    JP	0x595
+  059B    1003    CLRB	0x3,0
+  059C    0DF6    RLCR	0x76
+  059D    0873    LD	A,0x73
+  059E    0274    SUBA	0x74
+  059F    1C03    SNZB	0x3,0
+  05A0    2DA5    JP	0x5A5
+  05A1    0873    LD	A,0x73
+  05A2    02F4    SUBR	0x74
+  05A3    1476    SETB	0x76,0
+  05A4    1003    CLRB	0x3,0
+  05A5    0CF3    RRCR	0x73
+  05A6    0BF5    SZDECR	0x75
+  05A7    2D9B    JP	0x59B
+  05A8    0876    LD	A,0x76
+  05A9    0008    RET
+5:                {
+6:                	unsigned char	quotient;
+7:                	unsigned char	counter;
+8:                
+9:                	quotient = 0;
+10:               	if(divisor != 0) {
+11:               		counter = 1;
+12:               		while((divisor & 0x80) == 0) {
+13:               			divisor <<= 1;
+14:               			counter++;
+15:               		}
+16:               		do {
+17:               			quotient <<= 1;
+18:               			if(divisor <= dividend) {
+19:               				dividend -= divisor;
+20:               				quotient |= 1;
+21:               			}
+22:               			divisor >>= 1;
+23:               		} while(--counter != 0);
+24:               	}
+25:               	return quotient;
+26:               }
+---- stringtab ------------------------------------------------------------------
+  05C4    3005    LDIA	0x5
+  05C5    008A    LD	0xA,A
+  05C6    0804    LD	A,0x4
+  05C7    0A84    INCR	0x4
+  05C8    0782    ADDR	0x2
+  05C9    3400    RET	0x0
+---- reset_enter ------------------------------------------------------------------
+  0000    280C    JP	0xC
+  000C    280D    JP	0xD
+---- start_initialization ------------------------------------------------------------------
+  000D    3077    LDIA	0x77
+  000E    0084    LD	0x4,A
+  000F    307B    LDIA	0x7B
+  0010    2606    CALL	0x606
+  0011    3020    LDIA	0x20
+  0012    1383    CLRB	0x3,7
+  0013    0084    LD	0x4,A
+  0014    3055    LDIA	0x55
+  0015    2606    CALL	0x606
+---- interrupt_function_enter ----------------------------------------------------------
+  0004    00FE    LD	0x7E,A
+  0005    0E03    SWAPA	0x3
+  0006    00F0    LD	0x70,A
+  0007    0804    LD	A,0x4
+  0008    00F1    LD	0x71,A
+  0009    080A    LD	A,0xA
+  000A    00F2    LD	0x72,A
+  000B    2D56    JP	0x556
+---- common_function ------------------------------------------------------------------
+  0016    0183    CLR	0x3
+  0017    2C50    JP	0x450
+  00FC    0AAA    INCR	0x2A
+  00FD    1903    SZB	0x3,2
+  00FE    0AAB    INCR	0x2B
+  00FF    300B    LDIA	0xB
+  0100    022B    SUBA	0x2B
+  0101    34B9    RET	0xB9
+  01CE    00D6    LD	0x56,A
+  01CF    01D7    CLR	0x57
+  01D0    01D8    CLR	0x58
+  01D1    0855    LD	A,0x55
+  01D2    02DC    SUBR	0x5C
+  01D3    0856    LD	A,0x56
+  01D4    1C03    SNZB	0x3,0
+  01D5    0F56    SZINCA	0x56
+  01D6    02DD    SUBR	0x5D
+  01D7    0857    LD	A,0x57
+  01D8    1C03    SNZB	0x3,0
+  01D9    0F57    SZINCA	0x57
+  01DA    02DE    SUBR	0x5E
+  01DB    0858    LD	A,0x58
+  01DC    0008    RET
+  01DD    01DC    CLR	0x5C
+  01DE    01DD    CLR	0x5D
+  01DF    01DE    CLR	0x5E
+  01E0    01DF    CLR	0x5F
+  01E1    01E0    CLR	0x60
+  01E2    01E1    CLR	0x61
+  01E3    01E2    CLR	0x62
+  01E4    01E3    CLR	0x63
+  01E5    0008    RET
+  01E6    0865    LD	A,0x65
+  01E7    00E3    LD	0x63,A
+  01E8    0864    LD	A,0x64
+  01E9    00E2    LD	0x62,A
+  01EA    0008    RET
+  044B    00E9    LD	0x69,A
+  044C    300A    LDIA	0xA
+  044D    00F3    LD	0x73,A
+  044E    0879    LD	A,0x79
+  044F    0008    RET
+  04CE    0085    LD	0x5,A
+  04CF    3004    LDIA	0x4
+  04D0    1283    CLRB	0x3,5
+  04D1    0085    LD	0x5,A
+  04D2    1683    SETB	0x3,5
+  04D3    0186    CLR	0x6
+  04D4    1283    CLRB	0x3,5
+  04D5    0186    CLR	0x6
+  04D6    0008    RET
+  05CA    343F    RET	0x3F
+  05CB    3406    RET	0x6
+  05CC    345B    RET	0x5B
+  05CD    344F    RET	0x4F
+  05CE    3466    RET	0x66
+  05CF    346D    RET	0x6D
+  05D0    347D    RET	0x7D
+  05D1    3407    RET	0x7
+  05D2    347F    RET	0x7F
+  05D3    346F    RET	0x6F
+  05D4    3471    RET	0x71
+  05D5    3479    RET	0x79
+  05D6    3450    RET	0x50
+  05D7    3476    RET	0x76
+  05E5    1283    CLRB	0x3,5
+  05E6    0095    LD	0x15,A
+  05E7    019D    CLR	0x1D
+  05E8    0008    RET
+  05E9    2A91    JP	0x291
+  05EA    2A03    JP	0x203
+  05EB    2A0D    JP	0x20D
+  05EC    2A16    JP	0x216
+  05ED    2A1D    JP	0x21D
+  05EE    2A28    JP	0x228
+  05EF    2A33    JP	0x233
+  05F0    2A3A    JP	0x23A
+  05F1    2A41    JP	0x241
+  05F2    2A49    JP	0x249
+  05F3    2A51    JP	0x251
+  05F4    2A5B    JP	0x25B
+  05F5    2A66    JP	0x266
+  05F6    2A70    JP	0x270
+  05F7    2A7B    JP	0x27B
+  05F8    2A86    JP	0x286
+  0606    0064    CLRWDT
+  0607    0180    CLR	0x0
+  0608    0A84    INCR	0x4
+  0609    0604    XORA	0x4
+  060A    1903    SZB	0x3,2
+  060B    3400    RET	0x0
+  060C    0604    XORA	0x4
+  060D    2E07    JP	0x607
