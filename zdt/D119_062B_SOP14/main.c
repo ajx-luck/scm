@@ -134,7 +134,7 @@ void main()
 		chrgCtr();
 		checkBatAD();
 		setBatStep();
-		if(lowBatFlag == 0 && firstTime == 0)
+		if(lowBatFlag == 0 && firstTime == 0 && chrgFlag == 0)
 		{
 			keyCtr();
 		}
@@ -170,7 +170,7 @@ void ledShow()
 		switch(ledCnt)
 		{
 			case 1:
-			if(shiweiNum & 0x01)
+			if(geweiNum & 0x08)
 			{
 				A_LED5_OUT;
 				A_LED1_OUT;
@@ -179,7 +179,7 @@ void ledShow()
 			}
 			break;
 			case 2:
-			if(shiweiNum & 0x02)
+			if(geweiNum & 0x10)
 			{
 				A_LED3_OUT;
 				A_LED5_OUT;
@@ -188,7 +188,7 @@ void ledShow()
 			}
 			break;
 			case 3:
-			if(shiweiNum & 0x04)
+			if(geweiNum & 0x20)
 			{
 				A_LED3_OUT;
 				A_LED2_OUT;
@@ -197,7 +197,7 @@ void ledShow()
 			}
 			break;
 			case 4:
-			if(shiweiNum & 0x08)
+			if(geweiNum & 0x01)
 			{
 				A_LED2_OUT;
 				A_LED1_OUT;
@@ -206,7 +206,7 @@ void ledShow()
 			}
 			break;
 			case 5:
-			if(shiweiNum & 0x10)
+			if(geweiNum & 0x02)
 			{
 				A_LED1_OUT;
 				A_LED3_OUT;
@@ -215,7 +215,7 @@ void ledShow()
 			}
 			break;
 			case 6:
-			if(shiweiNum & 0x20)
+			if(geweiNum & 0x04)
 			{
 				A_LED1_OUT;
 				A_LED5_OUT;
@@ -224,7 +224,7 @@ void ledShow()
 			}
 			break;
 			case 7:
-			if(shiweiNum & 0x40)
+			if(geweiNum & 0x40)
 			{
 				A_LED1_OUT;
 				A_LED3_OUT;
@@ -233,7 +233,7 @@ void ledShow()
 			}
 			break;
 			case 8:
-			if(geweiNum & 0x01)
+			if(shiweiNum & 0x08)
 			{
 				A_LED4_OUT;
 				A_LED5_OUT;
@@ -242,7 +242,7 @@ void ledShow()
 			}
 			break;
 			case 9:
-			if(geweiNum & 0x02)
+			if(shiweiNum & 0x10)
 			{
 				A_LED5_OUT;
 				A_LED4_OUT;
@@ -251,7 +251,7 @@ void ledShow()
 			}
 			break;
 			case 10:
-			if(geweiNum & 0x04)
+			if(shiweiNum & 0x20)
 			{
 				A_LED4_OUT;
 				A_LED3_OUT;
@@ -260,7 +260,7 @@ void ledShow()
 			}
 			break;
 			case 11:
-			if(geweiNum & 0x08)
+			if(shiweiNum & 0x01)
 			{
 				A_LED1_OUT;
 				A_LED2_OUT;
@@ -269,7 +269,7 @@ void ledShow()
 			}
 			break;
 			case 12:
-			if(geweiNum & 0x10)
+			if(shiweiNum & 0x02)
 			{
 				A_LED3_OUT;
 				A_LED2_OUT;
@@ -278,7 +278,7 @@ void ledShow()
 			}
 			break;
 			case 13:
-			if(geweiNum & 0x20)
+			if(shiweiNum & 0x04)
 			{
 				A_LED3_OUT;
 				A_LED5_OUT;
@@ -287,7 +287,7 @@ void ledShow()
 			}
 			break;
 			case 0:
-			if(geweiNum & 0x40)
+			if(shiweiNum & 0x40)
 			{
 				A_LED4_OUT;
 				A_LED3_OUT;
@@ -313,6 +313,7 @@ void chrgCtr()
 	if(PORTB & 0x01)
 	{
 		chrgFlag = 1;
+		workStep = 0;
 		lowBatFlag = 0;
 		if(PORTA & 0x01)
 		{

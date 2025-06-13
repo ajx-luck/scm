@@ -180,6 +180,7 @@ void KeyServer()
 					else
 					{
 						powerFlag = 1;
+						workStep = 1;
 					}
 				}
 			}

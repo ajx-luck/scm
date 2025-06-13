@@ -93,6 +93,9 @@ void Init_System()
 	TRISC = 0;
 	PORTC = 0;
 	WPUC = 0x00;
+	ANSEL0 = 0x01;
+	ANSEL1 = 0x04;
+	ANSEL2 = 0x01;
 
 	PIE1 = 2;
 	PR2 = 250;				//8M下将TMR2设置为125us中断

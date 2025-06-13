@@ -34,7 +34,7 @@ u8t		chrgFullTime = 0;
 u8t		firstLock = 0;
 u8t		lowBatLock = 0;
 u16t		lowBatTime = 0;	
-u8t		lowFanTime = 0;//风扇降低为1档的时间	
+u16t		lowFanTime = 0;//风扇降低为1档的时间	
 
 volatile unsigned int adresult;
 volatile unsigned int result;
@@ -114,6 +114,10 @@ void KeyServer()
 					shanshuoTime = 450;
 				}
 				else if(++workStep > 2)
+				{
+					workStep = 0;
+				}
+				if(power_ad < 3350 && workStep == 2)
 				{
 					workStep = 0;
 				}
@@ -460,7 +464,7 @@ void fanCtr()
 		u8t maxFanValue = 48;
 		if(workStep == 1 || power_ad < 3350)
 		{	
-			maxFanValue = 33;
+			maxFanValue = 32;
 		}
 		test_adc = ADC_Sample(13, 0);
 		if (0xA5 == test_adc)
@@ -560,9 +564,9 @@ void workCtr()
 		power_temp = (unsigned long)((POWER_RATIO)/adresult);		//1.2*4096/AD=VDD，参数放大1000倍 
 		power_ad = (unsigned int)(power_temp);		//通过内部基准电压推出芯片VDD电压
 	}
-	if(workStep == 2 && power_ad < 3300)
+	if(workStep == 2 && power_ad < 3550)
 	{
-		if(++lowFanTime > 200)
+		if(++lowFanTime > 1000)
 		{
 			lowFanTime = 0;
 			workStep = 1;

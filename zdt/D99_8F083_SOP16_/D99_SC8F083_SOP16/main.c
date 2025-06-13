@@ -149,6 +149,10 @@ void KeyServer()
 				{
 					workStep = 0;
 				}
+				if(power_ad < 3200 && workStep == 2)
+				{
+					workStep = 0;
+				}
 				if(workStep == 2)
 				{
 					shanshuoTime = 225;
@@ -872,7 +876,7 @@ void workCtr()
 	}
 	if(workStep == 2 && power_ad < 3300)
 	{
-		if(++lowFanTime > 200)
+		if(++lowFanTime > 2000)
 		{
 			lowFanTime = 0;
 			workStep = 1;

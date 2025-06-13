@@ -9,7 +9,7 @@
 	;
 	; -oD17_SC8F6790_tssop20.cof -mD17_SC8F6790_tssop20.map \
 	; --summary=default,-psect,-class --fill=0xFFFF --output=intel main.p1 \
-	; C:\mcuproject\scm\D17_SC8F6790_tssop20\D17_SC8F6790_tssop20\Touch_Kscan_Library.lpp \
+	; C:\mcuproject\scm\zdt\D17_SC8F6790_tssop20\D17_SC8F6790_tssop20\Touch_Kscan_Library.lpp \
 	; --chip=SC8F6790 -P --runtime=default, \
 	; --opt=-local,-asmfile,+asm,-speed,+space,-debug -E+cmscerr.err \
 	; -D__DEBUG=1 -g --asmlist --warn=-9 --stack=compiled:auto:auto:auto \

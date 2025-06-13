@@ -197,11 +197,13 @@ void KeyServer()
 						workStep = 0;
 						wuhuaFlag = 0;
 						bujinFlag = 0;
+						shanshuoTime3 = 0;
 					}
 					else
 					{
 						powerFlag = 1;
-						shanshuoTime3 = 900;
+						workStep = 1;
+						shanshuoTime3 = 2000;
 					}
 				}
 			}
