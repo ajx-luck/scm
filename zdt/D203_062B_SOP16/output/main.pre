@@ -400,7 +400,6 @@ unsigned char subTime;
 unsigned char chrgWaitTime;
 unsigned char ledCntTime;
 unsigned int count5s = 0;
-unsigned char overWorkTime;
 unsigned char preLedStep;
 unsigned int count8s;
 unsigned int count900s;
@@ -412,6 +411,9 @@ unsigned char ledDuty = 0;
 unsigned char ledBreathTime = 0;
 unsigned char cDuty = 0;
 unsigned char count2 = 0;
+unsigned int out_ad = 0;
+unsigned char overTime = 0;
+unsigned char lowBatHintTime = 0;
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
 void DelayXms(unsigned char x);
@@ -422,7 +424,7 @@ void Sleep_Mode();
 void pwmInit();
 void pwmStop();
 void chrgCtr();
-void checkOutA();
+void checkOutAD();
 void checkBatAD();
 void ledShow();
 void keyCtr();
@@ -430,7 +432,7 @@ void workCtr();
 void ledCtr();
 char keyRead(char keyStatus);
 
-# 103
+# 105
 void interrupt Isr_Timer()
 {
 if(TMR2IF)
@@ -450,7 +452,7 @@ count1s = 0;
 
 }
 
-# 126
+# 128
 void main()
 {
 Init_System();
@@ -464,12 +466,13 @@ continue;
 IntFlag = 0;
 chrgCtr();
 checkBatAD();
-if(chrgFlag == 0 && lowBatFlag == 0)
+if(chrgFlag == 0)
 {
 keyCtr();
 }
 workCtr();
-if(chrgFlag == 0 && workStep == 0 && keyCount == 0 && firstTime == 0)
+checkOutAD();
+if(chrgFlag == 0 && workStep == 0 && keyCount == 0 && firstTime == 0 && lowBatHintTime == 0)
 {
 if(++sleepTime >= 200)
 {
@@ -506,13 +509,14 @@ count50s = 0;
 }
 if(prePwStep >= 99)
 {
-PORTB &= 0xFC;
+PORTB &= 0xFE;
+PORTB |= 0x02;
 }
 else
 {
 if(count1s < 50)
 {
-PORTB &= 0xFC;
+PORTB &= 0xFD;
 }
 else
 {
@@ -535,6 +539,22 @@ prePwStep--;
 else
 {
 count50s = 0;
+}
+if(lowBatHintTime > 0)
+{
+if(lowBatHintTime % 100 > 50)
+{
+PORTB &= 0xFD;
+}
+else
+{
+PORTB |= 0x03;
+}
+lowBatHintTime--;
+}
+else
+{
+PORTB |= 0x03;
 }
 }
 }
@@ -568,7 +588,13 @@ void keyCtr()
 char kclick = keyRead(0x20 & (~PORTB));
 if(kclick == 1)
 {
-if(++workStep > 2)
+if(lowBatFlag == 1)
+{
+lowBatHintTime = 250;
+}
+else
+{
+if(++workStep > 1)
 {
 workStep = 0;
 }
@@ -576,7 +602,8 @@ if(workStep == 1)
 {
 cDuty = 45;
 }
-maxDuty = 50 + workStep*20;
+maxDuty = 99;
+}
 }
 }
 
@@ -610,7 +637,21 @@ PWMD3L = cDuty;
 }
 if(workStep > 0)
 {
-PORTB &= 0xFC;
+
+PORTB |= 0x03;
+PORTA &= 0xF7;
+if(out_ad > 450)
+{
+if(++overTime > 10)
+{
+overTime = 0;
+workStep = 0;
+}
+}
+else
+{
+overTime = 0;
+}
 if((PWMCON0 & 0x08) == 0)
 {
 pwmInit();
@@ -622,6 +663,7 @@ workStep = 0;
 }
 else
 {
+PORTA |= 0x08;
 if(chrgFlag == 0)
 {
 PORTB |= 0x03;
@@ -638,23 +680,43 @@ count900s = 0;
 }
 }
 
+
+void checkOutAD()
+{
+test_adc = ADC_Sample(0, 5);
+if (0xA5 == test_adc)
+{
+volatile unsigned long power_temp;
+
+out_ad = adresult;
+}
+else
+{
+ADCON0 = 0;
+ADCON1 = 0;
+_delay((unsigned long)((100)*(16000000/4000000.0)));
+}
+
+}
+
+
 void checkBatAD()
 {
 test_adc = ADC_Sample(1, 5);
 if (0xA5 == test_adc)
 {
 batADValue = adresult;
-if(batADValue < 1117)
+if(batADValue < 1155)
 {
 pwStep = 0;
-if(++count8s > 800)
+if(++count8s > 200)
 {
 count8s = 0;
 lowBatFlag = 1;
 if(workStep > 0)
 {
-overWorkTime = 180;
 preLedStep = workStep;
+lowBatHintTime = 250;
 }
 prePwStep = 0;
 workStep = 0;
@@ -716,7 +778,7 @@ _delay((unsigned long)((100)*(16000000/4000000.0)));
 }
 }
 
-# 400
+# 462
 void Init_System()
 {
 asm("nop");
@@ -729,10 +791,10 @@ WPUA = 0B00000000;
 WPDA = 0x00;
 WPUB = 0x20;
 
-TRISA = 0x06;
+TRISA = 0x07;
 TRISB = 0x24;
 
-PORTA = 0X00;
+PORTA = 0X08;
 PORTB = 0X03;
 
 
@@ -745,16 +807,16 @@ T2CON = 0B00000100;
 INTCON = 0XC0;
 }
 
-# 437
+# 499
 void AD_Init()
 {
 
-# 470
+# 532
 ADCON0 = 0X41;
 
-# 487
+# 549
 ADCON1 = 0;
-ANSEL0 = 0X06;
+ANSEL0 = 0X07;
 }
 
 
@@ -779,16 +841,16 @@ PWMCON0 &= 0XF7;
 RB4 = 0;
 }
 
-# 521
+# 583
 void Sleep_Mode()
 {
 INTCON = 0;
 
 OPTION_REG = 0;
 
-TRISA = 0x06;
+TRISA = 0x07;
 WPUA = 0B00000000;
-PORTA = 0x00;
+PORTA = 0x08;
 TRISB = 0x24;
 PORTB = 0x03;
 WPUB = 0x20;
@@ -836,7 +898,7 @@ Init_System();
 AD_Init();
 }
 
-# 597
+# 659
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo)
 {
 volatile unsigned long adsum = 0;

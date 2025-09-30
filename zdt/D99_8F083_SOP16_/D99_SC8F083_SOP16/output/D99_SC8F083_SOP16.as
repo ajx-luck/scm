@@ -1207,7 +1207,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 919 in file "C:\mcuproject\scm\zdt\D99_8F083_SOP16_\D99_SC8F083_SOP16\main.c"
+;;		line 920 in file "C:\mcuproject\scm\zdt\D99_8F083_SOP16_\D99_SC8F083_SOP16\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1242,12 +1242,12 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
 	file	"C:\mcuproject\scm\zdt\D99_8F083_SOP16_\D99_SC8F083_SOP16\main.c"
-	line	919
+	line	920
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
 	file	"C:\mcuproject\scm\zdt\D99_8F083_SOP16_\D99_SC8F083_SOP16\main.c"
-	line	919
+	line	920
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
@@ -1255,79 +1255,79 @@ _main:
 ;incstack = 0
 	opt	stack 2
 ; Regs used in _main: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
-	line	921
-	
-l5029:	
-;main.c: 921: Init_System();
-	fcall	_Init_System
 	line	922
 	
+l5029:	
+;main.c: 922: Init_System();
+	fcall	_Init_System
+	line	923
+	
 l5031:	
-;main.c: 922: firstLock = 1;
+;main.c: 923: firstLock = 1;
 	bcf	status, 5	;RP0=0, select bank0
 	clrf	(_firstLock)
 	incf	(_firstLock),f
-	line	923
+	line	924
 	
 l5033:	
-;main.c: 923: firstTime = 250;
+;main.c: 924: firstTime = 250;
 	movlw	low(0FAh)
 	movwf	(_firstTime)
-	line	927
+	line	928
 	
 l5035:	
-;main.c: 925: {
-;main.c: 927: if(B_MainLoop)
+;main.c: 926: {
+;main.c: 928: if(B_MainLoop)
 	btfss	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
 	goto	u5631
 	goto	u5630
 u5631:
 	goto	l5035
 u5630:
-	line	929
+	line	930
 	
 l5037:	
-;main.c: 928: {
-;main.c: 929: B_MainLoop = 0;
+;main.c: 929: {
+;main.c: 930: B_MainLoop = 0;
 	bcf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
-	line	930
-# 930 "C:\mcuproject\scm\zdt\D99_8F083_SOP16_\D99_SC8F083_SOP16\main.c"
+	line	931
+# 931 "C:\mcuproject\scm\zdt\D99_8F083_SOP16_\D99_SC8F083_SOP16\main.c"
 clrwdt ;# 
 psect	maintext
-	line	931
-	
-l5039:	
-;main.c: 931: CheckTouchKey();
-	fcall	_CheckTouchKey
 	line	932
 	
-l5041:	
-;main.c: 932: chrgCtr();
-	fcall	_chrgCtr
+l5039:	
+;main.c: 932: CheckTouchKey();
+	fcall	_CheckTouchKey
 	line	933
 	
-l5043:	
-;main.c: 933: Refurbish_Sfr();
-	fcall	_Refurbish_Sfr
+l5041:	
+;main.c: 933: chrgCtr();
+	fcall	_chrgCtr
 	line	934
 	
-l5045:	
-;main.c: 934: KeyServer();
-	fcall	_KeyServer
+l5043:	
+;main.c: 934: Refurbish_Sfr();
+	fcall	_Refurbish_Sfr
 	line	935
 	
-l5047:	
-;main.c: 935: workCtr();
-	fcall	_workCtr
+l5045:	
+;main.c: 935: KeyServer();
+	fcall	_KeyServer
 	line	936
 	
-l5049:	
-;main.c: 936: setBatStep();
-	fcall	_setBatStep
+l5047:	
+;main.c: 936: workCtr();
+	fcall	_workCtr
 	line	937
 	
+l5049:	
+;main.c: 937: setBatStep();
+	fcall	_setBatStep
+	line	938
+	
 l5051:	
-;main.c: 937: if(firstTime == 0 && chrgFlag == 0 && workStep == 0 && wuhuaFlag == 0 && shanshuoTime == 0 && shanshuoTime2 == 0)
+;main.c: 938: if(firstTime == 0 && chrgFlag == 0 && workStep == 0 && wuhuaFlag == 0 && shanshuoTime == 0 && shanshuoTime2 == 0)
 	movf	((_firstTime)),w
 	btfss	status,2
 	goto	u5641
@@ -1382,45 +1382,45 @@ iorwf	((_shanshuoTime2+1)),w
 u5691:
 	goto	l5071
 u5690:
-	line	939
+	line	940
 	
 l5063:	
-;main.c: 938: {
-;main.c: 939: PORTA &= 0xE4;
+;main.c: 939: {
+;main.c: 940: PORTA &= 0xE4;
 	movlw	low(0E4h)
 	bsf	status, 5	;RP0=1, select bank1
 	andwf	(134)^080h,f	;volatile
-	line	940
+	line	941
 	
 l5065:	
-;main.c: 940: PORTB &= 0xEF;
+;main.c: 941: PORTB &= 0xEF;
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	(6)+(4/8),(4)&7	;volatile
-	line	941
-;main.c: 941: TRISA |= 0x1B;
+	line	942
+;main.c: 942: TRISA |= 0x1B;
 	movlw	low(01Bh)
 	bsf	status, 5	;RP0=1, select bank1
 	iorwf	(133)^080h,f	;volatile
-	line	942
-	
-l5067:	
-;main.c: 942: TRISB |= 0x10;
-	bcf	status, 5	;RP0=0, select bank0
-	bsf	(5)+(4/8),(4)&7	;volatile
 	line	943
 	
-l5069:	
-;main.c: 943: WorkSleep();
-	fcall	_WorkSleep
+l5067:	
+;main.c: 943: TRISB |= 0x10;
+	bcf	status, 5	;RP0=0, select bank0
+	bsf	(5)+(4/8),(4)&7	;volatile
 	line	944
-;main.c: 944: }
+	
+l5069:	
+;main.c: 944: WorkSleep();
+	fcall	_WorkSleep
+	line	945
+;main.c: 945: }
 	goto	l5035
-	line	947
+	line	948
 	
 l5071:	
-;main.c: 945: else
-;main.c: 946: {
-;main.c: 947: time = 0;
+;main.c: 946: else
+;main.c: 947: {
+;main.c: 948: time = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(_time)^080h
 	clrf	(_time+1)^080h
@@ -1428,7 +1428,7 @@ l5071:
 	global	start
 	ljmp	start
 	opt stack 0
-	line	951
+	line	952
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -1621,21 +1621,24 @@ l4983:
 	line	896
 ;main.c: 896: wuhuaFlag = 0;
 	clrf	(_wuhuaFlag)
+	line	897
+;main.c: 897: showBatStep = 0;
+	clrf	(_showBatStep)
 	goto	l4987
-	line	901
+	line	902
 	
 l4985:	
-;main.c: 899: else
-;main.c: 900: {
-;main.c: 901: lowBatTime = 0;
+;main.c: 900: else
+;main.c: 901: {
+;main.c: 902: lowBatTime = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(_lowBatTime)^080h
 	clrf	(_lowBatTime+1)^080h
-	line	903
+	line	904
 	
 l4987:	
-;main.c: 902: }
-;main.c: 903: if(firstTime > 0)
+;main.c: 903: }
+;main.c: 904: if(firstTime > 0)
 	bcf	status, 5	;RP0=0, select bank0
 	movf	((_firstTime)),w
 	btfsc	status,2
@@ -1644,29 +1647,29 @@ l4987:
 u5571:
 	goto	l4991
 u5570:
-	line	905
+	line	906
 	
 l4989:	
-;main.c: 904: {
-;main.c: 905: firstTime--;
+;main.c: 905: {
+;main.c: 906: firstTime--;
 	decf	(_firstTime),f
-	line	906
-;main.c: 906: }
+	line	907
+;main.c: 907: }
 	goto	l1167
-	line	909
+	line	910
 	
 l4991:	
-;main.c: 907: else
-;main.c: 908: {
-;main.c: 909: keyLedCtr();
+;main.c: 908: else
+;main.c: 909: {
+;main.c: 910: keyLedCtr();
 	fcall	_keyLedCtr
-	line	910
-;main.c: 910: fanCtr();
-	fcall	_fanCtr
 	line	911
-;main.c: 911: wuhuaCtr();
+;main.c: 911: fanCtr();
+	fcall	_fanCtr
+	line	912
+;main.c: 912: wuhuaCtr();
 	fcall	_wuhuaCtr
-	line	914
+	line	915
 	
 l1167:	
 	return
@@ -2389,7 +2392,7 @@ l4605:
 	line	788
 	
 l4607:	
-;main.c: 788: if(workStep == 1 || power_ad < 3150)
+;main.c: 788: if(workStep == 1 || power_ad < 3350)
 		decf	((_workStep)),w
 	btfsc	status,2
 	goto	u4881
@@ -2399,9 +2402,9 @@ u4881:
 u4880:
 	
 l4609:	
-	movlw	0Ch
+	movlw	0Dh
 	subwf	(_power_ad+1),w	;volatile
-	movlw	04Eh
+	movlw	016h
 	skipnz
 	subwf	(_power_ad),w	;volatile
 	skipnc
@@ -2414,8 +2417,8 @@ u4890:
 	
 l4611:	
 ;main.c: 789: {
-;main.c: 790: maxFanValue = 38;
-	movlw	low(026h)
+;main.c: 790: maxFanValue = 34;
+	movlw	low(022h)
 	movwf	(fanCtr@maxFanValue)
 	line	792
 	

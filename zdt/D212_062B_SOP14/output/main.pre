@@ -423,6 +423,8 @@ unsigned char motorDuty = 0;
 unsigned char motorTime = 0;
 unsigned char motorMaxTime= 0;
 unsigned int maxWorkTime = 0;
+unsigned char firstCheckTime = 0;
+unsigned int sumBatValue = 0;
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
 void DelayXms(unsigned char x);
@@ -444,7 +446,7 @@ void workCtr2();
 void ledCtr();
 char keyRead(char keyStatus);
 
-# 130
+# 132
 void interrupt Isr_Timer()
 {
 if(TMR2IF)
@@ -465,7 +467,7 @@ intCount10++;
 
 }
 
-# 154
+# 156
 void main()
 {
 Init_System();
@@ -690,13 +692,23 @@ break;
 
 void ledCtr()
 {
+if(firstTime > 0 && firstTime < 150)
+{
+sumBatValue += pwStep;
+firstCheckTime++;
+}
+else
+{
+if(sumBatValue > 0)
+{
+prePwStep = sumBatValue/firstCheckTime;
+}
+firstCheckTime = 0;
+sumBatValue = 0;
+}
 if(firstTime > 0)
 {
 firstTime--;
-if(prePwStep < pwStep)
-{
-prePwStep = pwStep;
-}
 }
 else if(overWorkTime > 0)
 {
@@ -1134,7 +1146,7 @@ _delay((unsigned long)((100)*(16000000/4000000.0)));
 
 }
 
-# 831
+# 843
 void Init_System()
 {
 asm("nop");
@@ -1163,14 +1175,14 @@ T2CON = 0B00000100;
 INTCON = 0XC0;
 }
 
-# 868
+# 880
 void AD_Init()
 {
 
-# 901
+# 913
 ADCON0 = 0X41;
 
-# 918
+# 930
 ADCON1 = 0;
 ANSEL0 = 0X07;
 ANSEL1 = 0x00;
@@ -1234,7 +1246,7 @@ RB4 = 0;
 }
 }
 
-# 989
+# 1001
 void Sleep_Mode()
 {
 INTCON = 0;
@@ -1292,7 +1304,7 @@ Init_System();
 AD_Init();
 }
 
-# 1066
+# 1078
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo)
 {
 volatile unsigned long adsum = 0;

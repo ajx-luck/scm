@@ -59,6 +59,12 @@ u16t	count30s = 0;
 u8t	showBatStep = 0;
 u8t		curBatStep = 0;
 u8t	lowBatTime = 0;
+u8t	startLockFlag = 0;
+u8t	lockTime = 0;
+u16t out_ad = 0;
+u8t	overTime = 0;
+u8t	curDuty = 0;
+u8t	maxDuty = 0;
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
 void DelayXms(unsigned char x);
@@ -70,6 +76,7 @@ void pwmInit();
 void pwmStop();
 void chrgCtr();
 void checkBatAD();
+void checkOutAD();
 void ledShow();
 void keyCtr();
 void workCtr();
@@ -121,6 +128,7 @@ void main()
 	shiweiNum = geweiNum = numArray[8];
 	baiweiNum = 1;
 	firstTime = 250;
+	startLockFlag = 1;		//上电默认不让启动，必须要复位才能启动
 	while (1) 
 	{
 		asm("clrwdt");
@@ -139,6 +147,7 @@ void main()
 			keyCtr();
 		}
 		workCtr();
+		checkOutAD();
 		if(chrgFlag == 0 && workStep == 0 && firstTime == 0 && showBatTime == 0)
 		{
 			baiweiNum = 0;
@@ -170,25 +179,16 @@ void ledShow()
 		switch(ledCnt)
 		{
 			case 1:
-			if(geweiNum & 0x08)
+			if(shiweiNum & 0x01)
 			{
-				A_LED5_OUT;
+				A_LED2_OUT;
 				A_LED1_OUT;
-				A_LED5 = 1;
+				A_LED2 = 1;
 				A_LED1 = 0;
 			}
 			break;
 			case 2:
-			if(geweiNum & 0x10)
-			{
-				A_LED3_OUT;
-				A_LED5_OUT;
-				A_LED5 = 1;
-				A_LED3 = 0;
-			}
-			break;
-			case 3:
-			if(geweiNum & 0x20)
+			if(shiweiNum & 0x02)
 			{
 				A_LED3_OUT;
 				A_LED2_OUT;
@@ -196,43 +196,16 @@ void ledShow()
 				A_LED3 = 0;
 			}
 			break;
-			case 4:
-			if(geweiNum & 0x01)
+			case 3:
+			if(shiweiNum & 0x04)
 			{
-				A_LED2_OUT;
-				A_LED1_OUT;
-				A_LED1 = 1;
-				A_LED2 = 0;
-			}
-			break;
-			case 5:
-			if(geweiNum & 0x02)
-			{
-				A_LED1_OUT;
 				A_LED3_OUT;
-				A_LED3 = 1;
-				A_LED1 = 0;
-			}
-			break;
-			case 6:
-			if(geweiNum & 0x04)
-			{
-				A_LED1_OUT;
 				A_LED5_OUT;
-				A_LED1 = 1;
-				A_LED5 = 0;
-			}
-			break;
-			case 7:
-			if(geweiNum & 0x40)
-			{
-				A_LED1_OUT;
-				A_LED3_OUT;
-				A_LED1 = 1;
+				A_LED5 = 1;
 				A_LED3 = 0;
 			}
 			break;
-			case 8:
+			case 4:
 			if(shiweiNum & 0x08)
 			{
 				A_LED4_OUT;
@@ -241,7 +214,7 @@ void ledShow()
 				A_LED5 = 0;
 			}
 			break;
-			case 9:
+			case 5:
 			if(shiweiNum & 0x10)
 			{
 				A_LED5_OUT;
@@ -250,35 +223,62 @@ void ledShow()
 				A_LED4 = 0;
 			}
 			break;
-			case 10:
+			case 6:
 			if(shiweiNum & 0x20)
 			{
-				A_LED4_OUT;
 				A_LED3_OUT;
+				A_LED4_OUT;
 				A_LED3 = 1;
 				A_LED4 = 0;
 			}
 			break;
-			case 11:
-			if(shiweiNum & 0x01)
+			case 7:
+			if(shiweiNum & 0x40)
+			{
+				A_LED4_OUT;
+				A_LED3_OUT;
+				A_LED4 = 1;
+				A_LED3 = 0;
+			}
+			break;
+			case 8:
+			if(geweiNum & 0x01)
 			{
 				A_LED1_OUT;
 				A_LED2_OUT;
-				A_LED2 = 1;
+				A_LED1 = 1;
+				A_LED2 = 0;
+			}
+			break;
+			case 9:
+			if(geweiNum & 0x02)
+			{
+				A_LED3_OUT;
+				A_LED1_OUT;
+				A_LED3 = 1;
+				A_LED1 = 0;
+			}
+			break;
+			case 10:
+			if(geweiNum & 0x04)
+			{
+				A_LED1_OUT;
+				A_LED5_OUT;
+				A_LED1 = 1;
+				A_LED5 = 0;
+			}
+			break;
+			case 11:
+			if(geweiNum & 0x08)
+			{
+				A_LED1_OUT;
+				A_LED5_OUT;
+				A_LED5 = 1;
 				A_LED1 = 0;
 			}
 			break;
 			case 12:
-			if(shiweiNum & 0x02)
-			{
-				A_LED3_OUT;
-				A_LED2_OUT;
-				A_LED3 = 1;
-				A_LED2 = 0;
-			}
-			break;
-			case 13:
-			if(shiweiNum & 0x04)
+			if(geweiNum & 0x10)
 			{
 				A_LED3_OUT;
 				A_LED5_OUT;
@@ -286,12 +286,21 @@ void ledShow()
 				A_LED5 = 0;
 			}
 			break;
-			case 0:
-			if(shiweiNum & 0x40)
+			case 13:
+			if(geweiNum & 0x20)
 			{
-				A_LED4_OUT;
 				A_LED3_OUT;
-				A_LED4 = 1;
+				A_LED2_OUT;
+				A_LED3 = 1;
+				A_LED2 = 0;
+			}
+			break;
+			case 0:
+			if(geweiNum & 0x40)
+			{
+				A_LED1_OUT;
+				A_LED3_OUT;
+				A_LED1 = 1;
 				A_LED3 = 0;
 			}
 			break;
@@ -313,8 +322,13 @@ void chrgCtr()
 	if(PORTB & 0x01)
 	{
 		chrgFlag = 1;
+		startLockFlag = 1;	//充电不在0档锁定
 		workStep = 0;
 		lowBatFlag = 0;
+		if(showBatStep == 0)
+		{
+			showBatStep = 1;
+		}
 		if(PORTA & 0x01)
 		{
 			chrgFullTime = 0;
@@ -333,12 +347,13 @@ void chrgCtr()
 		chrgFlag = 0;
 		chrgFullFlag = 0;
 		chrgFullTime = 0;
-		if(power_ad < 1563)
+		if(power_ad < 1650)
 		{
 			if(++lowBatTime > 200)
 			{
 				lowBatTime = 0;
 				lowBatFlag = 1;
+				showBatStep = 0;
 			}
 		}
 		else
@@ -389,18 +404,28 @@ void keyCtr()
 {
 	if(PORTB & 0x02)
 	{
-		if(PORTB & 0x04)
+		lockTime = 0;
+		if(workStep > 0 || startLockFlag == 0)
 		{
-			workStep = 1;
-		}
-		else
-		{
-			workStep = 2;
+			startLockFlag = 1;
+			if(PORTB & 0x04)
+			{
+				workStep = 1;
+			}
+			else
+			{
+				workStep = 2;
+			}
 		}
 	}
 	else
 	{
 		workStep = 0;
+		if(++lockTime > 20)
+		{
+			lockTime = 0;
+			startLockFlag = 0;
+		}
 	}
 	
 	
@@ -416,6 +441,14 @@ void workCtr()
 		workStep = 0;
 	}
 	*/
+	if(curDuty < maxDuty)
+	{
+		curDuty++;
+	}
+	else if(curDuty > maxDuty)
+	{
+		curDuty--;
+	}
 	if(lowShanTime > 0)
 	{
 		if(--lowShanTime == 0)
@@ -441,7 +474,12 @@ void workCtr()
 	{
 		shiweiNum = 0;
 		geweiNum = 0;
-		pwmStop();
+		maxDuty = 0;
+		PWMD2L = curDuty;
+		if(curDuty < 40)
+		{
+			pwmStop();
+		}
 		count900s = 0;
 	}
 	else if(workStep == 1)
@@ -454,9 +492,25 @@ void workCtr()
 		if(motorPwmFlag == 0)
 		{
 			pwmInit();
+			PWMD23H = 0X00;
+			PWMD2L = 40;
+			curDuty = 40;
 		}
-		PWMD23H = 0X00;
-		PWMD2L = 60;
+		PWMD2L = curDuty;
+		maxDuty = 70;
+		if(out_ad > 200)
+		{
+			if(++overTime > 10)
+			{
+				overTime = 0;
+				workStep = 0;
+				startLockFlag = 1;
+			}
+		}
+		else
+		{
+			overTime = 0;
+		}
 	}
 	else if(workStep == 2)
 	{
@@ -468,10 +522,32 @@ void workCtr()
 		if(motorPwmFlag == 0)
 		{
 			pwmInit();
+			PWMD23H = 0X00;
+			PWMD2L = 40;
+			curDuty = 40;
 		}
-		PWMD23H = 0X00;
-		PWMD2L = 99;
-		
+		if(curDuty >= 99)
+		{
+			PWMD2L = 102;
+		}
+		else
+		{
+			PWMD2L = curDuty;
+		}
+		maxDuty = 85;
+		if(out_ad > 220)
+		{
+			if(++overTime > 10)
+			{
+				overTime = 0;
+				workStep = 0;
+				startLockFlag = 1;
+			}
+		}
+		else
+		{	
+			overTime = 0;
+		}
 	}
 	if(chrgFlag || showBatTime > 0)
 	{
@@ -519,7 +595,7 @@ void setBatStep()
 		curBatStep = 0;
 		lowShanTime = 300;
 	}
-	else if(power_ad < 1675)
+	else if(power_ad < 1830)
 	{
 		if(count1s == 0)
 		{
@@ -538,13 +614,17 @@ void setBatStep()
 	}
 	else
 	{
-		if(power_ad < 1875)
+		if(power_ad < 1990)
 		{
-			curBatStep = (power_ad - 1675)/10;
+			curBatStep = (power_ad - 1830)/16;
+		}
+		else if(power_ad < 2090)
+		{
+			curBatStep = 10 + ((power_ad - 1990)/5);
 		}
 		else
 		{
-			curBatStep = 10 + ((power_ad - 1875)/5);
+			curBatStep = 30 + ((power_ad - 2090)/3);
 		}
 		if(curBatStep > 99)
 		{
@@ -555,7 +635,7 @@ void setBatStep()
 		{
 			if(chrgFullFlag)
 			{
-				if(++count30s >= 3000 && showBatStep < 99)	//20s
+				if(++count30s >= 1000 && showBatStep < 99)	//20s
 				{	
 					count30s = 0;
 					showBatStep++;
@@ -563,7 +643,7 @@ void setBatStep()
 			}
 			else if(curBatStep > showBatStep)
 			{
-				if(++count30s >= 30000 && showBatStep < 99)	//20s
+				if(++count30s >= 3000 && showBatStep < 99)	//20s
 				{	
 					count30s = 0;
 					showBatStep++;
@@ -579,7 +659,7 @@ void setBatStep()
 		{
 			if(curBatStep < showBatStep && showBatStep > 1)
 			{
-				if(++count30s >= 1500 && showBatStep > 1)	//10s
+				if(++count30s >= 1000 && showBatStep > 1)	//10s
 				{	
 					count30s = 0;
 					showBatStep--;
@@ -603,6 +683,24 @@ void checkBatAD()
 		volatile unsigned long power_temp;
 		
 		power_ad = adresult;		//通过内部基准电压推出芯片VDD电压
+	}
+	else
+	{
+		ADCON0 = 0;						//如果转换没有完成，需初始化ADCON0,1
+		ADCON1 = 0;				
+		__delay_us(100);				//延时100us(编译器内置函数)
+	}
+	
+}
+
+void checkOutAD()
+{
+	test_adc = ADC_Sample(13, 5);		//测试内部基准1.2V相对电源的AD值
+	if (0xA5 == test_adc)
+	{
+		volatile unsigned long power_temp;
+		
+		out_ad = adresult;		//通过内部基准电压推出芯片VDD电压
 	}
 	else
 	{

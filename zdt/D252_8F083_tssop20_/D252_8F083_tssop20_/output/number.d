@@ -1,0 +1,1 @@
+ number.d  number.p1:  C:/mcuproject/scm/zdt/D252_8F083_tssop20_/D252_8F083_tssop20_/number.c C:/mcuproject/scm/zdt/D252_8F083_tssop20_/D252_8F083_tssop20_/number.h

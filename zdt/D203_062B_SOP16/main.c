@@ -57,7 +57,6 @@ u8t subTime;
 u8t chrgWaitTime;
 u8t	ledCntTime;
 u16t	count5s = 0;
-u8t		overWorkTime;
 u8t		preLedStep;
 u16t	count8s;
 u16t	count900s;
@@ -69,6 +68,9 @@ u8t		ledDuty = 0;
 u8t		ledBreathTime = 0;
 u8t		cDuty = 0;
 u8t		count2 = 0;
+u16t	out_ad = 0;
+u8t		overTime = 0;
+u8t		lowBatHintTime = 0;
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
 void DelayXms(unsigned char x);
@@ -79,7 +81,7 @@ void Sleep_Mode();
 void pwmInit();
 void pwmStop();
 void chrgCtr();
-void checkOutA();
+void checkOutAD();
 void checkBatAD();
 void ledShow();
 void keyCtr();
@@ -136,12 +138,13 @@ void main()
     	IntFlag = 0;
 		chrgCtr();
 		checkBatAD();
-		if(chrgFlag == 0 && lowBatFlag == 0)
+		if(chrgFlag == 0)
 		{
 			keyCtr();
 		}
 		workCtr();
-		if(chrgFlag == 0 && workStep == 0 && keyCount == 0 && firstTime == 0)
+		checkOutAD();
+		if(chrgFlag == 0 && workStep == 0 && keyCount == 0 && firstTime == 0 && lowBatHintTime == 0)
 		{
 			if(++sleepTime >= 200)
 			{
@@ -178,13 +181,14 @@ void chrgCtr()
 		}
 		if(prePwStep >= 99)
 		{
-			PORTB &= 0xFC;
+			PORTB &= 0xFE;
+			PORTB |= 0x02;
 		}
 		else
 		{
 			if(count1s < 50)
 			{
-				PORTB &= 0xFC;
+				PORTB &= 0xFD;
 			}
 			else
 			{
@@ -207,6 +211,22 @@ void chrgCtr()
 		else
 		{
 			count50s = 0;
+		}
+		if(lowBatHintTime > 0)
+		{
+			if(lowBatHintTime % 100 > 50)
+			{
+				PORTB &= 0xFD;
+			}
+			else
+			{
+				PORTB |= 0x03;
+			}
+			lowBatHintTime--;
+		}
+		else
+		{
+			PORTB |= 0x03;
 		}
 	}
 }
@@ -240,15 +260,22 @@ void keyCtr()
 	char kclick = keyRead(0x20 & (~PORTB));
 	if(kclick == 1)
 	{
-		if(++workStep > 2)
+		if(lowBatFlag == 1)
 		{
-			workStep = 0;
+			lowBatHintTime = 250;
 		}
-		if(workStep == 1)
+		else
 		{
-			cDuty = 45;
+			if(++workStep > 1)
+			{
+				workStep = 0;
+			}
+			if(workStep == 1)
+			{
+				cDuty = 45;
+			}
+			maxDuty = 99;
 		}
-		maxDuty = 50 + workStep*20;
 	}
 }
 
@@ -282,7 +309,21 @@ void workCtr()
 	}
 	if(workStep > 0)
 	{
-		PORTB &= 0xFC;
+		//PORTB &= 0xFC;
+		PORTB |= 0x03;
+		PORTA &= 0xF7;
+		if(out_ad > 450)
+		{
+			if(++overTime > 10)
+			{
+				overTime = 0;
+				workStep = 0;
+			}
+		}
+		else
+		{
+			overTime = 0;
+		}
 		if((PWMCON0 & 0x08) == 0)
 		{
 			pwmInit();
@@ -294,6 +335,7 @@ void workCtr()
 	}
 	else
 	{
+		PORTA |= 0x08;
 		if(chrgFlag == 0)
 		{
 			PORTB |= 0x03;
@@ -310,23 +352,43 @@ void workCtr()
 	}
 }
 
+
+void checkOutAD()
+{
+	test_adc = ADC_Sample(0, 5);		//测试内部基准1.2V相对电源的AD值
+	if (0xA5 == test_adc)
+	{
+		volatile unsigned long power_temp;
+		
+		out_ad = adresult;		//通过内部基准电压推出芯片VDD电压
+	}
+	else
+	{
+		ADCON0 = 0;						//如果转换没有完成，需初始化ADCON0,1
+		ADCON1 = 0;				
+		__delay_us(100);				//延时100us(编译器内置函数)
+	}
+	
+}
+
+
 void checkBatAD()
 {
 	test_adc = ADC_Sample(1, 5);		//测试AN2口的AD值，参考电压2V
 	if (0xA5 == test_adc)				//测试完成，如因其他原因导致AD转换没有完成，则不处理
 	{
 		batADValue = adresult;
-		if(batADValue < 1117)
+		if(batADValue < 1155)
         {
         	pwStep = 0;
-			if(++count8s > 800)
+			if(++count8s > 200)
 			{
 				count8s = 0;
 				lowBatFlag = 1;
 				if(workStep > 0)
 				{
-					overWorkTime = 180;
 					preLedStep = workStep;
+					lowBatHintTime = 250;
 				}
 				prePwStep = 0;
 				workStep = 0;
@@ -409,10 +471,10 @@ void Init_System()
 	WPDA = 0x00;					//RA1开下拉
 	WPUB = 0x20;
 
-	TRISA = 0x06;				//配置IO状态，0为输出，1为输入
+	TRISA = 0x07;				//配置IO状态，0为输出，1为输入
 	TRISB = 0x24;
 
-	PORTA = 0X00;
+	PORTA = 0X08;
 	PORTB = 0X03;
 
 //---------------------------------------
@@ -485,7 +547,7 @@ void AD_Init()
 			11=  3.0V
 	*********************************************/
 	ADCON1 = 0;
-	ANSEL0 = 0X06;	
+	ANSEL0 = 0X07;	
 }
 
 
@@ -524,9 +586,9 @@ void Sleep_Mode()
 	
 	OPTION_REG = 0;
 
-	TRISA = 0x06; 		//关闭所有输出，RA0口做唤醒输入
+	TRISA = 0x07; 		//关闭所有输出，RA0口做唤醒输入
 	WPUA  = 0B00000000;			//RA0 开上拉电阻
-	PORTA = 0x00;
+	PORTA = 0x08;
 	TRISB = 0x24;			//关闭所有输出，RB3口做唤醒输入
 	PORTB = 0x03;
 	WPUB  = 0x20;			//RB2 开上拉电阻

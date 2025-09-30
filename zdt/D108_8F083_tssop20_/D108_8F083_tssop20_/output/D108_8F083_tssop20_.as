@@ -174,6 +174,7 @@ __end_of_Table_KeyChannel:
 	global	_KeyData
 	global	_KeyOldData
 	global	_power_ad
+	global	_keyCount
 	global	_motorStep
 	global	_shanshuoTime3
 	global	_shanshuoTime2
@@ -192,7 +193,6 @@ __end_of_Table_KeyChannel:
 	global	_longKeyFlag
 	global	_powerFlag
 	global	_bujinFlag
-	global	_lowFanTime
 	global	_lowBatLock
 	global	_chrgFullTime
 	global	_chrgFullFlag
@@ -212,20 +212,17 @@ __end_of_Table_KeyChannel:
 	global	_KeyUpShake
 	global	CheckValidTime@F87
 	global	_result
-	global	_keyCount
+	global	_lowFanTime
 	global	_lowBatTime
 	global	_fanValue
 	global	_firstLock
-psect	nvBANK0,class=BANK0,space=1,noexec
-global __pnvBANK0
-__pnvBANK0:
+psect	nvBANK1,class=BANK1,space=1,noexec
+global __pnvBANK1
+__pnvBANK1:
 _firstLock:
        ds      1
 
 	global	_firstTime
-psect	nvBANK1,class=BANK1,space=1,noexec
-global __pnvBANK1
-__pnvBANK1:
 _firstTime:
        ds      1
 
@@ -387,6 +384,9 @@ _KeyOldData:
 _power_ad:
        ds      2
 
+_keyCount:
+       ds      2
+
 _motorStep:
        ds      2
 
@@ -439,9 +439,6 @@ _powerFlag:
        ds      1
 
 _bujinFlag:
-       ds      1
-
-_lowFanTime:
        ds      1
 
 _lowBatLock:
@@ -518,7 +515,7 @@ CheckValidTime@F87:
 _result:
        ds      2
 
-_keyCount:
+_lowFanTime:
        ds      2
 
 _lowBatTime:
@@ -565,7 +562,7 @@ psect cinit,class=CODE,delta=2,merge=1
 psect cinit,class=CODE,delta=2,merge=1
 	movlw	low(__pbssBANK0)
 	movwf	fsr
-	movlw	low((__pbssBANK0)+029h)
+	movlw	low((__pbssBANK0)+02Ah)
 	fcall	clear_ram0
 ; Clear objects allocated to COMMON
 psect cinit,class=CODE,delta=2,merge=1
@@ -819,7 +816,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!    Strings     0
 ;!    Constant    17
 ;!    Data        3
-;!    BSS         87
+;!    BSS         88
 ;!    Persistent  2
 ;!    Stack       0
 ;!
@@ -827,7 +824,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!    Space          Size  Autos    Used
 ;!    COMMON           14      8      12
 ;!    BANK0            80     34      79
-;!    BANK1            80      4      48
+;!    BANK1            80      4      49
 ;!    BANK2            80      0       0
 
 ;!
@@ -1120,7 +1117,7 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!BITBANK2            50      0       0      10        0.0%
 ;!SFR2                 0      0       0       5        0.0%
 ;!BITSFR2              0      0       0       5        0.0%
-;!BANK1               50      4      30       6       60.0%
+;!BANK1               50      4      31       6       61.3%
 ;!BITBANK1            50      0       0       5        0.0%
 ;!SFR1                 0      0       0       2        0.0%
 ;!BITSFR1              0      0       0       2        0.0%
@@ -1131,8 +1128,8 @@ ___fttol@exp1:	; 1 bytes @ 0x21
 ;!COMMON               E      8       C       1       85.7%
 ;!BITCOMMON            E      0       1       0        7.1%
 ;!CODE                 0      0       0       0        0.0%
-;!DATA                 0      0      8B       9        0.0%
-;!ABS                  0      0      8B       8        0.0%
+;!DATA                 0      0      8C       9        0.0%
+;!ABS                  0      0      8C       8        0.0%
 ;!NULL                 0      0       0       0        0.0%
 ;!STACK                0      0       0       2        0.0%
 
@@ -1196,15 +1193,13 @@ l4811:
 	
 l4813:	
 ;main.c: 831: firstLock = 1;
-	bcf	status, 5	;RP0=0, select bank0
-	clrf	(_firstLock)
-	incf	(_firstLock),f
+	clrf	(_firstLock)^080h
+	incf	(_firstLock)^080h,f
 	line	832
 	
 l4815:	
 ;main.c: 832: firstTime = 200;
 	movlw	low(0C8h)
-	bsf	status, 5	;RP0=1, select bank1
 	movwf	(_firstTime)^080h
 	line	835
 	
@@ -1303,9 +1298,8 @@ u5151:
 u5150:
 	
 l4841:	
-	bsf	status, 5	;RP0=1, select bank1
-	movf	((_keyCount)^080h),w
-iorwf	((_keyCount+1)^080h),w
+	movf	((_keyCount)),w
+iorwf	((_keyCount+1)),w
 	btfss	status,2
 	goto	u5161
 	goto	u5160
@@ -1314,7 +1308,6 @@ u5161:
 u5160:
 	
 l4843:	
-	bcf	status, 5	;RP0=0, select bank0
 	movf	((_bujinFlag)),w
 	btfss	status,2
 	goto	u5171
@@ -1516,10 +1509,16 @@ u5000:
 	
 l4745:	
 ;main.c: 782: {
-;main.c: 783: if(++lowFanTime > 200)
-	movlw	low(0C9h)
-	incf	(_lowFanTime),f
-	subwf	((_lowFanTime)),w
+;main.c: 783: if(++lowFanTime > 2000)
+	bsf	status, 5	;RP0=1, select bank1
+	incf	(_lowFanTime)^080h,f
+	skipnz
+	incf	(_lowFanTime+1)^080h,f
+	movlw	07h
+	subwf	((_lowFanTime+1)^080h),w
+	movlw	0D1h
+	skipnz
+	subwf	((_lowFanTime)^080h),w
 	skipc
 	goto	u5011
 	goto	u5010
@@ -1531,7 +1530,8 @@ u5010:
 l4747:	
 ;main.c: 784: {
 ;main.c: 785: lowFanTime = 0;
-	clrf	(_lowFanTime)
+	clrf	(_lowFanTime)^080h
+	clrf	(_lowFanTime+1)^080h
 	line	786
 	
 l4749:	
@@ -1545,13 +1545,16 @@ l4751:
 ;main.c: 789: else
 ;main.c: 790: {
 ;main.c: 791: lowFanTime = 0;
-	clrf	(_lowFanTime)
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(_lowFanTime)^080h
+	clrf	(_lowFanTime+1)^080h
 	line	793
 	
 l4753:	
 ;main.c: 792: }
 ;main.c: 793: if(power_ad < 2900)
 	movlw	0Bh
+	bcf	status, 5	;RP0=0, select bank0
 	subwf	(_power_ad+1),w	;volatile
 	movlw	054h
 	skipnz
@@ -5122,9 +5125,11 @@ l3903:
 	
 l3905:	
 ;main.c: 399: firstLock = 0;
-	clrf	(_firstLock)
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(_firstLock)^080h
 	line	400
 ;main.c: 400: lowBatLock = 0;
+	bcf	status, 5	;RP0=0, select bank0
 	clrf	(_lowBatLock)
 	line	401
 	
@@ -5963,7 +5968,8 @@ u3311:
 u3310:
 	
 l3771:	
-	movf	((_firstLock)),w
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstLock)^080h),w
 	btfss	status,2
 	goto	u3321
 	goto	u3320
@@ -5972,6 +5978,7 @@ u3321:
 u3320:
 	
 l3773:	
+	bcf	status, 5	;RP0=0, select bank0
 	movf	((_powerFlag)),w
 	btfsc	status,2
 	goto	u3331
@@ -6066,6 +6073,7 @@ l3791:
 ;main.c: 142: }
 ;main.c: 143: }
 ;main.c: 144: if ((KeyOldFlag & 0x2) && (KeyFlag[0] & 0x2) && firstLock == 0 && powerFlag > 0)
+	bcf	status, 5	;RP0=0, select bank0
 	btfss	(KeyServer@KeyOldFlag),(1)&7
 	goto	u3371
 	goto	u3370
@@ -6082,7 +6090,8 @@ u3381:
 u3380:
 	
 l3795:	
-	movf	((_firstLock)),w
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstLock)^080h),w
 	btfss	status,2
 	goto	u3391
 	goto	u3390
@@ -6091,6 +6100,7 @@ u3391:
 u3390:
 	
 l3797:	
+	bcf	status, 5	;RP0=0, select bank0
 	movf	((_powerFlag)),w
 	btfsc	status,2
 	goto	u3401
@@ -6183,6 +6193,7 @@ l3813:
 ;main.c: 163: }
 ;main.c: 165: }
 ;main.c: 166: if ((KeyOldFlag & 0x4) && (KeyFlag[0] & 0x4) && firstLock == 0 && workStep > 0 && powerFlag > 0)
+	bcf	status, 5	;RP0=0, select bank0
 	btfss	(KeyServer@KeyOldFlag),(2)&7
 	goto	u3441
 	goto	u3440
@@ -6199,7 +6210,8 @@ u3451:
 u3450:
 	
 l3817:	
-	movf	((_firstLock)),w
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstLock)^080h),w
 	btfss	status,2
 	goto	u3461
 	goto	u3460
@@ -6217,6 +6229,7 @@ u3471:
 u3470:
 	
 l3821:	
+	bcf	status, 5	;RP0=0, select bank0
 	movf	((_powerFlag)),w
 	btfsc	status,2
 	goto	u3481
@@ -6290,13 +6303,15 @@ l3835:
 ;main.c: 182: }
 ;main.c: 184: KeyOldFlag = KeyFlag[0];
 	movf	(_KeyFlag),w	;volatile
+	bcf	status, 5	;RP0=0, select bank0
 	movwf	(KeyServer@KeyOldFlag)
 	line	186
 	
 l3837:	
 ;main.c: 185: }
 ;main.c: 186: if(firstLock == 0 && KeyOldFlag & 0x4)
-	movf	((_firstLock)),w
+	bsf	status, 5	;RP0=1, select bank1
+	movf	((_firstLock)^080h),w
 	btfss	status,2
 	goto	u3511
 	goto	u3510
@@ -6305,6 +6320,7 @@ u3511:
 u3510:
 	
 l3839:	
+	bcf	status, 5	;RP0=0, select bank0
 	btfss	(KeyServer@KeyOldFlag),(2)&7
 	goto	u3521
 	goto	u3520
@@ -6316,15 +6332,14 @@ u3520:
 l3841:	
 ;main.c: 187: {
 ;main.c: 188: if(++keyCount >= 400)
-	bsf	status, 5	;RP0=1, select bank1
-	incf	(_keyCount)^080h,f
+	incf	(_keyCount),f
 	skipnz
-	incf	(_keyCount+1)^080h,f
+	incf	(_keyCount+1),f
 	movlw	01h
-	subwf	((_keyCount+1)^080h),w
+	subwf	((_keyCount+1)),w
 	movlw	090h
 	skipnz
-	subwf	((_keyCount)^080h),w
+	subwf	((_keyCount)),w
 	skipc
 	goto	u3531
 	goto	u3530
@@ -6336,13 +6351,12 @@ u3530:
 l3843:	
 ;main.c: 189: {
 ;main.c: 190: keyCount = 0;
-	clrf	(_keyCount)^080h
-	clrf	(_keyCount+1)^080h
+	clrf	(_keyCount)
+	clrf	(_keyCount+1)
 	line	191
 	
 l3845:	
 ;main.c: 191: if(longKeyFlag == 0)
-	bcf	status, 5	;RP0=0, select bank0
 	movf	((_longKeyFlag)),w
 	btfss	status,2
 	goto	u3541
@@ -6424,9 +6438,8 @@ l3855:
 	clrf	(_longKeyFlag)
 	line	216
 ;main.c: 216: keyCount = 0;
-	bsf	status, 5	;RP0=1, select bank1
-	clrf	(_keyCount)^080h
-	clrf	(_keyCount+1)^080h
+	clrf	(_keyCount)
+	clrf	(_keyCount+1)
 	line	218
 	
 l974:	

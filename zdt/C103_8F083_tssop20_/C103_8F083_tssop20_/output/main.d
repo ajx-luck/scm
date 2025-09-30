@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/zdt/C103_8F083_tssop20_/C103_8F083_tssop20_/main.c C:/mcuproject/scm/zdt/C103_8F083_tssop20_/C103_8F083_tssop20_/number.h

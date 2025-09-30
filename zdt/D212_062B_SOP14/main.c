@@ -92,6 +92,8 @@ u8t		motorDuty = 0;
 u8t		motorTime = 0;
 u8t		motorMaxTime= 0;
 u16t		maxWorkTime = 0;
+u8t		firstCheckTime = 0;
+u16t		sumBatValue = 0;
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
 void DelayXms(unsigned char x);
@@ -375,13 +377,23 @@ void ledShow()
 
 void ledCtr()
 {
+	if(firstTime > 0 && firstTime < 150)
+	{
+		sumBatValue +=  pwStep;
+		firstCheckTime++;
+	}
+	else
+	{
+		if(sumBatValue > 0)
+		{
+			prePwStep = sumBatValue/firstCheckTime;
+		}
+		firstCheckTime = 0;
+		sumBatValue = 0;
+	}
 	if(firstTime > 0)
 	{
 		firstTime--;
-		if(prePwStep < pwStep)
-		{
-			prePwStep = pwStep;
-		}
 	}
 	else if(overWorkTime > 0)
 	{

@@ -39,7 +39,7 @@ u8t		chrgFullTime = 0;
 u8t		firstLock = 0;
 u8t		lowBatLock = 0;
 u16t		lowBatTime = 0;	
-u8t		lowFanTime = 0;//风扇降低为1档的时间
+u16t		lowFanTime = 0;//风扇降低为1档的时间
 u8t		bujinFlag = 0;	
 u16t	motorStep = 0;
 u16t	maxMotorStep = 512;
@@ -780,7 +780,7 @@ void workCtr()
 	}
 	if(workStep == 2 && power_ad < 3300)
 	{
-		if(++lowFanTime > 200)
+		if(++lowFanTime > 2000)
 		{
 			lowFanTime = 0;
 			workStep = 1;

@@ -785,9 +785,9 @@ void fanCtr()
 	{
 		PORTA |= 0x04;
 		u8t maxFanValue = 52;
-		if(workStep == 1 || power_ad < 3150)
+		if(workStep == 1 || power_ad < 3350)
 		{	
-			maxFanValue = 38;
+			maxFanValue = 34;
 		}
 		test_adc = ADC_Sample(13, 0);
 		if (0xA5 == test_adc)
@@ -874,7 +874,7 @@ void workCtr()
 		power_temp = (unsigned long)((POWER_RATIO)/adresult);		//1.2*4096/AD=VDD，参数放大1000倍 
 		power_ad = (unsigned int)(power_temp);		//通过内部基准电压推出芯片VDD电压
 	}
-	if(workStep == 2 && power_ad < 3300)
+	if(workStep == 2 && power_ad < 3500)
 	{
 		if(++lowFanTime > 2000)
 		{
@@ -894,6 +894,7 @@ void workCtr()
 			lowBatLock = 1;
 			workStep = 0;
 			wuhuaFlag = 0;
+			showBatStep = 0;
 		}
 	}
 	else
