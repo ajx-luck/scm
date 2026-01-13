@@ -71,6 +71,7 @@ u8t		count2 = 0;
 u16t	out_ad = 0;
 u8t		overTime = 0;
 u8t		lowBatHintTime = 0;
+u16t	count300s = 0;
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
 void DelayXms(unsigned char x);
@@ -174,10 +175,19 @@ void chrgCtr()
 				count50s = 0;
 				prePwStep++;
 			}
+			count300s = 0;
 		}
 		else
 		{
 			count50s = 0;
+			if(prePwStep < 99)
+			{
+				if(++count300s > 30000)
+				{
+					count300s = 0;
+					prePwStep++;
+				}
+			}
 		}
 		if(prePwStep >= 99)
 		{
@@ -312,7 +322,7 @@ void workCtr()
 		//PORTB &= 0xFC;
 		PORTB |= 0x03;
 		PORTA &= 0xF7;
-		if(out_ad > 450)
+		if(out_ad > 430)
 		{
 			if(++overTime > 10)
 			{
@@ -397,14 +407,15 @@ void checkBatAD()
         else
         {
 	        count8s = 0;
-			if(batADValue >= 1340)
+			if(batADValue >= 1380)
 	    	{
-	    		pwStep = ((batADValue - 1340) /2) + 13;
+	    		pwStep = ((batADValue - 1380) /2) + 15;
 	    	}
 	    	else
 	    	{
 	    		pwStep = (batADValue - 1117) / 16;
 	    	}
+			
 	    	if(pwStep > 99)
 	    	{
 	    		pwStep = 99;

@@ -63,6 +63,7 @@ u16t	count900s;
 u8t		lowBatFlag = 0;
 u8t		sleepTime;
 u8t		startChrgTime = 0;
+u8t		badBatFlag = 0;
 
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
@@ -348,15 +349,26 @@ void chrgCtr()
 			}
 			return;
 		}
-		if(batADValue < 1118)
+		if(batADValue < 1200)
+		{
+			chrgMode = 0;
+			chrgMaxAD = 10;
+		}
+		else if(batADValue < 1300)
 		{
 			chrgMode = 0;
 			chrgMaxAD = 15;
 		}
+		else if(batADValue < 1400)
+		{
+			chrgMode = 1;
+			chrgMaxAD = 23;
+			lockCount = 0;
+		}
 		else if(batADValue < 1530)
 		{
 			chrgMode = 1;
-			chrgMaxAD = 40;
+			chrgMaxAD = 24;
 			lockCount = 0;
 		}
 		else if(count1s == 0)
@@ -367,9 +379,9 @@ void chrgCtr()
 				chrgMode = 2;
 			}
 			
-			chrgMaxAD = 40;
+			chrgMaxAD = 22;
 		}
-		if(chrgMode == 2 && outADValue < 5)
+		if(chrgMode == 2 && outADValue < 8)
 		{
 			if(++fullCount >= 200)
 			{
@@ -589,7 +601,7 @@ void checkOutA()
 	}
 	if (0xA5 == test_adc)				//测试完成，如因其他原因导致AD转换没有完成，则不处理
 	{
-		if(chrgFlag && adresult > 210)
+		if(chrgFlag && adresult > 150)
 		{
 			if(++overChrgTime > 10)
 			{
@@ -602,6 +614,7 @@ void checkOutA()
 		{
 			overChrgTime = 0;
 		}
+		
 		outADValue = adresult;
 		//电机坏了过载保护
         if(workStep && (outADValue > 220))
@@ -711,6 +724,11 @@ void checkBatAD()
 	if (0xA5 == test_adc)				//测试完成，如因其他原因导致AD转换没有完成，则不处理
 	{
 		batADValue = adresult;
+		if(batADValue < 558)
+		{
+			protectFlag = 2;
+		}
+
 		if(batADValue < 1117)
         {
         	pwStep = 0;
@@ -760,7 +778,12 @@ void checkBatAD()
 		if(chrgFlag && adresult > 100)
 	    {
 	    	//有电池
-	    	if(adresult > 810 || (batADValue - adresult) > 810)
+			if(batADValue < 279)
+			{
+				protectFlag = 2;
+			}
+	
+	    	if(adresult > 800 || (batADValue - adresult) > 800)
 	    	{
 	    		//有一节电池已经满了
 	    		if(++countHalfFull > 250)

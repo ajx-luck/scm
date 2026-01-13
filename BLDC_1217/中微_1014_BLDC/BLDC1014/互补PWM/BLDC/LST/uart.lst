@@ -1,0 +1,173 @@
+C51 COMPILER V9.60.7.0   UART                                                              10/22/2025 01:51:10 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\PRO\uart.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE DRV\uart.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\DRV) DEBUG OBJECTEXTEND PRI
+                    -NT(.\LST\uart.lst) OBJECT(.\PRO\uart.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          
+   3          xdata u8 Uart0TxBuf[TxData] = 0;
+   4          
+   5          xdata u8 Uart0TxCnt = 0;
+   6          xdata u8 Uart0TxDelay = TXDELAYTIME;
+   7          xdata u8 Uart0TxState = 0;
+   8          xdata u8 State[8] = 0;
+   9          extern xdata u8 AD_Op1oValueTarget;
+  10          extern xdata u8 lastAD_Op1oValueTarget;
+  11          extern xdata u8  displogo;
+  12          extern xdata u8 time;
+  13          void uart0send()
+  14          {
+  15   1              u8 i = 0;
+  16   1              u16 checksum = 0;
+  17   1              time++;
+  18   1              Uart0TxBuf[0] = 0;
+  19   1              Uart0TxBuf[1] = 0;
+  20   1              Uart0TxBuf[2] = 0;
+  21   1              Uart0TxBuf[3] = 0;
+  22   1              Uart0TxBuf[4] = 0;
+  23   1              Uart0TxBuf[5] = 0;
+  24   1              Uart0TxBuf[6] = 0;
+  25   1      
+  26   1              State[0] = Bat_LevelLowFlags;                           //低电量
+  27   1              State[1] = Motor_FRFlags;                                               //正反转
+  28   1              State[2] = Bat_ChargeFlags;                                     //充电
+  29   1              State[3] = Motor_StopTempFlags;                 //暂停
+  30   1              State[4] = Motor_RunErrorFlags;                 //运行异常
+  31   1              State[5] = SysPowerOutFlags;                            //开机标志
+  32   1              State[6] = 0;//displogo;                        //0表示不要logo开机动画 1表示要logo开机动画displogo
+  33   1              State[7] = 0;
+  34   1              
+  35   1              Uart0TxState &= 0;
+  36   1              Uart0TxState |= State[0] << 0;
+  37   1              Uart0TxState |= State[1] << 1;
+  38   1              Uart0TxState |= State[2] << 2;
+  39   1              Uart0TxState |= State[3] << 3;
+  40   1              Uart0TxState |= State[4] << 4;
+  41   1              Uart0TxState |= State[5] << 5;
+  42   1              Uart0TxState |= State[6] << 6;
+  43   1              Uart0TxBuf[0] = 0xBC;
+  44   1              Uart0TxBuf[1] = 0x02;
+  45   1              Uart0TxBuf[2] = Uart0TxState;
+  46   1              Uart0TxBuf[3] = Vsp_LevelValueTarget;
+  47   1              Uart0TxBuf[4] = Bat_Level;
+  48   1                      if( time == 3 )
+  49   1              {
+  50   2                      time = 0; 
+  51   2                      lastAD_Op1oValueTarget = AD_Op1oValueTarget;  
+  52   2              } 
+  53   1                      Uart0TxBuf[5] = lastAD_Op1oValueTarget; 
+  54   1                      Uart0TxBuf[6] =displogo ; //displogo
+C51 COMPILER V9.60.7.0   UART                                                              10/22/2025 01:51:10 PAGE 2   
+
+  55   1              for(i=0; i<(TxData-1); i++)
+  56   1              {
+  57   2                      checksum = checksum + Uart0TxBuf[i];
+  58   2              }
+  59   1              Uart0TxBuf[TxData-1] = (u8)checksum; //数据校验
+  60   1              
+  61   1              SCON0 &= ~(1<<0);
+  62   1              SCON0 &= ~(1<<1);
+  63   1              Uart0TxCnt = 1;                                 
+  64   1              SBUF0 = Uart0TxBuf[0];  //发送第一组数据
+  65   1      }
+  66          
+  67          void uart0Tx()
+  68          {
+  69   1              if(Uart0TxDelay)
+  70   1                      Uart0TxDelay--;
+  71   1              else
+  72   1              {
+  73   2                      Uart0TxDelay = TXDELAYTIME;
+  74   2                      uart0send();
+  75   2              }
+  76   1      }
+  77           
+  78          void ISR_UART0() interrupt 4
+  79          {
+  80   1              if(SCON0 & 0x02)//表示发送缓冲区已空，可以发送下一帧数据
+  81   1              {
+  82   2                      SCON0 &= ~(1<<1);//表示此时在发送数据
+  83   2                      if(Uart0TxCnt < TxData)
+  84   2                      {
+  85   3                              SBUF0 = Uart0TxBuf[Uart0TxCnt]; 
+  86   3                              Uart0TxCnt++;
+  87   3                      }
+  88   2                      else
+  89   2                              Uart0TxCnt = 0; 
+  90   2              }
+  91   1              
+  92   1              if(SCON0 & 0x01)//表示接收缓冲区已经满可以接收下一帧数据
+  93   1              {
+  94   2                      SCON0 &= ~(1<<0);
+  95   2              }
+  96   1      }
+  97          
+  98          
+  99          /******************************************************************************
+ 100           ** \brief       putchar
+ 101           ** \param [in] data
+ 102           **             
+ 103           ** \return  none
+ 104           ** \note   <stdio.h>中需要的函数
+ 105           ******************************************************************************/
+ 106          char putchar (char ch)
+ 107          {
+ 108   1              SBUF0 = ch;
+ 109   1              while( !(SCON0 & (1<<1)));
+ 110   1              SCON0 &=~(1<<1);                
+ 111   1              return 0;
+ 112   1      }
+ 113          
+ 114          /******************************************************************************
+ 115           ** \brief       putchar
+ 116           ** \param [in] none
+C51 COMPILER V9.60.7.0   UART                                                              10/22/2025 01:51:10 PAGE 3   
+
+ 117           **             
+ 118           ** \return  data
+ 119           ** \note   <stdio.h>中需要的函数
+ 120           ******************************************************************************/
+ 121          char getchar (void)
+ 122          {
+ 123   1              while(!(SCON0 & (1<<0)));
+ 124   1              SCON0 &=~(1<<0);
+ 125   1              return  SBUF0;  
+ 126   1      }
+ 127          /********************************************************************************
+ 128           ** \brief       puts 
+ 129           **
+ 130           ** \param [in]  bytes addr for sending
+ 131           **
+ 132           ** \return  <stdio.h>中需要的函数
+ 133           ******************************************************************************/
+ 134          int  puts( const char  * s)
+ 135          {
+ 136   1              while(*s)
+ 137   1              {
+ 138   2                      putchar(*s);
+ 139   2                      s++;            
+ 140   2              }
+ 141   1              return 0;
+ 142   1      }
+ 143          
+ 144          
+ 145          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    412    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     19    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,175 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              10/22/2025 01:51:10 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\PRO\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE DRV\main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\DRV) DEBUG OBJECTEXTEND PRI
+                    -NT(.\LST\main.lst) OBJECT(.\PRO\main.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          
+   3          bit SysPowerOutFlags = 0;                                       //1 = 开机   0 = 关机
+   4          bit SysOnceFlags = 0;
+   5          bit FRFlags = 0;
+   6          bit FRFlagslast = 0;
+   7          bit F_HFlags = 0;
+   8          bit F_V_ONoffFlags = 0;
+   9          
+  10          bit lastFRFlags = 0;
+  11          bit AutoCloseFlags = 0;
+  12          xdata u8 Sys1ms = 0;
+  13          xdata u8 Sys200ms = 0;
+  14          xdata u16 sys5s = 0;
+  15          xdata u16 Sys10s = 0;
+  16          xdata u16 Auto1ms = 0;
+  17          xdata u8  Auto100ms = 0;
+  18          xdata u8  Auto1min = 0;
+  19          
+  20          //void closeauto()                              //自动关机
+  21          //{
+  22          //      if(Auto1ms >= 60000)
+  23          //      {
+  24          //              Auto1ms = 0;
+  25          //              Auto1min++;
+  26          //      }
+  27          //      if(Auto1min >= 10)  //自动关机
+  28          //      {
+  29          //              Auto1min = 10;
+  30          //              BUZZERGO;
+  31          //              if(Auto100ms < 200)
+  32          //                      Auto100ms++;
+  33          //              if(Auto100ms == 100)
+  34          //                      AutoCloseFlags = 1;
+  35          //      }
+  36          //      else
+  37          //      {
+  38          //              Auto100ms = 0;
+  39          //              AutoCloseFlags = 0;
+  40          //      }
+  41          //}
+  42          u16 iii=0;
+  43          void main()
+  44          {
+  45   1              Sysinit();
+  46   1      //      POWEROFF;
+  47   1      //      flash_read();
+  48   1              Auto1ms = 0;
+  49   1              Sys1ms = 0;
+  50   1              Sys200ms = 0;
+  51   1              EA = 1;
+  52   1              //printf("CMS8S6990 Test........\n\r");//使用printf()函数时不建议开启串口中断功能
+  53   1              //      LED
+  54   1      //      LED = 1;
+C51 COMPILER V9.60.7.0   MAIN                                                              10/22/2025 01:51:10 PAGE 2   
+
+  55   1              while(1)
+  56   1              { 
+  57   2                      clwdt();
+  58   2                      motor_run();
+  59   2      //        Motor_RealPwm=80;
+  60   2              
+  61   2      //              if(Sys200ms < 200)
+  62   2      //              adc(); 
+  63   2      //              if(AutoCloseFlags)
+  64   2      //              {
+  65   2      //                      AutoCloseFlags = 0;
+  66   2      //                      flash_write();
+  67   2      //                      SysPowerOutFlags = 0;
+  68   2      //              }
+  69   2      //              if(SysOnceFlags)
+  70   2      //              {
+  71   2      //                      if(Motor_Mode == Motor_Mode_Stop)
+  72   2      //                      {
+  73   2      //                              SysOnceFlags = 0;
+  74   2      //                              flash_write();
+  75   2      //                      }
+  76   2      //              }
+  77   2                      if(SysPowerOutFlags)
+  78   2                      {
+  79   3      //                      POWERON;
+  80   3                      }
+  81   2                      else 
+  82   2                      {
+  83   3      //                      POWEROFF;
+  84   3                      }
+  85   2                      if(Sys1ms)
+  86   2                      {
+  87   3      //            if(iii++>=10)
+  88   3      //            {
+  89   3      //                iii=0;
+  90   3      //                motor_steps();
+  91   3      //            }
+  92   3                              Sys1ms = 0; 
+  93   3                              adc();
+  94   3                              vsp();
+  95   3      //              bat();
+  96   3      //                      button();
+  97   3      //                      buzzer();
+  98   3      //                uart0Tx();
+  99   3      //              closeauto();
+ 100   3                      }
+ 101   2              }
+ 102   1      }
+ 103          
+ 104          void isr_time1()        interrupt 3
+ 105          {
+ 106   1              TF1 = 0;
+ 107   1              TH1     =       0xF0;                                   //1000*4    *1/4
+ 108   1              TL1 = 0x60;                                     //1ms定时
+ 109   1              
+ 110   1              Sys1ms++;
+ 111   1              Sys200ms++;
+ 112   1              Auto1ms++;
+ 113   1      //      if(Bat_LevelLowFlags)
+ 114   1      //      {
+ 115   1      //              Sys10s++;
+ 116   1      //              if(Sys10s > 10000)
+C51 COMPILER V9.60.7.0   MAIN                                                              10/22/2025 01:51:10 PAGE 3   
+
+ 117   1      //              {
+ 118   1      //                      Sys10s = 0;
+ 119   1      //                      
+ 120   1      //                      if(SysPowerOutFlags)
+ 121   1      //                              SysPowerOutFlags = 0;
+ 122   1      //              }
+ 123   1      //      }
+ 124   1      //      else
+ 125   1      //              Sys10s = 0; 
+ 126   1              Motor_RestartTime1ms++;
+ 127   1              if(Motor_RestartFlags)
+ 128   1              {
+ 129   2                      if(Motor_RestartTime < 10000)
+ 130   2                              Motor_RestartTime++;
+ 131   2              }
+ 132   1              
+ 133   1              switch(Motor_Mode)
+ 134   1              {
+ 135   2                      case Motor_Mode_KeepON : Motor_KeepOnCheckTime++;break;
+ 136   2                      case Motor_Mode_Start  : Motor_StartForceTime++;break;
+ 137   2                      case Motor_Mode_Run    : Motor_PidTime++;
+ 138   2                                                                                                                       Motor_SpeedValueTargetTime++;
+ 139   2                                                                                                                       Motor_SpeedValueNowTime++;
+ 140   2                                                                                                                       Auto1ms = 0;
+ 141   2                                                                                                                       Auto1min = 0;
+ 142   2                                                                                                                       break;
+ 143   2                      case Motor_Mode_Brake  : if(Motor_BrakeTime < 5000) 
+ 144   2                                                                                                                              Motor_BrakeTime++;
+ 145   2                                                                                                                       break;
+ 146   2              }
+ 147   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    223    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     10    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      8    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,131 +1,132 @@
 ---- C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c ----------------------------------------------------------------------
-1:                #include <sc.h>
-2:                #include "Touch_Kscan_Library.h"
-3:                
+1:                //2025年10月8日 17:44:18 双击判断时间改成0.5秒
+2:                #include <sc.h>
+3:                #include "Touch_Kscan_Library.h"
 4:                
 5:                
-6:                #define		u8t		unsigned char
-7:                #define		u16t	unsigned int
-8:                volatile unsigned char MainTime;
-9:                volatile bit	B_MainLoop,B_OnOff;
-10:               u8t	workStep = 0;
-11:               u8t	sleepTime = 0;
-12:               u8t	closeTime = 0;
-13:               u8t	ledDuty = 50;
-14:               u8t led1Duty = 50;
-15:               u8t led2Duty = 50;
-16:               u8t led3Duty = 50;
-17:               u16t	keyCount = 0;
-18:               u8t	modeStep = 0;
-19:               u16t count1s = 0;
-20:               u16t	count300s = 0;
-21:               u8t		lvdTime = 0;
-22:               u8t		doubleKeyTime = 0;
-23:               
-24:               void pwm1Init();
-25:               void pwm3Init();
-26:               void pwm13Init();
-27:               void pwm1Stop();
-28:               void pwm3Stop();
-29:               void pwm13Stop();
-30:               void checkLvd();
-31:               
-32:               //系统初始化
-33:               void Init_System()
+6:                
+7:                #define		u8t		unsigned char
+8:                #define		u16t	unsigned int
+9:                volatile unsigned char MainTime;
+10:               volatile bit	B_MainLoop,B_OnOff;
+11:               u8t	workStep = 0;
+12:               u8t	sleepTime = 0;
+13:               u8t	closeTime = 0;
+14:               u8t	ledDuty = 50;
+15:               u8t led1Duty = 50;
+16:               u8t led2Duty = 50;
+17:               u8t led3Duty = 50;
+18:               u16t	keyCount = 0;
+19:               u8t	modeStep = 0;
+20:               u16t count1s = 0;
+21:               u16t	count300s = 0;
+22:               u8t		lvdTime = 0;
+23:               u8t		doubleKeyTime = 0;
+24:               
+25:               void pwm1Init();
+26:               void pwm3Init();
+27:               void pwm13Init();
+28:               void pwm1Stop();
+29:               void pwm3Stop();
+30:               void pwm13Stop();
+31:               void checkLvd();
+32:               
+33:               //系统初始化
+34:               void Init_System()
   042D    0000    NOP
   042E    0064    CLRWDT
-34:               {
-35:               	asm("nop");
-36:               	asm("clrwdt");
-37:               	INTCON = 0;				//禁止中断
+35:               {
+36:               	asm("nop");
+37:               	asm("clrwdt");
+38:               	INTCON = 0;				//禁止中断
   042F    018B    CLR	0xB
-38:               	OSCCON = 0X72;			//配置振荡为8M
+39:               	OSCCON = 0X72;			//配置振荡为8M
   0430    3072    LDIA	0x72
   0431    1283    CLRB	0x3,5
   0432    1303    CLRB	0x3,6
   0433    0094    LD	0x14,A
-39:               	OPTION_REG = 0;
+40:               	OPTION_REG = 0;
   0434    0181    CLR	0x1
-40:               	
 41:               	
-42:               	//延时等待电源电压稳定
-43:               	//DelayXms(200);
-44:               	TRISB = 0x00;
+42:               	
+43:               	//延时等待电源电压稳定
+44:               	//DelayXms(200);
+45:               	TRISB = 0x00;
   0435    0185    CLR	0x5
-45:               	PORTB = 0;	
+46:               	PORTB = 0;	
   0436    0186    CLR	0x6
-46:               
-47:               	PIE1 = 2;
+47:               
+48:               	PIE1 = 2;
   0437    3002    LDIA	0x2
   0438    008E    LD	0xE,A
-48:               	PR2 = 250;				//16M下将TMR2设置为125us中断
+49:               	PR2 = 250;				//16M下将TMR2设置为125us中断
   0439    30FA    LDIA	0xFA
   043A    0091    LD	0x11,A
-49:               	T2CON = 4;				//使能定时器2
+50:               	T2CON = 4;				//使能定时器2
   043B    3004    LDIA	0x4
   043C    0093    LD	0x13,A
-50:               
-51:               	INTCON = 0XC0;			//使能中断
+51:               
+52:               	INTCON = 0XC0;			//使能中断
   043D    30C0    LDIA	0xC0
   043E    008B    LD	0xB,A
   043F    0008    RET
-52:               }
-53:               
+53:               }
 54:               
-55:               /**********************************************************
-56:               函数名称：Refurbish_Sfr
-57:               函数功能：刷新一些特殊功能寄存器
-58:               入口参数：无
-59:               出口参数：无
-60:               备    注：每隔一定时间刷新一次SFR可增强抗干扰能力
-61:               **********************************************************/
-62:               void Refurbish_Sfr() 
-63:               {
-64:               	//刷新中断相关控制寄存器
-65:               	PIE1 = 2;
+55:               
+56:               /**********************************************************
+57:               函数名称：Refurbish_Sfr
+58:               函数功能：刷新一些特殊功能寄存器
+59:               入口参数：无
+60:               出口参数：无
+61:               备    注：每隔一定时间刷新一次SFR可增强抗干扰能力
+62:               **********************************************************/
+63:               void Refurbish_Sfr() 
+64:               {
+65:               	//刷新中断相关控制寄存器
+66:               	PIE1 = 2;
   0450    3002    LDIA	0x2
   0451    1283    CLRB	0x3,5
   0452    1303    CLRB	0x3,6
   0453    008E    LD	0xE,A
-66:               	PR2 = 250;
+67:               	PR2 = 250;
   0454    30FA    LDIA	0xFA
   0455    0091    LD	0x11,A
-67:               	INTCON = 0XC0;
+68:               	INTCON = 0XC0;
   0456    30C0    LDIA	0xC0
   0457    008B    LD	0xB,A
-68:               	if (4 != T2CON)
+69:               	if (4 != T2CON)
   0458    3004    LDIA	0x4
   0459    0613    XORA	0x13
   045A    1903    SZB	0x3,2
   045B    0008    RET
-69:               		T2CON = 4;
+70:               		T2CON = 4;
   045C    3004    LDIA	0x4
   045D    0093    LD	0x13,A
   045E    0008    RET
-70:               }
-71:               
+71:               }
 72:               
-73:               /***********************************************************
-74:               键处理函数
-75:               ***********************************************************/
-76:               void KeyServer() 
-77:               {
-78:               	static unsigned char KeyOldFlag = 0;
-79:               	if (KeyFlag[0]) 
+73:               
+74:               /***********************************************************
+75:               键处理函数
+76:               ***********************************************************/
+77:               void KeyServer() 
+78:               {
+79:               	static unsigned char KeyOldFlag = 0;
+80:               	if (KeyFlag[0]) 
   0177    087A    LD	A,0x7A
   0178    1903    SZB	0x3,2
   0179    29AF    JP	0x1AF
-80:               	{
-81:               		if ((KeyFlag[0] & 0x1)) 
+81:               	{
+82:               		if ((KeyFlag[0] & 0x1)) 
   017A    1C7A    SNZB	0x7A,0
   017B    0008    RET
-82:               		{
-83:               			keyCount++;
+83:               		{
+84:               			keyCount++;
   017C    0AAA    INCR	0x2A
   017D    1903    SZB	0x3,2
   017E    0AAB    INCR	0x2B
-84:               			//KEY1被按下
-85:               			if(keyCount >= 250 && keyCount % 10 == 0 && workStep > 0)
+85:               			//KEY1被按下
+86:               			if(keyCount >= 250 && keyCount % 10 == 0 && workStep > 0)
   017F    3000    LDIA	0x0
   0180    022B    SUBA	0x2B
   0181    30FA    LDIA	0xFA
@@ -148,8 +149,8 @@
   0192    0879    LD	A,0x79
   0193    1903    SZB	0x3,2
   0194    29AC    JP	0x1AC
-86:               			{
-87:               				if(modeStep == 0 && ledDuty < 90)
+87:               			{
+88:               				if(modeStep == 0 && ledDuty < 90)
   0195    083E    LD	A,0x3E
   0196    1D03    SNZB	0x3,2
   0197    299D    JP	0x19D
@@ -157,44 +158,44 @@
   0199    027B    SUBA	0x7B
   019A    1803    SZB	0x3,0
   019B    299D    JP	0x19D
-88:               				{
-89:               					ledDuty++;
+89:               				{
+90:               					ledDuty++;
   019C    0AFB    INCR	0x7B
-90:               				}
-91:               				if(modeStep == 1 && ledDuty > 10)
+91:               				}
+92:               				if(modeStep == 1 && ledDuty > 10)
   019D    0B3E    SZDECA	0x3E
   019E    29A4    JP	0x1A4
   019F    300B    LDIA	0xB
   01A0    027B    SUBA	0x7B
   01A1    1C03    SNZB	0x3,0
   01A2    29A4    JP	0x1A4
-92:               				{
-93:               					ledDuty--;
+93:               				{
+94:               					ledDuty--;
   01A3    03FB    DECR	0x7B
-94:               				}
-95:               				PWMD23H = 0;			
+95:               				}
+96:               				PWMD23H = 0;			
   01A4    1683    SETB	0x3,5
   01A5    019E    CLR	0x1E
-96:               				PWMD3L = ledDuty;	
+97:               				PWMD3L = ledDuty;	
   01A6    087B    LD	A,0x7B
   01A7    009C    LD	0x1C,A
-97:               				PWMD01H = 0;			
+98:               				PWMD01H = 0;			
   01A8    1283    CLRB	0x3,5
   01A9    019E    CLR	0x1E
-98:               				PWMD1L = ledDuty;			
+99:               				PWMD1L = ledDuty;			
   01AA    087B    LD	A,0x7B
   01AB    009A    LD	0x1A,A
-99:               			}
-100:              			B_OnOff = !B_OnOff;
+100:              			}
+101:              			B_OnOff = !B_OnOff;
   01AC    3020    LDIA	0x20
   01AD    06F8    XORR	0x78
   01AE    0008    RET
-101:              		}
-102:              	} 
-103:              	else 
-104:              	{
-105:              		KeyOldFlag = 0;
-106:              		if(keyCount > 0 && keyCount < 250)
+102:              		}
+103:              	} 
+104:              	else 
+105:              	{
+106:              		KeyOldFlag = 0;
+107:              		if(keyCount > 0 && keyCount < 250)
   01AF    082A    LD	A,0x2A
   01B0    042B    ORA	0x2B
   01B1    3000    LDIA	0x0
@@ -206,43 +207,43 @@
   01B7    022A    SUBA	0x2A
   01B8    1803    SZB	0x3,0
   01B9    29CA    JP	0x1CA
-107:              		{
-108:              			if(doubleKeyTime > 0)
+108:              		{
+109:              			if(doubleKeyTime > 0)
   01BA    083C    LD	A,0x3C
   01BB    1903    SZB	0x3,2
   01BC    29C8    JP	0x1C8
-109:              			{
-110:              				if(count300s > 0)
+110:              			{
+111:              				if(count300s > 0)
   01BD    0826    LD	A,0x26
   01BE    0427    ORA	0x27
   01BF    1903    SZB	0x3,2
   01C0    29C3    JP	0x1C3
-111:              				{
-112:              					count300s = 0;
+112:              				{
+113:              					count300s = 0;
   01C1    01A6    CLR	0x26
   01C2    29C5    JP	0x1C5
-113:              				}
-114:              				else
-115:              				{
-116:              					count300s = 200;
+114:              				}
+115:              				else
+116:              				{
+117:              					count300s = 200;
   01C3    30C8    LDIA	0xC8
   01C4    00A6    LD	0x26,A
   01C5    01A7    CLR	0x27
-117:              				}
-118:              				doubleKeyTime = 0;
+118:              				}
+119:              				doubleKeyTime = 0;
   01C6    01BC    CLR	0x3C
-119:              			}
+120:              			}
   01C7    29CA    JP	0x1CA
-120:              			else
-121:              			{
-122:              				doubleKeyTime = 250;
-  01C8    30FA    LDIA	0xFA
+121:              			else
+122:              			{
+123:              				doubleKeyTime = 125;	//双击判断时间改成0.5秒
+  01C8    307D    LDIA	0x7D
   01C9    00BC    LD	0x3C,A
-123:              			}
-124:              			
-125:              		
-126:              		}
-127:              		if(keyCount > 250)
+124:              			}
+125:              			
+126:              		
+127:              		}
+128:              		if(keyCount > 250)
   01CA    3000    LDIA	0x0
   01CB    022B    SUBA	0x2B
   01CC    30FB    LDIA	0xFB
@@ -250,206 +251,206 @@
   01CE    022A    SUBA	0x2A
   01CF    1C03    SNZB	0x3,0
   01D0    29DB    JP	0x1DB
-128:              		{
-129:              			if(workStep > 0)
+129:              		{
+130:              			if(workStep > 0)
   01D1    0879    LD	A,0x79
   01D2    1903    SZB	0x3,2
   01D3    29DB    JP	0x1DB
-130:              			{
-131:              				if(modeStep > 0)
+131:              			{
+132:              				if(modeStep > 0)
   01D4    083E    LD	A,0x3E
   01D5    1903    SZB	0x3,2
   01D6    29D9    JP	0x1D9
-132:              				{
-133:              					modeStep = 0;
+133:              				{
+134:              					modeStep = 0;
   01D7    01BE    CLR	0x3E
-134:              				}
+135:              				}
   01D8    29DB    JP	0x1DB
-135:              				else
-136:              				{
-137:              					modeStep = 1;
+136:              				else
+137:              				{
+138:              					modeStep = 1;
   01D9    01BE    CLR	0x3E
   01DA    0ABE    INCR	0x3E
-138:              				}
-139:              			}
-140:              		}
-141:              		keyCount = 0;
+139:              				}
+140:              			}
+141:              		}
+142:              		keyCount = 0;
   01DB    01AA    CLR	0x2A
   01DC    01AB    CLR	0x2B
   01DD    0008    RET
-142:              	}
-143:              }
-144:              
-145:              void pwm3Init()
-146:              {
-147:              		
-148:              		TRISB |= 0x10;
+143:              	}
+144:              }
+145:              
+146:              void pwm3Init()
+147:              {
+148:              		
+149:              		TRISB |= 0x10;
   04A7    1605    SETB	0x5,4
-149:              		PWMCON1 = 0B00000000;	//PWM选择D组，死区2禁止，死区1使能，死区时钟源为Fosc/4
-150:              		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
-151:              		//PWMT4L = 100;
-152:              		PWMTL = 100;
-153:              		PWMD23H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
-154:              		PWMD3L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
-155:              		PWM23DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
+150:              		PWMCON1 = 0B00000000;	//PWM选择D组，死区2禁止，死区1使能，死区时钟源为Fosc/4
+151:              		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
+152:              		//PWMT4L = 100;
+153:              		PWMTL = 100;
+154:              		PWMD23H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+155:              		PWMD3L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
+156:              		PWM23DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
   04A8    23F9    CALL	0x3F9
-156:              
-157:              		PWMCON0 = 0X68;			//打开PWM3 分频比为8
+157:              
+158:              		PWMCON0 = 0X68;			//打开PWM3 分频比为8
   04A9    3068    LDIA	0x68
   04AA    1283    CLRB	0x3,5
   04AB    0095    LD	0x15,A
-158:              		PWMCON2 =0X00;			//PWM4输出反向
+159:              		PWMCON2 =0X00;			//PWM4输出反向
   04AC    019D    CLR	0x1D
-159:              		TRISB &= 0xEF;
+160:              		TRISB &= 0xEF;
   04AD    1205    CLRB	0x5,4
   04AE    0008    RET
-160:              
-161:              }
-162:              
-163:              void pwm3Stop()
-164:              {
-165:              	PWMCON0 &= 0XF7;
+161:              
+162:              }
+163:              
+164:              void pwm3Stop()
+165:              {
+166:              	PWMCON0 &= 0XF7;
   04C0    1195    CLRB	0x15,3
-166:              	RB4 = 0;
+167:              	RB4 = 0;
   04C1    1206    CLRB	0x6,4
   04C2    0008    RET
-167:              
 168:              
-169:              }
-170:              
-171:              void pwm1Init()
-172:              {
-173:              		TRISB |= 0x02;
+169:              
+170:              }
+171:              
+172:              void pwm1Init()
+173:              {
+174:              		TRISB |= 0x02;
   045F    1485    SETB	0x5,1
-174:              		PWMCON1 = 0B00000000;	//PWM选择D组，死区2禁止，死区1使能，死区时钟源为Fosc/4
+175:              		PWMCON1 = 0B00000000;	//PWM选择D组，死区2禁止，死区1使能，死区时钟源为Fosc/4
   0460    0196    CLR	0x16
-175:              		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
+176:              		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
   0461    0198    CLR	0x18
-176:              		PWMTL = 100;			//PWM 周期=[PWMT+1]*Tosc*(CLKDIV 分频值)
+177:              		PWMTL = 100;			//PWM 周期=[PWMT+1]*Tosc*(CLKDIV 分频值)
   0462    3064    LDIA	0x64
   0463    0097    LD	0x17,A
-177:              		
 178:              		
-179:              		PWMD01H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+179:              		
+180:              		PWMD01H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
   0464    019E    CLR	0x1E
-180:              		PWMD1L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
+181:              		PWMD1L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
   0465    087B    LD	A,0x7B
   0466    009A    LD	0x1A,A
-181:              		PWM01DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
+182:              		PWM01DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
   0467    019F    CLR	0x1F
-182:              
-183:              		PWMCON0 = 0X62;			//打开PWM3 分频比为8
+183:              
+184:              		PWMCON0 = 0X62;			//打开PWM3 分频比为8
   0468    3062    LDIA	0x62
   0469    0095    LD	0x15,A
-184:              		PWMCON2 =0X00;			//PWM4输出反向
+185:              		PWMCON2 =0X00;			//PWM4输出反向
   046A    019D    CLR	0x1D
-185:              		TRISB &= 0xFD;
+186:              		TRISB &= 0xFD;
   046B    1085    CLRB	0x5,1
   046C    0008    RET
-186:              
-187:              }
-188:              
-189:              void pwm1Stop()
-190:              {
-191:              	PWMCON0 &= 0XFD;
+187:              
+188:              }
+189:              
+190:              void pwm1Stop()
+191:              {
+192:              	PWMCON0 &= 0XFD;
   04C3    1095    CLRB	0x15,1
-192:              	RB1 = 0;
+193:              	RB1 = 0;
   04C4    1086    CLRB	0x6,1
   04C5    0008    RET
-193:              
-194:              }
-195:              
-196:              void pwm13Init()
-197:              {
-198:              		TRISB |= 0x05;
+194:              
+195:              }
+196:              
+197:              void pwm13Init()
+198:              {
+199:              		TRISB |= 0x05;
   03EB    3005    LDIA	0x5
   03EC    0485    ORR	0x5
-199:              		PWMCON1 = 0B00000000;	//PWM选择D组，死区2禁止，死区1使能，死区时钟源为Fosc/4
-200:              		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
-201:              		PWMTL = 100;			//PWM 周期=[PWMT+1]*Tosc*(CLKDIV 分频值)
-202:              		//PWMT4L = 100;
-203:              		
-204:              		PWMD23H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
-205:              		PWMD3L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
-206:              		PWM23DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
+200:              		PWMCON1 = 0B00000000;	//PWM选择D组，死区2禁止，死区1使能，死区时钟源为Fosc/4
+201:              		PWMTH = 0X00;			//周期选择为0FF，则周期为（255+1）*1/8M，周期的时钟分频在PWMCON0选择
+202:              		PWMTL = 100;			//PWM 周期=[PWMT+1]*Tosc*(CLKDIV 分频值)
+203:              		//PWMT4L = 100;
+204:              		
+205:              		PWMD23H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+206:              		PWMD3L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
+207:              		PWM23DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
   03ED    23F9    CALL	0x3F9
-207:              		
-208:              		PWMD01H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
+208:              		
+209:              		PWMD01H = 0;			//配置PWM1,PWM2的占空比，该值不能超过周期，否者为100%输出
   03EE    1283    CLRB	0x3,5
   03EF    019E    CLR	0x1E
-209:              		PWMD1L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
+210:              		PWMD1L = ledDuty;			//互补模式，PWM1的占空比与PWM0互补，和设置值无关
   03F0    087B    LD	A,0x7B
   03F1    009A    LD	0x1A,A
-210:              		PWM01DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
+211:              		PWM01DT = 0X00;			//死区设为2uS，计算为（3+1）*1/8M*4
   03F2    019F    CLR	0x1F
-211:              
-212:              		PWMCON0 = 0X6A;			//打开PWM3 分频比为8
+212:              
+213:              		PWMCON0 = 0X6A;			//打开PWM3 分频比为8
   03F3    306A    LDIA	0x6A
   03F4    0095    LD	0x15,A
-213:              		PWMCON2 =0X00;			//PWM4输出反向
+214:              		PWMCON2 =0X00;			//PWM4输出反向
   03F5    019D    CLR	0x1D
-214:              		TRISB &= 0xFA;
+215:              		TRISB &= 0xFA;
   03F6    30FA    LDIA	0xFA
   03F7    0585    ANDR	0x5
   03F8    0008    RET
-215:              
-216:              }
-217:              
-218:              void pwm13Stop()
-219:              {
-220:              	PWMCON0 &= 0XF5;
+216:              
+217:              }
+218:              
+219:              void pwm13Stop()
+220:              {
+221:              	PWMCON0 &= 0XF5;
   04B6    30F5    LDIA	0xF5
   04B7    0595    ANDR	0x15
-221:              	PORTB &= 0xED;
+222:              	PORTB &= 0xED;
   04B8    30ED    LDIA	0xED
   04B9    0586    ANDR	0x6
   04BA    0008    RET
-222:              
-223:              }
-224:              
-225:              void checkLvd()
-226:              {
-227:              	CMPCON1 = 0x28;
+223:              
+224:              }
+225:              
+226:              void checkLvd()
+227:              {
+228:              	CMPCON1 = 0x28;
   04BB    3028    LDIA	0x28
   04BC    0090    LD	0x10,A
-228:              	CMPCON0 = 0xA8;
+229:              	CMPCON0 = 0xA8;
   04BD    30A8    LDIA	0xA8
   04BE    008F    LD	0xF,A
   04BF    0008    RET
-229:              	
-230:              }
-231:              
+230:              	
+231:              }
 232:              
-233:              /***********************************************************
-234:              中断服务函数
-235:              ***********************************************************/
-236:              void interrupt Isr_Timer()
-237:              {
-238:              	if(TMR2IF)				//若只使能了一个中断源,可以略去判断
+233:              
+234:              /***********************************************************
+235:              中断服务函数
+236:              ***********************************************************/
+237:              void interrupt Isr_Timer()
+238:              {
+239:              	if(TMR2IF)				//若只使能了一个中断源,可以略去判断
   0418    1283    CLRB	0x3,5
   0419    1303    CLRB	0x3,6
   041A    1C8D    SNZB	0xD,1
   041B    2C25    JP	0x425
-239:              	{
-240:              		TMR2IF = 0;
+240:              	{
+241:              		TMR2IF = 0;
   041C    108D    CLRB	0xD,1
-241:              		if(++MainTime >= 32)	//需根据你选择的触摸路数和触摸电容选择扫描一次按键的时间
+242:              		if(++MainTime >= 32)	//需根据你选择的触摸路数和触摸电容选择扫描一次按键的时间
   041D    3020    LDIA	0x20
   041E    0ABF    INCR	0x3F
   041F    023F    SUBA	0x3F
   0420    1C03    SNZB	0x3,0
   0421    2C26    JP	0x426
-242:              		{						//可根据测量CAP口的电容充电时间判断扫描一次需要的时间
-243:              			MainTime = 0;
+243:              		{						//可根据测量CAP口的电容充电时间判断扫描一次需要的时间
+244:              			MainTime = 0;
   0422    01BF    CLR	0x3F
-244:              			B_MainLoop = 1;
+245:              			B_MainLoop = 1;
   0423    1778    SETB	0x78,6
   0424    2C26    JP	0x426
-245:              		}
-246:              	}
-247:              	else
-248:              	{
-249:              		PIR1 = 0;
+246:              		}
+247:              	}
+248:              	else
+249:              	{
+250:              		PIR1 = 0;
   0425    018D    CLR	0xD
   0426    0871    LD	A,0x71
   0427    008A    LD	0xA,A
@@ -458,141 +459,141 @@
   042A    0EFE    SWAPR	0x7E
   042B    0E7E    SWAPA	0x7E
   042C    0009    RETI
-250:              	}
-251:              	
-252:              }
-253:              
-254:              void WorkSleep()
-255:              {
-256:              #if (0 != C_KEY_WAKEUP)
-257:              	static unsigned char time;
-258:              	
-259:              	//if(B_OnOff)time = 0;
-260:              	
-261:              	if(++time >= 125)
+251:              	}
+252:              	
+253:              }
+254:              
+255:              void WorkSleep()
+256:              {
+257:              #if (0 != C_KEY_WAKEUP)
+258:              	static unsigned char time;
+259:              	
+260:              	//if(B_OnOff)time = 0;
+261:              	
+262:              	if(++time >= 125)
   03B7    307D    LDIA	0x7D
   03B8    0ABB    INCR	0x3B
   03B9    023B    SUBA	0x3B
   03BA    1C03    SNZB	0x3,0
   03BB    0008    RET
-262:              	{
-263:              		time = 0;
+263:              	{
+264:              		time = 0;
   03BC    01BB    CLR	0x3B
-264:              		INTCON = 0;			//;关断中断使能；
+265:              		INTCON = 0;			//;关断中断使能；
   03BD    018B    CLR	0xB
-265:              		PIE1 = 0;
+266:              		PIE1 = 0;
   03BE    018E    CLR	0xE
-266:              		PIE2 = 0;
+267:              		PIE2 = 0;
   03BF    1703    SETB	0x3,6
   03C0    0190    CLR	0x10
-267:              		PIR1 = 0;
+268:              		PIR1 = 0;
   03C1    1303    CLRB	0x3,6
   03C2    018D    CLR	0xD
-268:              		PIR2 = 0;
+269:              		PIR2 = 0;
   03C3    1703    SETB	0x3,6
   03C4    018F    CLR	0xF
-269:              		T2CON = 0;
+270:              		T2CON = 0;
   03C5    1303    CLRB	0x3,6
   03C6    0193    CLR	0x13
-270:              	
-271:              		//进入休眠前,必须固定口线电平,这儿全部输出低电平,并关闭所有上拉电阻
-272:              
-273:              		TRISB = 0x00;
+271:              	
+272:              		//进入休眠前,必须固定口线电平,这儿全部输出低电平,并关闭所有上拉电阻
+273:              
+274:              		TRISB = 0x00;
   03C7    0185    CLR	0x5
-274:              		PORTB = 0;
+275:              		PORTB = 0;
   03C8    0186    CLR	0x6
-275:              		CMPCON1 = 0x00;
+276:              		CMPCON1 = 0x00;
   03C9    0190    CLR	0x10
-276:              		CMPCON0 = 0x00;
+277:              		CMPCON0 = 0x00;
   03CA    018F    CLR	0xF
-277:              
-278:              /****如需要PB口中断唤醒，使能下列程序并按需修改****
-279:              			TRISB0 =1;	//输入
-280:              			WPUB0 = 1;	//上拉			
-281:              			RBIF = 0;	//清标志
-282:              			RBIE = 1;	//允许PB口电平变化中断
-283:              			
-284:              			PORTB;		//读一次PB口			
-285:              ************************************/	
-286:              
-287:              		//进入休眠模式,触摸允许唤醒的按键后恢复正常工作
-288:              		SystemEnterSleep();
+278:              
+279:              /****如需要PB口中断唤醒，使能下列程序并按需修改****
+280:              			TRISB0 =1;	//输入
+281:              			WPUB0 = 1;	//上拉			
+282:              			RBIF = 0;	//清标志
+283:              			RBIE = 1;	//允许PB口电平变化中断
+284:              			
+285:              			PORTB;		//读一次PB口			
+286:              ************************************/	
+287:              
+288:              		//进入休眠模式,触摸允许唤醒的按键后恢复正常工作
+289:              		SystemEnterSleep();
   03CB    2102    CALL	0x102
-289:              		if(RBIF) 
+290:              		if(RBIF) 
   03CC    1C0B    SNZB	0xB,0
   03CD    2BD0    JP	0x3D0
-290:              		{
-291:              			RBIF = 0;
+291:              		{
+292:              			RBIF = 0;
   03CE    100B    CLRB	0xB,0
-292:              			PORTB;
+293:              			PORTB;
   03CF    0806    LD	A,0x6
-293:              		}
-294:              		//休眠被唤醒,重新配置中断等SFR,使系统进入正常工作
-295:              		Refurbish_Sfr();
+294:              		}
+295:              		//休眠被唤醒,重新配置中断等SFR,使系统进入正常工作
+296:              		Refurbish_Sfr();
   03D0    2450    CALL	0x450
-296:              		checkLvd();
+297:              		checkLvd();
   03D1    2CBB    JP	0x4BB
-297:              	}
-298:              #endif
-299:              }
-300:              
-301:              void keyCtr()
-302:              {
-303:              	if(doubleKeyTime > 0)
+298:              	}
+299:              #endif
+300:              }
+301:              
+302:              void keyCtr()
+303:              {
+304:              	if(doubleKeyTime > 0)
   039B    083C    LD	A,0x3C
   039C    1D03    SNZB	0x3,2
-304:              	{
-305:              		if(--doubleKeyTime == 0)
+305:              	{
+306:              		if(--doubleKeyTime == 0)
   039D    0BBC    SZDECR	0x3C
   039E    0008    RET
-306:              		{
-307:              			if(++workStep > 3)
+307:              		{
+308:              			if(++workStep > 3)
   039F    3004    LDIA	0x4
   03A0    0AF9    INCR	0x79
   03A1    0279    SUBA	0x79
   03A2    1803    SZB	0x3,0
-308:              			{
-309:              				workStep = 0;
+309:              			{
+310:              				workStep = 0;
   03A3    01F9    CLR	0x79
-310:              			}
-311:              			if(workStep == 1)
+311:              			}
+312:              			if(workStep == 1)
   03A4    0B79    SZDECA	0x79
   03A5    2BA9    JP	0x3A9
-312:              			{
-313:              				ledDuty = led1Duty;
+313:              			{
+314:              				ledDuty = led1Duty;
   03A6    084C    LD	A,0x4C
   03A7    00FB    LD	0x7B,A
-314:              			}
+315:              			}
   03A8    0008    RET
-315:              			else if(workStep == 2)
+316:              			else if(workStep == 2)
   03A9    3002    LDIA	0x2
   03AA    0679    XORA	0x79
   03AB    1D03    SNZB	0x3,2
   03AC    2BB0    JP	0x3B0
-316:              			{
-317:              				ledDuty = led2Duty;
+317:              			{
+318:              				ledDuty = led2Duty;
   03AD    084B    LD	A,0x4B
   03AE    00FB    LD	0x7B,A
-318:              			}
+319:              			}
   03AF    0008    RET
-319:              			else if(workStep == 3)
+320:              			else if(workStep == 3)
   03B0    3003    LDIA	0x3
   03B1    0679    XORA	0x79
   03B2    1D03    SNZB	0x3,2
   03B3    0008    RET
-320:              			{
-321:              				ledDuty = led3Duty;
+321:              			{
+322:              				ledDuty = led3Duty;
   03B4    084A    LD	A,0x4A
   03B5    00FB    LD	0x7B,A
   03B6    0008    RET
-322:              			}
-323:              		}
-324:              	}
-325:              }
-326:              
-327:              void workCtr()
-328:              {
-329:              	if(++count1s >= 500)
+323:              			}
+324:              		}
+325:              	}
+326:              }
+327:              
+328:              void workCtr()
+329:              {
+330:              	if(++count1s >= 500)
   0275    0AA8    INCR	0x28
   0276    1903    SZB	0x3,2
   0277    0AA9    INCR	0x29
@@ -603,128 +604,128 @@
   027C    0228    SUBA	0x28
   027D    1C03    SNZB	0x3,0
   027E    2A8B    JP	0x28B
-330:              	{
-331:              		count1s = 0;
+331:              	{
+332:              		count1s = 0;
   027F    01A8    CLR	0x28
   0280    01A9    CLR	0x29
-332:              		if(count300s > 0)
+333:              		if(count300s > 0)
   0281    0826    LD	A,0x26
   0282    0427    ORA	0x27
   0283    1903    SZB	0x3,2
   0284    2A8B    JP	0x28B
-333:              		{
-334:              			count300s--;
+334:              		{
+335:              			count300s--;
   0285    3001    LDIA	0x1
   0286    02A6    SUBR	0x26
   0287    3000    LDIA	0x0
   0288    1C03    SNZB	0x3,0
   0289    03A7    DECR	0x27
   028A    02A7    SUBR	0x27
-335:              		}
-336:              	}
-337:              	if(count300s > 0)
+336:              		}
+337:              	}
+338:              	if(count300s > 0)
   028B    0826    LD	A,0x26
   028C    0427    ORA	0x27
   028D    1903    SZB	0x3,2
   028E    2A91    JP	0x291
-338:              	{
-339:              		RB2 = 1;
+339:              	{
+340:              		RB2 = 1;
   028F    1506    SETB	0x6,2
-340:              	}
+341:              	}
   0290    2A92    JP	0x292
-341:              	else
-342:              	{
-343:              		RB2 = 0;
+342:              	else
+343:              	{
+344:              		RB2 = 0;
   0291    1106    CLRB	0x6,2
-344:              	}
-345:              	
-346:              	if(workStep == 0)
+345:              	}
+346:              	
+347:              	if(workStep == 0)
   0292    0879    LD	A,0x79
   0293    1D03    SNZB	0x3,2
   0294    2A96    JP	0x296
-347:              	{
-348:              		pwm13Stop();
+348:              	{
+349:              		pwm13Stop();
   0295    2CB6    JP	0x4B6
-349:              	}
-350:              	else if(workStep == 1)
+350:              	}
+351:              	else if(workStep == 1)
   0296    0B79    SZDECA	0x79
   0297    2A9D    JP	0x29D
-351:              	{
-352:              		pwm1Init();
+352:              	{
+353:              		pwm1Init();
   0298    245F    CALL	0x45F
-353:              		pwm3Stop();
+354:              		pwm3Stop();
   0299    24C0    CALL	0x4C0
-354:              		led1Duty = ledDuty;
+355:              		led1Duty = ledDuty;
   029A    087B    LD	A,0x7B
   029B    00CC    LD	0x4C,A
-355:              	}
+356:              	}
   029C    0008    RET
-356:              	else if(workStep == 2)
+357:              	else if(workStep == 2)
   029D    3002    LDIA	0x2
   029E    0679    XORA	0x79
   029F    1D03    SNZB	0x3,2
   02A0    2AA6    JP	0x2A6
-357:              	{
-358:              		pwm3Init();
+358:              	{
+359:              		pwm3Init();
   02A1    24A7    CALL	0x4A7
-359:              		pwm1Stop();
+360:              		pwm1Stop();
   02A2    24C3    CALL	0x4C3
-360:              		led2Duty = ledDuty;
+361:              		led2Duty = ledDuty;
   02A3    087B    LD	A,0x7B
   02A4    00CB    LD	0x4B,A
-361:              	}
+362:              	}
   02A5    0008    RET
-362:              	else if(workStep == 3)
+363:              	else if(workStep == 3)
   02A6    3003    LDIA	0x3
   02A7    0679    XORA	0x79
   02A8    1D03    SNZB	0x3,2
   02A9    0008    RET
-363:              	{
-364:              		pwm13Init();
+364:              	{
+365:              		pwm13Init();
   02AA    23EB    CALL	0x3EB
-365:              		led3Duty = ledDuty;
+366:              		led3Duty = ledDuty;
   02AB    087B    LD	A,0x7B
   02AC    00CA    LD	0x4A,A
   02AD    0008    RET
-366:              		//count300s = 600;
-367:              	}
-368:              }
-369:              
-370:              /***********************************************************
-371:              主循环
-372:              ***********************************************************/
-373:              void main()
-374:              {
-375:              	Init_System();
+367:              		//count300s = 600;
+368:              	}
+369:              }
+370:              
+371:              /***********************************************************
+372:              主循环
+373:              ***********************************************************/
+374:              void main()
+375:              {
+376:              	Init_System();
   02DB    242D    CALL	0x42D
-376:              	ledDuty = 50;
+377:              	ledDuty = 50;
   02DC    3032    LDIA	0x32
   02DD    00FB    LD	0x7B,A
-377:              	checkLvd();
+378:              	checkLvd();
   02DE    24BB    CALL	0x4BB
-378:              	while(1)
-379:              	{
-380:              		if(B_MainLoop)
+379:              	while(1)
+380:              	{
+381:              		if(B_MainLoop)
   02DF    1F78    SNZB	0x78,6
   02E0    2ADF    JP	0x2DF
-381:              		{
-382:              			B_MainLoop = 0;
+382:              		{
+383:              			B_MainLoop = 0;
   02E1    1378    CLRB	0x78,6
   02E2    0064    CLRWDT
-383:              			CLRWDT();
-384:              			
-385:              			CheckTouchKey();
+384:              			CLRWDT();
+385:              			
+386:              			CheckTouchKey();
   02E3    2305    CALL	0x305
-386:              			
-387:              			Refurbish_Sfr();
+387:              			
+388:              			Refurbish_Sfr();
   02E4    2450    CALL	0x450
-388:              			KeyServer();
+389:              			KeyServer();
   02E5    2177    CALL	0x177
-389:              			keyCtr();
+390:              			keyCtr();
   02E6    239B    CALL	0x39B
-390:              			workCtr();
+391:              			workCtr();
   02E7    2275    CALL	0x275
-391:              			if(workStep == 0 && keyCount == 0 && count300s == 0 && doubleKeyTime == 0)
+392:              			if(workStep == 0 && keyCount == 0 && count300s == 0 && doubleKeyTime == 0)
   02E8    0879    LD	A,0x79
   02E9    1D03    SNZB	0x3,2
   02EA    2AF9    JP	0x2F9
@@ -739,45 +740,45 @@
   02F3    083C    LD	A,0x3C
   02F4    1D03    SNZB	0x3,2
   02F5    2AF9    JP	0x2F9
-392:              			{
-393:              				
-394:              				pwm13Stop();
+393:              			{
+394:              				
+395:              				pwm13Stop();
   02F6    24B6    CALL	0x4B6
-395:              				WorkSleep();		//如不需省电模式，可屏蔽这个子函数
+396:              				WorkSleep();		//如不需省电模式，可屏蔽这个子函数
   02F7    23B7    CALL	0x3B7
-396:              			}
+397:              			}
   02F8    2ADF    JP	0x2DF
-397:              			else
-398:              			{
-399:              				if(CMPCON0 & 0x02)
+398:              			else
+399:              			{
+400:              				if(CMPCON0 & 0x02)
   02F9    1C8F    SNZB	0xF,1
   02FA    2AFD    JP	0x2FD
-400:              				{
-401:              					lvdTime = 0;
+401:              				{
+402:              					lvdTime = 0;
   02FB    01BD    CLR	0x3D
-402:              				}
+403:              				}
   02FC    2ADF    JP	0x2DF
-403:              				else
-404:              				{
-405:              					if(++lvdTime > 200)
+404:              				else
+405:              				{
+406:              					if(++lvdTime > 200)
   02FD    30C9    LDIA	0xC9
   02FE    0ABD    INCR	0x3D
   02FF    023D    SUBA	0x3D
   0300    1C03    SNZB	0x3,0
   0301    2ADF    JP	0x2DF
-406:              					{
-407:              						lvdTime = 0;
+407:              					{
+408:              						lvdTime = 0;
   0302    01BD    CLR	0x3D
-408:              						workStep = 0;
+409:              						workStep = 0;
   0303    01F9    CLR	0x79
   0304    2ADF    JP	0x2DF
-409:              					}
-410:              				}
-411:              			}
-412:              			
-413:              		}
-414:              	}
-415:              }
+410:              					}
+411:              				}
+412:              			}
+413:              			
+414:              		}
+415:              	}
+416:              }
 ---- C:\mcuproject\scm\SCMCU_IDE_V2.00.16_Beta5\SCMCU_IDE_V2.00.16_Beta5\data\sources\common\lwmod.c ----------------------------------------------------------------------
 1:                // word unsigned modulus
 2:                

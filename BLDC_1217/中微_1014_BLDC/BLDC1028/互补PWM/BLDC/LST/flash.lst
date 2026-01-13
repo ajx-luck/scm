@@ -1,0 +1,149 @@
+C51 COMPILER V9.01   FLASH                                                                 12/17/2025 13:41:37 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE FLASH
+OBJECT MODULE PLACED IN .\PRO\flash.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE DRV\flash.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\DRV) DEBUG OBJECTEXTEND PRINT
+                    -(.\LST\flash.lst) TABS(2) OBJECT(.\PRO\flash.obj)
+
+line level    source
+
+   1          
+   2          #include "flash.h"
+   3          xdata u8 Flash_Check = 0;
+   4          
+   5          void FlashUnlock()
+   6          {
+   7   1        MLOCK = 0xAA; 
+   8   1      }
+   9          
+  10          void FlashLock()
+  11          {
+  12   1        MLOCK = 0x00; 
+  13   1      }
+  14          
+  15          void FlashWrite(u16 Addr,u16 Data)
+  16          {
+  17   1        MDATA = Data;
+  18   1        MADRL = Addr;
+  19   1        MADRH = Addr>>8;
+  20   1        
+  21   1          EA = 0;
+  22   1        _nop_();
+  23   1        MCTRL = 0x10 | 0x08 | 0x01; //xx00 1001选择数据区 写操作 启动操作
+  24   1        _nop_();
+  25   1        _nop_();
+  26   1        _nop_();
+  27   1        _nop_();
+  28   1        _nop_();
+  29   1        _nop_();
+  30   1        _nop_();
+  31   1        
+  32   1        while(MCTRL & 0x01);
+  33   1          EA = 1;
+  34   1      }
+  35          
+  36          u16 FlashRead(u16 Addr)
+  37          {
+  38   1        MADRL = Addr;
+  39   1        MADRH = Addr>>8;
+  40   1        
+  41   1          EA = 0;
+  42   1        _nop_();
+  43   1        MCTRL = 0x10 | 0x00 | 0x01; //xx00 0001选择数据区 读操作 启动操作
+  44   1        _nop_();
+  45   1        _nop_();
+  46   1        _nop_();
+  47   1        _nop_();
+  48   1        _nop_();
+  49   1        _nop_();
+  50   1        _nop_();
+  51   1        
+  52   1        while(MCTRL & 0x01);
+  53   1          EA = 1;
+  54   1        
+C51 COMPILER V9.01   FLASH                                                                 12/17/2025 13:41:37 PAGE 2   
+
+  55   1        return (MDATA);
+  56   1      }
+  57            
+  58          void FlashErase(u16 Addr)
+  59          {
+  60   1      
+  61   1        MADRL = Addr;
+  62   1        MADRH = Addr>>8;
+  63   1        
+  64   1          EA = 0;
+  65   1        _nop_();
+  66   1        MCTRL = 0x10 | 0x0C | 0x01; //xx00 1101选择数据区 擦除操作 启动操作
+  67   1        _nop_();
+  68   1        _nop_();
+  69   1        _nop_();
+  70   1        _nop_();
+  71   1        _nop_();
+  72   1        _nop_();
+  73   1        _nop_();
+  74   1        
+  75   1        while(MCTRL & 0x01);
+  76   1          EA = 1; 
+  77   1          
+  78   1      //    for(i = 0 ;i< 256 ;i++)   //连续256 bytes的写等待Flash执行完成
+  79   1      //  {     
+  80   1      //    FlashWrite(0x03FF,0xFF);
+  81   1      //  }
+  82   1      }
+  83          
+  84          void flash_read()
+  85          {
+  86   1        EA = 0; 
+  87   1        FlashUnlock();
+  88   1        Flash_Check = 0;
+  89   1        Flash_Check = FlashRead(0x01);
+  90   1        if(Flash_Check == 0x05)
+  91   1        {
+  92   2          Bat_ChargeFullTimem = FlashRead(0x02);
+  93   2          Vsp_LevelValueTarget = FlashRead(0x03);
+  94   2          displogo = FlashRead(0x04);
+  95   2        }
+  96   1        else
+  97   1        {
+  98   2          FlashErase(0x00);
+  99   2          FlashWrite(0x01,0x05);
+ 100   2          FlashWrite(0x02,0);
+ 101   2          FlashWrite(0x03,0);
+ 102   2          FlashWrite(0x04,0);
+ 103   2          FlashWrite(0x05,0);
+ 104   2        }
+ 105   1        FlashLock();
+ 106   1        EA = 1; 
+ 107   1      }
+ 108          
+ 109          void flash_write()
+ 110          {
+ 111   1        EA = 0;
+ 112   1        FlashUnlock();
+ 113   1        FlashErase(0x00);
+ 114   1        FlashWrite(0x01,0x05);
+ 115   1        FlashWrite(0x02,Bat_ChargeFullTimem);
+ 116   1        FlashWrite(0x03,Vsp_LevelValueTarget);
+C51 COMPILER V9.01   FLASH                                                                 12/17/2025 13:41:37 PAGE 3   
+
+ 117   1        FlashWrite(0x04,displogo);
+ 118   1        FlashWrite(0x05,displogo);
+ 119   1        FlashLock();
+ 120   1        EA = 1;
+ 121   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    241    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

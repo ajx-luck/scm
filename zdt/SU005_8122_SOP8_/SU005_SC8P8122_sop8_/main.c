@@ -1,3 +1,4 @@
+//2025年10月8日 17:44:18 双击判断时间改成0.5秒
 #include <sc.h>
 #include "Touch_Kscan_Library.h"
 
@@ -119,7 +120,7 @@ void KeyServer()
 			}
 			else
 			{
-				doubleKeyTime = 250;
+				doubleKeyTime = 125;	//双击判断时间改成0.5秒
 			}
 			
 		

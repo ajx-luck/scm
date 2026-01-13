@@ -1,0 +1,139 @@
+C51 COMPILER V9.53.0.0   DRIVE                                                             07/01/2024 12:06:52 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE DRIVE
+OBJECT MODULE PLACED IN .\PRO\drive.obj
+COMPILER INVOKED BY: E:\keil\Keil5\C51\BIN\C51.EXE DRV\drive.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\DRV) DEBUG OBJECTEXTEND
+                    - PRINT(.\LST\drive.lst) TABS(2) OBJECT(.\PRO\drive.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          
+   3          xdata u8  DataBuff[DATALENGTH] = 0;
+   4          
+   5          void tm1621_writeCmd(u16 Cmd)
+   6          {
+   7   1        s8 i = 0;
+   8   1        u16 Data = Cmd;
+   9   1        
+  10   1        CS = 0;
+  11   1        for(i=11;i>=0;i--)
+  12   1        {
+  13   2          WR = 0;
+  14   2          if(Data & (1 << i))                              
+  15   2            DATA = 1;
+  16   2          else
+  17   2            DATA = 0;
+  18   2          _nop_x;_nop_x;_nop_x;_nop_x;_nop_x;
+  19   2          WR = 1;
+  20   2        }
+  21   1        CS = 1;
+  22   1      }
+  23          
+  24          void tm1621_send()
+  25          {
+  26   1        s8 i = 0;
+  27   1        s8 k = 0;
+  28   1        u8 addr = 0; 
+  29   1        
+  30   1        CS = 0;
+  31   1        _nop_x;_nop_x;
+  32   1        
+  33   1        // "1"
+  34   1        WR = 0;
+  35   1        _nop_x;_nop_x;
+  36   1        DATA = 1;
+  37   1        _nop_x;_nop_x;
+  38   1        WR = 1;
+  39   1        _nop_x;_nop_x;
+  40   1        
+  41   1        // "0"
+  42   1        WR = 0;
+  43   1        _nop_x;_nop_x;
+  44   1        DATA = 0;
+  45   1        _nop_x;_nop_x;
+  46   1        WR = 1;
+  47   1        _nop_x;_nop_x;
+  48   1        
+  49   1        // "1"
+  50   1        WR = 0;
+  51   1        _nop_x;_nop_x;
+  52   1        DATA = 1;
+  53   1        _nop_x;_nop_x;
+  54   1        WR = 1;
+C51 COMPILER V9.53.0.0   DRIVE                                                             07/01/2024 12:06:52 PAGE 2   
+
+  55   1        _nop_x;_nop_x;
+  56   1        
+  57   1        addr = STARTADDR;
+  58   1        for(i=0; i<6; i++)
+  59   1        {
+  60   2          WR = 0;
+  61   2          _nop_x;_nop_x;
+  62   2          if(addr & 0x20)
+  63   2            DATA = 1;
+  64   2          else
+  65   2            DATA = 0;
+  66   2          _nop_x;_nop_x;
+  67   2          WR = 1;
+  68   2          addr <<= 1;
+  69   2          _nop_x;_nop_x;
+  70   2        }
+  71   1        
+  72   1        for(i=0; i<DATALENGTH; i++)
+  73   1        {
+  74   2          for(k=0; k<4; k++)
+  75   2          {
+  76   3            WR = 0;
+  77   3            _nop_x;_nop_x;
+  78   3            if(DataBuff[i] & (1<<k))
+  79   3              DATA = 1;
+  80   3            else
+  81   3              DATA = 0;
+  82   3            _nop_x;_nop_x;
+  83   3            WR = 1;
+  84   3            _nop_x;_nop_x;
+  85   3          }
+  86   2        }
+  87   1        CS = 1;
+  88   1      }
+  89          
+  90          void tm1621_init()
+  91          {
+  92   1        u8 ii = 0;
+  93   1        
+  94   1        CS = 1;
+  95   1        WR = 1;
+  96   1        DATA = 1;
+  97   1        _nop_x;_nop_x;_nop_x;_nop_x;_nop_x;
+  98   1        
+  99   1        tm1621_writeCmd( 0x800 | 0x30 ); 
+ 100   1        tm1621_writeCmd( 0x800 | 0x52 ); 
+ 101   1        tm1621_writeCmd( 0x800 | 0x0A );
+ 102   1        tm1621_writeCmd( 0x800 | 0x02 );
+ 103   1        
+ 104   1        for(ii=0; ii<DATALENGTH; ii++)
+ 105   1        {
+ 106   2          DataBuff[ii] = 0;
+ 107   2        }
+ 108   1        
+ 109   1        tm1621_send();
+ 110   1        tm1621_writeCmd( 0x800 | 0x06 );
+ 111   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    352    ----
+   CONSTANT SIZE    =   ----    ----
+C51 COMPILER V9.53.0.0   DRIVE                                                             07/01/2024 12:06:52 PAGE 3   
+
+   XDATA SIZE       =      6    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

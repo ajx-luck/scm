@@ -83,22 +83,22 @@ psect	idataCOMMON,class=CODE,space=0,delta=2,noexec
 global __pidataCOMMON
 __pidataCOMMON:
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	13
+	line	14
 
 ;initializer for _ledDuty
 	retlw	032h
 psect	idataBANK0,class=CODE,space=0,delta=2,noexec
 global __pidataBANK0
 __pidataBANK0:
-	line	16
+	line	17
 
 ;initializer for _led3Duty
 	retlw	032h
-	line	15
+	line	16
 
 ;initializer for _led2Duty
 	retlw	032h
-	line	14
+	line	15
 
 ;initializer for _led1Duty
 	retlw	032h
@@ -307,7 +307,7 @@ psect	dataCOMMON,class=COMMON,space=1,noexec
 global __pdataCOMMON
 __pdataCOMMON:
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	13
+	line	14
 _ledDuty:
        ds      1
 
@@ -384,19 +384,19 @@ psect	dataBANK0,class=BANK0,space=1,noexec
 global __pdataBANK0
 __pdataBANK0:
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	16
+	line	17
 _led3Duty:
        ds      1
 
 psect	dataBANK0
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	15
+	line	16
 _led2Duty:
        ds      1
 
 psect	dataBANK0
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	14
+	line	15
 _led1Duty:
        ds      1
 
@@ -867,7 +867,7 @@ SystemEnterSleep@423:	; 1 bytes @ 0x8
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 373 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 374 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -903,12 +903,12 @@ SystemEnterSleep@423:	; 1 bytes @ 0x8
 ;;
 psect	maintext,global,class=CODE,delta=2,split=1,group=0
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	373
+	line	374
 global __pmaintext
 __pmaintext:	;psect for function _main
 psect	maintext
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	373
+	line	374
 	global	__size_of_main
 	__size_of_main	equ	__end_of_main-_main
 	
@@ -916,72 +916,72 @@ _main:
 ;incstack = 0
 	opt	stack 2
 ; Regs used in _main: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
-	line	375
-	
-l3120:	
-;main.c: 375: Init_System();
-	fcall	_Init_System
 	line	376
 	
-l3122:	
-;main.c: 376: ledDuty = 50;
-	movlw	low(032h)
-	movwf	(_ledDuty)
+l3120:	
+;main.c: 376: Init_System();
+	fcall	_Init_System
 	line	377
 	
+l3122:	
+;main.c: 377: ledDuty = 50;
+	movlw	low(032h)
+	movwf	(_ledDuty)
+	line	378
+	
 l3124:	
-;main.c: 377: checkLvd();
+;main.c: 378: checkLvd();
 	fcall	_checkLvd
-	line	380
+	line	381
 	
 l3126:	
-;main.c: 379: {
-;main.c: 380: if(B_MainLoop)
+;main.c: 380: {
+;main.c: 381: if(B_MainLoop)
 	btfss	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
 	goto	u2281
 	goto	u2280
 u2281:
 	goto	l3126
 u2280:
-	line	382
+	line	383
 	
 l3128:	
-;main.c: 381: {
-;main.c: 382: B_MainLoop = 0;
+;main.c: 382: {
+;main.c: 383: B_MainLoop = 0;
 	bcf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
-	line	383
-# 383 "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+	line	384
+# 384 "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 clrwdt ;# 
 psect	maintext
-	line	385
+	line	386
 	
 l3130:	
-;main.c: 385: CheckTouchKey();
+;main.c: 386: CheckTouchKey();
 	fcall	_CheckTouchKey
-	line	387
-	
-l3132:	
-;main.c: 387: Refurbish_Sfr();
-	fcall	_Refurbish_Sfr
 	line	388
 	
-l3134:	
-;main.c: 388: KeyServer();
-	fcall	_KeyServer
+l3132:	
+;main.c: 388: Refurbish_Sfr();
+	fcall	_Refurbish_Sfr
 	line	389
 	
-l3136:	
-;main.c: 389: keyCtr();
-	fcall	_keyCtr
+l3134:	
+;main.c: 389: KeyServer();
+	fcall	_KeyServer
 	line	390
 	
-l3138:	
-;main.c: 390: workCtr();
-	fcall	_workCtr
+l3136:	
+;main.c: 390: keyCtr();
+	fcall	_keyCtr
 	line	391
 	
+l3138:	
+;main.c: 391: workCtr();
+	fcall	_workCtr
+	line	392
+	
 l3140:	
-;main.c: 391: if(workStep == 0 && keyCount == 0 && count300s == 0 && doubleKeyTime == 0)
+;main.c: 392: if(workStep == 0 && keyCount == 0 && count300s == 0 && doubleKeyTime == 0)
 	movf	((_workStep)),w
 	btfss	status,2
 	goto	u2291
@@ -1018,48 +1018,48 @@ l3146:
 u2321:
 	goto	l535
 u2320:
-	line	394
-	
-l3148:	
-;main.c: 392: {
-;main.c: 394: pwm13Stop();
-	fcall	_pwm13Stop
 	line	395
 	
-l3150:	
-;main.c: 395: WorkSleep();
-	fcall	_WorkSleep
+l3148:	
+;main.c: 393: {
+;main.c: 395: pwm13Stop();
+	fcall	_pwm13Stop
 	line	396
-;main.c: 396: }
-	goto	l3126
+	
+l3150:	
+;main.c: 396: WorkSleep();
+	fcall	_WorkSleep
 	line	397
+;main.c: 397: }
+	goto	l3126
+	line	398
 	
 l535:	
-	line	399
-;main.c: 397: else
-;main.c: 398: {
-;main.c: 399: if(CMPCON0 & 0x02)
+	line	400
+;main.c: 398: else
+;main.c: 399: {
+;main.c: 400: if(CMPCON0 & 0x02)
 	btfss	(15),(1)&7	;volatile
 	goto	u2331
 	goto	u2330
 u2331:
 	goto	l3154
 u2330:
-	line	401
+	line	402
 	
 l3152:	
-;main.c: 400: {
-;main.c: 401: lvdTime = 0;
+;main.c: 401: {
+;main.c: 402: lvdTime = 0;
 	clrf	(_lvdTime)
-	line	402
-;main.c: 402: }
+	line	403
+;main.c: 403: }
 	goto	l3126
-	line	405
+	line	406
 	
 l3154:	
-;main.c: 403: else
-;main.c: 404: {
-;main.c: 405: if(++lvdTime > 200)
+;main.c: 404: else
+;main.c: 405: {
+;main.c: 406: if(++lvdTime > 200)
 	movlw	low(0C9h)
 	incf	(_lvdTime),f
 	subwf	((_lvdTime)),w
@@ -1069,24 +1069,24 @@ l3154:
 u2341:
 	goto	l534
 u2340:
-	line	407
+	line	408
 	
 l3156:	
-;main.c: 406: {
-;main.c: 407: lvdTime = 0;
+;main.c: 407: {
+;main.c: 408: lvdTime = 0;
 	clrf	(_lvdTime)
-	line	408
-;main.c: 408: workStep = 0;
+	line	409
+;main.c: 409: workStep = 0;
 	clrf	(_workStep)
 	goto	l3126
-	line	413
+	line	414
 	
 l534:	
 	goto	l3126
 	global	start
 	ljmp	start
 	opt stack 0
-	line	415
+	line	416
 GLOBAL	__end_of_main
 	__end_of_main:
 	signat	_main,89
@@ -1094,7 +1094,7 @@ GLOBAL	__end_of_main
 
 ;; *************** function _workCtr *****************
 ;; Defined at:
-;;		line 327 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 328 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1127,12 +1127,12 @@ GLOBAL	__end_of_main
 ;; This function uses a non-reentrant model
 ;;
 psect	text1,local,class=CODE,delta=2,merge=1,group=0
-	line	327
+	line	328
 global __ptext1
 __ptext1:	;psect for function _workCtr
 psect	text1
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	327
+	line	328
 	global	__size_of_workCtr
 	__size_of_workCtr	equ	__end_of_workCtr-_workCtr
 	
@@ -1140,10 +1140,10 @@ _workCtr:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _workCtr: [wreg+status,2+status,0+pclath+cstack]
-	line	329
+	line	330
 	
 l2694:	
-;main.c: 329: if(++count1s >= 500)
+;main.c: 330: if(++count1s >= 500)
 	incf	(_count1s),f
 	skipnz
 	incf	(_count1s+1),f
@@ -1158,17 +1158,17 @@ l2694:
 u1651:
 	goto	l2702
 u1650:
-	line	331
-	
-l2696:	
-;main.c: 330: {
-;main.c: 331: count1s = 0;
-	clrf	(_count1s)
-	clrf	(_count1s+1)
 	line	332
 	
+l2696:	
+;main.c: 331: {
+;main.c: 332: count1s = 0;
+	clrf	(_count1s)
+	clrf	(_count1s+1)
+	line	333
+	
 l2698:	
-;main.c: 332: if(count300s > 0)
+;main.c: 333: if(count300s > 0)
 	movf	((_count300s)),w
 iorwf	((_count300s+1)),w
 	btfsc	status,2
@@ -1177,23 +1177,23 @@ iorwf	((_count300s+1)),w
 u1661:
 	goto	l2702
 u1660:
-	line	334
+	line	335
 	
 l2700:	
-;main.c: 333: {
-;main.c: 334: count300s--;
+;main.c: 334: {
+;main.c: 335: count300s--;
 	movlw	01h
 	subwf	(_count300s),f
 	movlw	0
 	skipc
 	decf	(_count300s+1),f
 	subwf	(_count300s+1),f
-	line	337
+	line	338
 	
 l2702:	
-;main.c: 335: }
 ;main.c: 336: }
-;main.c: 337: if(count300s > 0)
+;main.c: 337: }
+;main.c: 338: if(count300s > 0)
 	movf	((_count300s)),w
 iorwf	((_count300s+1)),w
 	btfsc	status,2
@@ -1202,28 +1202,28 @@ iorwf	((_count300s+1)),w
 u1671:
 	goto	l519
 u1670:
-	line	339
+	line	340
 	
 l2704:	
-;main.c: 338: {
-;main.c: 339: RB2 = 1;
+;main.c: 339: {
+;main.c: 340: RB2 = 1;
 	bsf	(50/8),(50)&7	;volatile
-	line	340
-;main.c: 340: }
-	goto	l2706
 	line	341
+;main.c: 341: }
+	goto	l2706
+	line	342
 	
 l519:	
-	line	343
-;main.c: 341: else
-;main.c: 342: {
-;main.c: 343: RB2 = 0;
+	line	344
+;main.c: 342: else
+;main.c: 343: {
+;main.c: 344: RB2 = 0;
 	bcf	(50/8),(50)&7	;volatile
-	line	346
+	line	347
 	
 l2706:	
-;main.c: 344: }
-;main.c: 346: if(workStep == 0)
+;main.c: 345: }
+;main.c: 347: if(workStep == 0)
 	movf	((_workStep)),w
 	btfss	status,2
 	goto	u1681
@@ -1231,19 +1231,19 @@ l2706:
 u1681:
 	goto	l2710
 u1680:
-	line	348
+	line	349
 	
 l2708:	
-;main.c: 347: {
-;main.c: 348: pwm13Stop();
+;main.c: 348: {
+;main.c: 349: pwm13Stop();
 	fcall	_pwm13Stop
-	line	349
-;main.c: 349: }
-	goto	l528
 	line	350
+;main.c: 350: }
+	goto	l528
+	line	351
 	
 l2710:	
-;main.c: 350: else if(workStep == 1)
+;main.c: 351: else if(workStep == 1)
 		decf	((_workStep)),w
 	btfss	status,2
 	goto	u1691
@@ -1251,28 +1251,28 @@ l2710:
 u1691:
 	goto	l2716
 u1690:
-	line	352
-	
-l2712:	
-;main.c: 351: {
-;main.c: 352: pwm1Init();
-	fcall	_pwm1Init
 	line	353
 	
-l2714:	
-;main.c: 353: pwm3Stop();
-	fcall	_pwm3Stop
+l2712:	
+;main.c: 352: {
+;main.c: 353: pwm1Init();
+	fcall	_pwm1Init
 	line	354
-;main.c: 354: led1Duty = ledDuty;
+	
+l2714:	
+;main.c: 354: pwm3Stop();
+	fcall	_pwm3Stop
+	line	355
+;main.c: 355: led1Duty = ledDuty;
 	movf	(_ledDuty),w
 	movwf	(_led1Duty)
-	line	355
-;main.c: 355: }
-	goto	l528
 	line	356
+;main.c: 356: }
+	goto	l528
+	line	357
 	
 l2716:	
-;main.c: 356: else if(workStep == 2)
+;main.c: 357: else if(workStep == 2)
 		movlw	2
 	xorwf	((_workStep)),w
 	btfss	status,2
@@ -1281,28 +1281,28 @@ l2716:
 u1701:
 	goto	l2722
 u1700:
-	line	358
-	
-l2718:	
-;main.c: 357: {
-;main.c: 358: pwm3Init();
-	fcall	_pwm3Init
 	line	359
 	
-l2720:	
-;main.c: 359: pwm1Stop();
-	fcall	_pwm1Stop
+l2718:	
+;main.c: 358: {
+;main.c: 359: pwm3Init();
+	fcall	_pwm3Init
 	line	360
-;main.c: 360: led2Duty = ledDuty;
+	
+l2720:	
+;main.c: 360: pwm1Stop();
+	fcall	_pwm1Stop
+	line	361
+;main.c: 361: led2Duty = ledDuty;
 	movf	(_ledDuty),w
 	movwf	(_led2Duty)
-	line	361
-;main.c: 361: }
-	goto	l528
 	line	362
+;main.c: 362: }
+	goto	l528
+	line	363
 	
 l2722:	
-;main.c: 362: else if(workStep == 3)
+;main.c: 363: else if(workStep == 3)
 		movlw	3
 	xorwf	((_workStep)),w
 	btfss	status,2
@@ -1311,20 +1311,20 @@ l2722:
 u1711:
 	goto	l524
 u1710:
-	line	364
-	
-l2724:	
-;main.c: 363: {
-;main.c: 364: pwm13Init();
-	fcall	_pwm13Init
 	line	365
 	
+l2724:	
+;main.c: 364: {
+;main.c: 365: pwm13Init();
+	fcall	_pwm13Init
+	line	366
+	
 l2726:	
-;main.c: 365: led3Duty = ledDuty;
+;main.c: 366: led3Duty = ledDuty;
 	movf	(_ledDuty),w
 	movwf	(_led3Duty)
 	goto	l528
-	line	368
+	line	369
 	
 l524:	
 	
@@ -1338,7 +1338,7 @@ GLOBAL	__end_of_workCtr
 
 ;; *************** function _pwm3Stop *****************
 ;; Defined at:
-;;		line 163 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 164 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1366,12 +1366,12 @@ GLOBAL	__end_of_workCtr
 ;; This function uses a non-reentrant model
 ;;
 psect	text2,local,class=CODE,delta=2,merge=1,group=0
-	line	163
+	line	164
 global __ptext2
 __ptext2:	;psect for function _pwm3Stop
 psect	text2
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	163
+	line	164
 	global	__size_of_pwm3Stop
 	__size_of_pwm3Stop	equ	__end_of_pwm3Stop-_pwm3Stop
 	
@@ -1379,15 +1379,15 @@ _pwm3Stop:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _pwm3Stop: []
-	line	165
+	line	166
 	
 l2298:	
-;main.c: 165: PWMCON0 &= 0XF7;
+;main.c: 166: PWMCON0 &= 0XF7;
 	bcf	(21)+(3/8),(3)&7	;volatile
-	line	166
-;main.c: 166: RB4 = 0;
+	line	167
+;main.c: 167: RB4 = 0;
 	bcf	(52/8),(52)&7	;volatile
-	line	169
+	line	170
 	
 l473:	
 	return
@@ -1399,7 +1399,7 @@ GLOBAL	__end_of_pwm3Stop
 
 ;; *************** function _pwm3Init *****************
 ;; Defined at:
-;;		line 145 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 146 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1427,12 +1427,12 @@ GLOBAL	__end_of_pwm3Stop
 ;; This function uses a non-reentrant model
 ;;
 psect	text3,local,class=CODE,delta=2,merge=1,group=0
-	line	145
+	line	146
 global __ptext3
 __ptext3:	;psect for function _pwm3Init
 psect	text3
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	145
+	line	146
 	global	__size_of_pwm3Init
 	__size_of_pwm3Init	equ	__end_of_pwm3Init-_pwm3Init
 	
@@ -1440,56 +1440,56 @@ _pwm3Init:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _pwm3Init: [wreg+status,2]
-	line	148
-	
-l2284:	
-;main.c: 148: TRISB |= 0x10;
-	bsf	(5)+(4/8),(4)&7	;volatile
 	line	149
 	
-l2286:	
-;main.c: 149: PWMCON1 = 0B00000000;
-	clrf	(22)	;volatile
+l2284:	
+;main.c: 149: TRISB |= 0x10;
+	bsf	(5)+(4/8),(4)&7	;volatile
 	line	150
-;main.c: 150: PWMTH = 0X00;
-	clrf	(24)	;volatile
-	line	152
 	
-l2288:	
-;main.c: 152: PWMTL = 100;
-	movlw	low(064h)
-	movwf	(23)	;volatile
+l2286:	
+;main.c: 150: PWMCON1 = 0B00000000;
+	clrf	(22)	;volatile
+	line	151
+;main.c: 151: PWMTH = 0X00;
+	clrf	(24)	;volatile
 	line	153
 	
+l2288:	
+;main.c: 153: PWMTL = 100;
+	movlw	low(064h)
+	movwf	(23)	;volatile
+	line	154
+	
 l2290:	
-;main.c: 153: PWMD23H = 0;
+;main.c: 154: PWMD23H = 0;
 	bsf	status, 5	;RP0=1, select bank1
 	clrf	(158)^080h	;volatile
-	line	154
-;main.c: 154: PWMD3L = ledDuty;
+	line	155
+;main.c: 155: PWMD3L = ledDuty;
 	movf	(_ledDuty),w
 	movwf	(156)^080h	;volatile
-	line	155
+	line	156
 	
 l2292:	
-;main.c: 155: PWM23DT = 0X00;
+;main.c: 156: PWM23DT = 0X00;
 	clrf	(157)^080h	;volatile
-	line	157
+	line	158
 	
 l2294:	
-;main.c: 157: PWMCON0 = 0X68;
+;main.c: 158: PWMCON0 = 0X68;
 	movlw	low(068h)
 	bcf	status, 5	;RP0=0, select bank0
 	movwf	(21)	;volatile
-	line	158
-;main.c: 158: PWMCON2 =0X00;
-	clrf	(29)	;volatile
 	line	159
+;main.c: 159: PWMCON2 =0X00;
+	clrf	(29)	;volatile
+	line	160
 	
 l2296:	
-;main.c: 159: TRISB &= 0xEF;
+;main.c: 160: TRISB &= 0xEF;
 	bcf	(5)+(4/8),(4)&7	;volatile
-	line	161
+	line	162
 	
 l470:	
 	return
@@ -1501,7 +1501,7 @@ GLOBAL	__end_of_pwm3Init
 
 ;; *************** function _pwm1Stop *****************
 ;; Defined at:
-;;		line 189 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 190 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1529,12 +1529,12 @@ GLOBAL	__end_of_pwm3Init
 ;; This function uses a non-reentrant model
 ;;
 psect	text4,local,class=CODE,delta=2,merge=1,group=0
-	line	189
+	line	190
 global __ptext4
 __ptext4:	;psect for function _pwm1Stop
 psect	text4
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	189
+	line	190
 	global	__size_of_pwm1Stop
 	__size_of_pwm1Stop	equ	__end_of_pwm1Stop-_pwm1Stop
 	
@@ -1542,15 +1542,15 @@ _pwm1Stop:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _pwm1Stop: []
-	line	191
+	line	192
 	
 l2314:	
-;main.c: 191: PWMCON0 &= 0XFD;
+;main.c: 192: PWMCON0 &= 0XFD;
 	bcf	(21)+(1/8),(1)&7	;volatile
-	line	192
-;main.c: 192: RB1 = 0;
+	line	193
+;main.c: 193: RB1 = 0;
 	bcf	(49/8),(49)&7	;volatile
-	line	194
+	line	195
 	
 l479:	
 	return
@@ -1562,7 +1562,7 @@ GLOBAL	__end_of_pwm1Stop
 
 ;; *************** function _pwm1Init *****************
 ;; Defined at:
-;;		line 171 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 172 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1590,12 +1590,12 @@ GLOBAL	__end_of_pwm1Stop
 ;; This function uses a non-reentrant model
 ;;
 psect	text5,local,class=CODE,delta=2,merge=1,group=0
-	line	171
+	line	172
 global __ptext5
 __ptext5:	;psect for function _pwm1Init
 psect	text5
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	171
+	line	172
 	global	__size_of_pwm1Init
 	__size_of_pwm1Init	equ	__end_of_pwm1Init-_pwm1Init
 	
@@ -1603,54 +1603,54 @@ _pwm1Init:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _pwm1Init: [wreg+status,2]
-	line	173
-	
-l2300:	
-;main.c: 173: TRISB |= 0x02;
-	bsf	(5)+(1/8),(1)&7	;volatile
 	line	174
 	
-l2302:	
-;main.c: 174: PWMCON1 = 0B00000000;
-	clrf	(22)	;volatile
+l2300:	
+;main.c: 174: TRISB |= 0x02;
+	bsf	(5)+(1/8),(1)&7	;volatile
 	line	175
-;main.c: 175: PWMTH = 0X00;
-	clrf	(24)	;volatile
+	
+l2302:	
+;main.c: 175: PWMCON1 = 0B00000000;
+	clrf	(22)	;volatile
 	line	176
+;main.c: 176: PWMTH = 0X00;
+	clrf	(24)	;volatile
+	line	177
 	
 l2304:	
-;main.c: 176: PWMTL = 100;
+;main.c: 177: PWMTL = 100;
 	movlw	low(064h)
 	movwf	(23)	;volatile
-	line	179
+	line	180
 	
 l2306:	
-;main.c: 179: PWMD01H = 0;
+;main.c: 180: PWMD01H = 0;
 	clrf	(30)	;volatile
-	line	180
-;main.c: 180: PWMD1L = ledDuty;
+	line	181
+;main.c: 181: PWMD1L = ledDuty;
 	movf	(_ledDuty),w
 	movwf	(26)	;volatile
-	line	181
+	line	182
 	
 l2308:	
-;main.c: 181: PWM01DT = 0X00;
+;main.c: 182: PWM01DT = 0X00;
 	clrf	(31)	;volatile
-	line	183
+	line	184
 	
 l2310:	
-;main.c: 183: PWMCON0 = 0X62;
+;main.c: 184: PWMCON0 = 0X62;
 	movlw	low(062h)
 	movwf	(21)	;volatile
-	line	184
-;main.c: 184: PWMCON2 =0X00;
-	clrf	(29)	;volatile
 	line	185
+;main.c: 185: PWMCON2 =0X00;
+	clrf	(29)	;volatile
+	line	186
 	
 l2312:	
-;main.c: 185: TRISB &= 0xFD;
+;main.c: 186: TRISB &= 0xFD;
 	bcf	(5)+(1/8),(1)&7	;volatile
-	line	187
+	line	188
 	
 l476:	
 	return
@@ -1662,7 +1662,7 @@ GLOBAL	__end_of_pwm1Init
 
 ;; *************** function _pwm13Stop *****************
 ;; Defined at:
-;;		line 218 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 219 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1691,12 +1691,12 @@ GLOBAL	__end_of_pwm1Init
 ;; This function uses a non-reentrant model
 ;;
 psect	text6,local,class=CODE,delta=2,merge=1,group=0
-	line	218
+	line	219
 global __ptext6
 __ptext6:	;psect for function _pwm13Stop
 psect	text6
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	218
+	line	219
 	global	__size_of_pwm13Stop
 	__size_of_pwm13Stop	equ	__end_of_pwm13Stop-_pwm13Stop
 	
@@ -1704,17 +1704,17 @@ _pwm13Stop:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _pwm13Stop: [wreg+status,2+status,0]
-	line	220
+	line	221
 	
 l2342:	
-;main.c: 220: PWMCON0 &= 0XF5;
+;main.c: 221: PWMCON0 &= 0XF5;
 	movlw	low(0F5h)
 	andwf	(21),f	;volatile
-	line	221
-;main.c: 221: PORTB &= 0xED;
+	line	222
+;main.c: 222: PORTB &= 0xED;
 	movlw	low(0EDh)
 	andwf	(6),f	;volatile
-	line	223
+	line	224
 	
 l485:	
 	return
@@ -1726,7 +1726,7 @@ GLOBAL	__end_of_pwm13Stop
 
 ;; *************** function _pwm13Init *****************
 ;; Defined at:
-;;		line 196 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 197 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1754,12 +1754,12 @@ GLOBAL	__end_of_pwm13Stop
 ;; This function uses a non-reentrant model
 ;;
 psect	text7,local,class=CODE,delta=2,merge=1,group=0
-	line	196
+	line	197
 global __ptext7
 __ptext7:	;psect for function _pwm13Init
 psect	text7
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	196
+	line	197
 	global	__size_of_pwm13Init
 	__size_of_pwm13Init	equ	__end_of_pwm13Init-_pwm13Init
 	
@@ -1767,80 +1767,80 @@ _pwm13Init:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _pwm13Init: [wreg+status,2+status,0]
-	line	198
-	
-l2316:	
-;main.c: 198: TRISB |= 0x05;
-	movlw	low(05h)
-	iorwf	(5),f	;volatile
 	line	199
 	
-l2318:	
-;main.c: 199: PWMCON1 = 0B00000000;
-	clrf	(22)	;volatile
+l2316:	
+;main.c: 199: TRISB |= 0x05;
+	movlw	low(05h)
+	iorwf	(5),f	;volatile
 	line	200
 	
-l2320:	
-;main.c: 200: PWMTH = 0X00;
-	clrf	(24)	;volatile
+l2318:	
+;main.c: 200: PWMCON1 = 0B00000000;
+	clrf	(22)	;volatile
 	line	201
 	
+l2320:	
+;main.c: 201: PWMTH = 0X00;
+	clrf	(24)	;volatile
+	line	202
+	
 l2322:	
-;main.c: 201: PWMTL = 100;
+;main.c: 202: PWMTL = 100;
 	movlw	low(064h)
 	movwf	(23)	;volatile
-	line	204
-	
-l2324:	
-;main.c: 204: PWMD23H = 0;
-	bsf	status, 5	;RP0=1, select bank1
-	clrf	(158)^080h	;volatile
 	line	205
 	
-l2326:	
-;main.c: 205: PWMD3L = ledDuty;
-	movf	(_ledDuty),w
-	movwf	(156)^080h	;volatile
+l2324:	
+;main.c: 205: PWMD23H = 0;
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(158)^080h	;volatile
 	line	206
 	
-l2328:	
-;main.c: 206: PWM23DT = 0X00;
-	clrf	(157)^080h	;volatile
-	line	208
+l2326:	
+;main.c: 206: PWMD3L = ledDuty;
+	movf	(_ledDuty),w
+	movwf	(156)^080h	;volatile
+	line	207
 	
-l2330:	
-;main.c: 208: PWMD01H = 0;
-	bcf	status, 5	;RP0=0, select bank0
-	clrf	(30)	;volatile
+l2328:	
+;main.c: 207: PWM23DT = 0X00;
+	clrf	(157)^080h	;volatile
 	line	209
 	
-l2332:	
-;main.c: 209: PWMD1L = ledDuty;
-	movf	(_ledDuty),w
-	movwf	(26)	;volatile
+l2330:	
+;main.c: 209: PWMD01H = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(30)	;volatile
 	line	210
 	
-l2334:	
-;main.c: 210: PWM01DT = 0X00;
-	clrf	(31)	;volatile
-	line	212
+l2332:	
+;main.c: 210: PWMD1L = ledDuty;
+	movf	(_ledDuty),w
+	movwf	(26)	;volatile
+	line	211
 	
-l2336:	
-;main.c: 212: PWMCON0 = 0X6A;
-	movlw	low(06Ah)
-	movwf	(21)	;volatile
+l2334:	
+;main.c: 211: PWM01DT = 0X00;
+	clrf	(31)	;volatile
 	line	213
 	
-l2338:	
-;main.c: 213: PWMCON2 =0X00;
-	clrf	(29)	;volatile
+l2336:	
+;main.c: 213: PWMCON0 = 0X6A;
+	movlw	low(06Ah)
+	movwf	(21)	;volatile
 	line	214
 	
+l2338:	
+;main.c: 214: PWMCON2 =0X00;
+	clrf	(29)	;volatile
+	line	215
+	
 l2340:	
-;main.c: 214: TRISB &= 0xFA;
+;main.c: 215: TRISB &= 0xFA;
 	movlw	low(0FAh)
 	andwf	(5),f	;volatile
-	line	216
+	line	217
 	
 l482:	
 	return
@@ -1852,7 +1852,7 @@ GLOBAL	__end_of_pwm13Init
 
 ;; *************** function _keyCtr *****************
 ;; Defined at:
-;;		line 301 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 302 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -1880,12 +1880,12 @@ GLOBAL	__end_of_pwm13Init
 ;; This function uses a non-reentrant model
 ;;
 psect	text8,local,class=CODE,delta=2,merge=1,group=0
-	line	301
+	line	302
 global __ptext8
 __ptext8:	;psect for function _keyCtr
 psect	text8
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	301
+	line	302
 	global	__size_of_keyCtr
 	__size_of_keyCtr	equ	__end_of_keyCtr-_keyCtr
 	
@@ -1893,10 +1893,10 @@ _keyCtr:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _keyCtr: [wreg+status,2+status,0]
-	line	303
+	line	304
 	
 l2674:	
-;main.c: 303: if(doubleKeyTime > 0)
+;main.c: 304: if(doubleKeyTime > 0)
 	movf	((_doubleKeyTime)),w
 	btfsc	status,2
 	goto	u1591
@@ -1904,22 +1904,22 @@ l2674:
 u1591:
 	goto	l514
 u1590:
-	line	305
+	line	306
 	
 l2676:	
-;main.c: 304: {
-;main.c: 305: if(--doubleKeyTime == 0)
+;main.c: 305: {
+;main.c: 306: if(--doubleKeyTime == 0)
 	decfsz	(_doubleKeyTime),f
 	goto	u1601
 	goto	u1600
 u1601:
 	goto	l514
 u1600:
-	line	307
+	line	308
 	
 l2678:	
-;main.c: 306: {
-;main.c: 307: if(++workStep > 3)
+;main.c: 307: {
+;main.c: 308: if(++workStep > 3)
 	movlw	low(04h)
 	incf	(_workStep),f
 	subwf	((_workStep)),w
@@ -1929,17 +1929,17 @@ l2678:
 u1611:
 	goto	l2682
 u1610:
-	line	309
+	line	310
 	
 l2680:	
-;main.c: 308: {
-;main.c: 309: workStep = 0;
+;main.c: 309: {
+;main.c: 310: workStep = 0;
 	clrf	(_workStep)
-	line	311
+	line	312
 	
 l2682:	
-;main.c: 310: }
-;main.c: 311: if(workStep == 1)
+;main.c: 311: }
+;main.c: 312: if(workStep == 1)
 		decf	((_workStep)),w
 	btfss	status,2
 	goto	u1621
@@ -1947,20 +1947,20 @@ l2682:
 u1621:
 	goto	l2686
 u1620:
-	line	313
+	line	314
 	
 l2684:	
-;main.c: 312: {
-;main.c: 313: ledDuty = led1Duty;
+;main.c: 313: {
+;main.c: 314: ledDuty = led1Duty;
 	movf	(_led1Duty),w
 	movwf	(_ledDuty)
-	line	314
-;main.c: 314: }
-	goto	l514
 	line	315
+;main.c: 315: }
+	goto	l514
+	line	316
 	
 l2686:	
-;main.c: 315: else if(workStep == 2)
+;main.c: 316: else if(workStep == 2)
 		movlw	2
 	xorwf	((_workStep)),w
 	btfss	status,2
@@ -1969,20 +1969,20 @@ l2686:
 u1631:
 	goto	l2690
 u1630:
-	line	317
+	line	318
 	
 l2688:	
-;main.c: 316: {
-;main.c: 317: ledDuty = led2Duty;
+;main.c: 317: {
+;main.c: 318: ledDuty = led2Duty;
 	movf	(_led2Duty),w
 	movwf	(_ledDuty)
-	line	318
-;main.c: 318: }
-	goto	l514
 	line	319
+;main.c: 319: }
+	goto	l514
+	line	320
 	
 l2690:	
-;main.c: 319: else if(workStep == 3)
+;main.c: 320: else if(workStep == 3)
 		movlw	3
 	xorwf	((_workStep)),w
 	btfss	status,2
@@ -1991,18 +1991,18 @@ l2690:
 u1641:
 	goto	l507
 u1640:
-	line	321
+	line	322
 	
 l2692:	
-;main.c: 320: {
-;main.c: 321: ledDuty = led3Duty;
+;main.c: 321: {
+;main.c: 322: ledDuty = led3Duty;
 	movf	(_led3Duty),w
 	movwf	(_ledDuty)
 	goto	l514
-	line	323
+	line	324
 	
 l507:	
-	line	325
+	line	326
 	
 l514:	
 	return
@@ -2014,7 +2014,7 @@ GLOBAL	__end_of_keyCtr
 
 ;; *************** function _WorkSleep *****************
 ;; Defined at:
-;;		line 254 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 255 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2044,12 +2044,12 @@ GLOBAL	__end_of_keyCtr
 ;; This function uses a non-reentrant model
 ;;
 psect	text9,local,class=CODE,delta=2,merge=1,group=0
-	line	254
+	line	255
 global __ptext9
 __ptext9:	;psect for function _WorkSleep
 psect	text9
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	254
+	line	255
 	global	__size_of_WorkSleep
 	__size_of_WorkSleep	equ	__end_of_WorkSleep-_WorkSleep
 	
@@ -2057,11 +2057,11 @@ _WorkSleep:
 ;incstack = 0
 	opt	stack 3
 ; Regs used in _WorkSleep: [wreg-fsr0h+status,2+status,0+btemp+1+pclath+cstack]
-	line	261
+	line	262
 	
 l3068:	
-;main.c: 257: static unsigned char time;
-;main.c: 261: if(++time >= 125)
+;main.c: 258: static unsigned char time;
+;main.c: 262: if(++time >= 125)
 	movlw	low(07Dh)
 	incf	(WorkSleep@time),f
 	subwf	((WorkSleep@time)),w
@@ -2071,84 +2071,84 @@ l3068:
 u2211:
 	goto	l503
 u2210:
-	line	263
+	line	264
 	
 l3070:	
-;main.c: 262: {
-;main.c: 263: time = 0;
+;main.c: 263: {
+;main.c: 264: time = 0;
 	clrf	(WorkSleep@time)
-	line	264
-;main.c: 264: INTCON = 0;
-	clrf	(11)	;volatile
 	line	265
-;main.c: 265: PIE1 = 0;
-	clrf	(14)	;volatile
+;main.c: 265: INTCON = 0;
+	clrf	(11)	;volatile
 	line	266
-;main.c: 266: PIE2 = 0;
+;main.c: 266: PIE1 = 0;
+	clrf	(14)	;volatile
+	line	267
+;main.c: 267: PIE2 = 0;
 	bsf	status, 6	;RP1=1, select bank2
 	clrf	(272)^0100h	;volatile
-	line	267
-;main.c: 267: PIR1 = 0;
+	line	268
+;main.c: 268: PIR1 = 0;
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(13)	;volatile
-	line	268
-;main.c: 268: PIR2 = 0;
+	line	269
+;main.c: 269: PIR2 = 0;
 	bsf	status, 6	;RP1=1, select bank2
 	clrf	(271)^0100h	;volatile
-	line	269
-;main.c: 269: T2CON = 0;
+	line	270
+;main.c: 270: T2CON = 0;
 	bcf	status, 6	;RP1=0, select bank0
 	clrf	(19)	;volatile
-	line	273
-;main.c: 273: TRISB = 0x00;
-	clrf	(5)	;volatile
 	line	274
-;main.c: 274: PORTB = 0;
-	clrf	(6)	;volatile
+;main.c: 274: TRISB = 0x00;
+	clrf	(5)	;volatile
 	line	275
-;main.c: 275: CMPCON1 = 0x00;
-	clrf	(16)	;volatile
+;main.c: 275: PORTB = 0;
+	clrf	(6)	;volatile
 	line	276
-;main.c: 276: CMPCON0 = 0x00;
+;main.c: 276: CMPCON1 = 0x00;
+	clrf	(16)	;volatile
+	line	277
+;main.c: 277: CMPCON0 = 0x00;
 	clrf	(15)	;volatile
-	line	288
-	
-l3072:	
-;main.c: 288: SystemEnterSleep();
-	fcall	_SystemEnterSleep
 	line	289
 	
+l3072:	
+;main.c: 289: SystemEnterSleep();
+	fcall	_SystemEnterSleep
+	line	290
+	
 l3074:	
-;main.c: 289: if(RBIF)
+;main.c: 290: if(RBIF)
 	btfss	(88/8),(88)&7	;volatile
 	goto	u2221
 	goto	u2220
 u2221:
 	goto	l3080
 u2220:
-	line	291
-	
-l3076:	
-;main.c: 290: {
-;main.c: 291: RBIF = 0;
-	bcf	(88/8),(88)&7	;volatile
 	line	292
 	
-l3078:	
-;main.c: 292: PORTB;
-	movf	(6),w	;volatile
-	line	295
+l3076:	
+;main.c: 291: {
+;main.c: 292: RBIF = 0;
+	bcf	(88/8),(88)&7	;volatile
+	line	293
 	
-l3080:	
-;main.c: 293: }
-;main.c: 295: Refurbish_Sfr();
-	fcall	_Refurbish_Sfr
+l3078:	
+;main.c: 293: PORTB;
+	movf	(6),w	;volatile
 	line	296
 	
+l3080:	
+;main.c: 294: }
+;main.c: 296: Refurbish_Sfr();
+	fcall	_Refurbish_Sfr
+	line	297
+	
 l3082:	
-;main.c: 296: checkLvd();
+;main.c: 297: checkLvd();
 	fcall	_checkLvd
-	line	299
+	line	300
 	
 l503:	
 	return
@@ -2160,7 +2160,7 @@ GLOBAL	__end_of_WorkSleep
 
 ;; *************** function _checkLvd *****************
 ;; Defined at:
-;;		line 225 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 226 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2189,12 +2189,12 @@ GLOBAL	__end_of_WorkSleep
 ;; This function uses a non-reentrant model
 ;;
 psect	text10,local,class=CODE,delta=2,merge=1,group=0
-	line	225
+	line	226
 global __ptext10
 __ptext10:	;psect for function _checkLvd
 psect	text10
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	225
+	line	226
 	global	__size_of_checkLvd
 	__size_of_checkLvd	equ	__end_of_checkLvd-_checkLvd
 	
@@ -2202,17 +2202,17 @@ _checkLvd:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _checkLvd: [wreg]
-	line	227
+	line	228
 	
 l2344:	
-;main.c: 227: CMPCON1 = 0x28;
+;main.c: 228: CMPCON1 = 0x28;
 	movlw	low(028h)
 	movwf	(16)	;volatile
-	line	228
-;main.c: 228: CMPCON0 = 0xA8;
+	line	229
+;main.c: 229: CMPCON0 = 0xA8;
 	movlw	low(0A8h)
 	movwf	(15)	;volatile
-	line	230
+	line	231
 	
 l488:	
 	return
@@ -2514,7 +2514,7 @@ GLOBAL	__end_of_SystemEnterSleep
 
 ;; *************** function _Refurbish_Sfr *****************
 ;; Defined at:
-;;		line 62 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 63 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2544,12 +2544,12 @@ GLOBAL	__end_of_SystemEnterSleep
 ;;
 psect	text12,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	62
+	line	63
 global __ptext12
 __ptext12:	;psect for function _Refurbish_Sfr
 psect	text12
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	62
+	line	63
 	global	__size_of_Refurbish_Sfr
 	__size_of_Refurbish_Sfr	equ	__end_of_Refurbish_Sfr-_Refurbish_Sfr
 	
@@ -2557,26 +2557,26 @@ _Refurbish_Sfr:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _Refurbish_Sfr: [wreg+status,2+status,0]
-	line	65
+	line	66
 	
 l2278:	
-;main.c: 65: PIE1 = 2;
+;main.c: 66: PIE1 = 2;
 	movlw	low(02h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movwf	(14)	;volatile
-	line	66
-;main.c: 66: PR2 = 250;
+	line	67
+;main.c: 67: PR2 = 250;
 	movlw	low(0FAh)
 	movwf	(17)	;volatile
-	line	67
-;main.c: 67: INTCON = 0XC0;
+	line	68
+;main.c: 68: INTCON = 0XC0;
 	movlw	low(0C0h)
 	movwf	(11)	;volatile
-	line	68
+	line	69
 	
 l2280:	
-;main.c: 68: if (4 != T2CON)
+;main.c: 69: if (4 != T2CON)
 		movlw	4
 	xorwf	((19)),w	;volatile
 	btfsc	status,2
@@ -2585,13 +2585,13 @@ l2280:
 u1061:
 	goto	l447
 u1060:
-	line	69
+	line	70
 	
 l2282:	
-;main.c: 69: T2CON = 4;
+;main.c: 70: T2CON = 4;
 	movlw	low(04h)
 	movwf	(19)	;volatile
-	line	70
+	line	71
 	
 l447:	
 	return
@@ -2603,7 +2603,7 @@ GLOBAL	__end_of_Refurbish_Sfr
 
 ;; *************** function _KeyServer *****************
 ;; Defined at:
-;;		line 76 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 77 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -2631,12 +2631,12 @@ GLOBAL	__end_of_Refurbish_Sfr
 ;; This function uses a non-reentrant model
 ;;
 psect	text13,local,class=CODE,delta=2,merge=1,group=0
-	line	76
+	line	77
 global __ptext13
 __ptext13:	;psect for function _KeyServer
 psect	text13
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	76
+	line	77
 	global	__size_of_KeyServer
 	__size_of_KeyServer	equ	__end_of_KeyServer-_KeyServer
 	
@@ -2644,11 +2644,11 @@ _KeyServer:
 ;incstack = 0
 	opt	stack 5
 ; Regs used in _KeyServer: [wreg+status,2+status,0+pclath+cstack]
-	line	79
+	line	80
 	
 l2600:	
-;main.c: 78: static unsigned char KeyOldFlag = 0;
-;main.c: 79: if (KeyFlag[0])
+;main.c: 79: static unsigned char KeyOldFlag = 0;
+;main.c: 80: if (KeyFlag[0])
 	movf	((_KeyFlag)),w	;volatile
 	btfsc	status,2
 	goto	u1411
@@ -2656,29 +2656,29 @@ l2600:
 u1411:
 	goto	l2634
 u1410:
-	line	81
+	line	82
 	
 l2602:	
-;main.c: 80: {
-;main.c: 81: if ((KeyFlag[0] & 0x1))
+;main.c: 81: {
+;main.c: 82: if ((KeyFlag[0] & 0x1))
 	btfss	(_KeyFlag),(0)&7	;volatile
 	goto	u1421
 	goto	u1420
 u1421:
 	goto	l467
 u1420:
-	line	83
+	line	84
 	
 l2604:	
-;main.c: 82: {
-;main.c: 83: keyCount++;
+;main.c: 83: {
+;main.c: 84: keyCount++;
 	incf	(_keyCount),f
 	skipnz
 	incf	(_keyCount+1),f
-	line	85
+	line	86
 	
 l2606:	
-;main.c: 85: if(keyCount >= 250 && keyCount % 10 == 0 && workStep > 0)
+;main.c: 86: if(keyCount >= 250 && keyCount % 10 == 0 && workStep > 0)
 	movlw	0
 	subwf	(_keyCount+1),w
 	movlw	0FAh
@@ -2717,11 +2717,11 @@ l2610:
 u1451:
 	goto	l2632
 u1450:
-	line	87
+	line	88
 	
 l2612:	
-;main.c: 86: {
-;main.c: 87: if(modeStep == 0 && ledDuty < 90)
+;main.c: 87: {
+;main.c: 88: if(modeStep == 0 && ledDuty < 90)
 	movf	((_modeStep)),w
 	btfss	status,2
 	goto	u1461
@@ -2739,17 +2739,17 @@ l2614:
 u1471:
 	goto	l2618
 u1470:
-	line	89
+	line	90
 	
 l2616:	
-;main.c: 88: {
-;main.c: 89: ledDuty++;
+;main.c: 89: {
+;main.c: 90: ledDuty++;
 	incf	(_ledDuty),f
-	line	91
+	line	92
 	
 l2618:	
-;main.c: 90: }
-;main.c: 91: if(modeStep == 1 && ledDuty > 10)
+;main.c: 91: }
+;main.c: 92: if(modeStep == 1 && ledDuty > 10)
 		decf	((_modeStep)),w
 	btfss	status,2
 	goto	u1481
@@ -2767,49 +2767,49 @@ l2620:
 u1491:
 	goto	l2624
 u1490:
-	line	93
+	line	94
 	
 l2622:	
-;main.c: 92: {
-;main.c: 93: ledDuty--;
+;main.c: 93: {
+;main.c: 94: ledDuty--;
 	decf	(_ledDuty),f
-	line	95
-	
-l2624:	
-;main.c: 94: }
-;main.c: 95: PWMD23H = 0;
-	bsf	status, 5	;RP0=1, select bank1
-	clrf	(158)^080h	;volatile
 	line	96
 	
-l2626:	
-;main.c: 96: PWMD3L = ledDuty;
-	movf	(_ledDuty),w
-	movwf	(156)^080h	;volatile
+l2624:	
+;main.c: 95: }
+;main.c: 96: PWMD23H = 0;
+	bsf	status, 5	;RP0=1, select bank1
+	clrf	(158)^080h	;volatile
 	line	97
 	
-l2628:	
-;main.c: 97: PWMD01H = 0;
-	bcf	status, 5	;RP0=0, select bank0
-	clrf	(30)	;volatile
+l2626:	
+;main.c: 97: PWMD3L = ledDuty;
+	movf	(_ledDuty),w
+	movwf	(156)^080h	;volatile
 	line	98
 	
+l2628:	
+;main.c: 98: PWMD01H = 0;
+	bcf	status, 5	;RP0=0, select bank0
+	clrf	(30)	;volatile
+	line	99
+	
 l2630:	
-;main.c: 98: PWMD1L = ledDuty;
+;main.c: 99: PWMD1L = ledDuty;
 	movf	(_ledDuty),w
 	movwf	(26)	;volatile
-	line	100
+	line	101
 	
 l2632:	
-;main.c: 99: }
-;main.c: 100: B_OnOff = !B_OnOff;
+;main.c: 100: }
+;main.c: 101: B_OnOff = !B_OnOff;
 	movlw	1<<((_B_OnOff)&7)
 	xorwf	((_B_OnOff)/8),f
 	goto	l467
-	line	106
+	line	107
 	
 l2634:	
-;main.c: 106: if(keyCount > 0 && keyCount < 250)
+;main.c: 107: if(keyCount > 0 && keyCount < 250)
 	movf	((_keyCount)),w
 iorwf	((_keyCount+1)),w
 	btfsc	status,2
@@ -2831,11 +2831,11 @@ l2636:
 u1511:
 	goto	l458
 u1510:
-	line	108
+	line	109
 	
 l2638:	
-;main.c: 107: {
-;main.c: 108: if(doubleKeyTime > 0)
+;main.c: 108: {
+;main.c: 109: if(doubleKeyTime > 0)
 	movf	((_doubleKeyTime)),w
 	btfsc	status,2
 	goto	u1521
@@ -2843,11 +2843,11 @@ l2638:
 u1521:
 	goto	l2648
 u1520:
-	line	110
+	line	111
 	
 l2640:	
-;main.c: 109: {
-;main.c: 110: if(count300s > 0)
+;main.c: 110: {
+;main.c: 111: if(count300s > 0)
 	movf	((_count300s)),w
 iorwf	((_count300s+1)),w
 	btfsc	status,2
@@ -2856,49 +2856,49 @@ iorwf	((_count300s+1)),w
 u1531:
 	goto	l2644
 u1530:
-	line	112
+	line	113
 	
 l2642:	
-;main.c: 111: {
-;main.c: 112: count300s = 0;
+;main.c: 112: {
+;main.c: 113: count300s = 0;
 	clrf	(_count300s)
 	clrf	(_count300s+1)
-	line	113
-;main.c: 113: }
+	line	114
+;main.c: 114: }
 	goto	l2646
-	line	116
+	line	117
 	
 l2644:	
-;main.c: 114: else
-;main.c: 115: {
-;main.c: 116: count300s = 200;
+;main.c: 115: else
+;main.c: 116: {
+;main.c: 117: count300s = 200;
 	movlw	0C8h
 	movwf	(_count300s)
 	clrf	(_count300s+1)
-	line	118
+	line	119
 	
 l2646:	
-;main.c: 117: }
-;main.c: 118: doubleKeyTime = 0;
+;main.c: 118: }
+;main.c: 119: doubleKeyTime = 0;
 	clrf	(_doubleKeyTime)
-	line	119
-;main.c: 119: }
+	line	120
+;main.c: 120: }
 	goto	l458
-	line	122
+	line	123
 	
 l2648:	
-;main.c: 120: else
-;main.c: 121: {
-;main.c: 122: doubleKeyTime = 250;
-	movlw	low(0FAh)
+;main.c: 121: else
+;main.c: 122: {
+;main.c: 123: doubleKeyTime = 125;
+	movlw	low(07Dh)
 	movwf	(_doubleKeyTime)
-	line	126
+	line	127
 	
 l458:	
-	line	127
-;main.c: 123: }
-;main.c: 126: }
-;main.c: 127: if(keyCount > 250)
+	line	128
+;main.c: 124: }
+;main.c: 127: }
+;main.c: 128: if(keyCount > 250)
 	movlw	0
 	subwf	(_keyCount+1),w
 	movlw	0FBh
@@ -2910,11 +2910,11 @@ l458:
 u1541:
 	goto	l2656
 u1540:
-	line	129
+	line	130
 	
 l2650:	
-;main.c: 128: {
-;main.c: 129: if(workStep > 0)
+;main.c: 129: {
+;main.c: 130: if(workStep > 0)
 	movf	((_workStep)),w
 	btfsc	status,2
 	goto	u1551
@@ -2922,11 +2922,11 @@ l2650:
 u1551:
 	goto	l2656
 u1550:
-	line	131
+	line	132
 	
 l2652:	
-;main.c: 130: {
-;main.c: 131: if(modeStep > 0)
+;main.c: 131: {
+;main.c: 132: if(modeStep > 0)
 	movf	((_modeStep)),w
 	btfsc	status,2
 	goto	u1561
@@ -2934,34 +2934,34 @@ l2652:
 u1561:
 	goto	l465
 u1560:
-	line	133
+	line	134
 	
 l2654:	
-;main.c: 132: {
-;main.c: 133: modeStep = 0;
+;main.c: 133: {
+;main.c: 134: modeStep = 0;
 	clrf	(_modeStep)
-	line	134
-;main.c: 134: }
-	goto	l2656
 	line	135
+;main.c: 135: }
+	goto	l2656
+	line	136
 	
 l465:	
-	line	137
-;main.c: 135: else
-;main.c: 136: {
-;main.c: 137: modeStep = 1;
+	line	138
+;main.c: 136: else
+;main.c: 137: {
+;main.c: 138: modeStep = 1;
 	clrf	(_modeStep)
 	incf	(_modeStep),f
-	line	141
+	line	142
 	
 l2656:	
-;main.c: 138: }
 ;main.c: 139: }
 ;main.c: 140: }
-;main.c: 141: keyCount = 0;
+;main.c: 141: }
+;main.c: 142: keyCount = 0;
 	clrf	(_keyCount)
 	clrf	(_keyCount+1)
-	line	143
+	line	144
 	
 l467:	
 	return
@@ -3110,7 +3110,7 @@ GLOBAL	__end_of___lwmod
 
 ;; *************** function _Init_System *****************
 ;; Defined at:
-;;		line 33 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 34 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -3139,12 +3139,12 @@ GLOBAL	__end_of___lwmod
 ;;
 psect	text15,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	33
+	line	34
 global __ptext15
 __ptext15:	;psect for function _Init_System
 psect	text15
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	33
+	line	34
 	global	__size_of_Init_System
 	__size_of_Init_System	equ	__end_of_Init_System-_Init_System
 	
@@ -3152,60 +3152,60 @@ _Init_System:
 ;incstack = 0
 	opt	stack 6
 ; Regs used in _Init_System: [wreg+status,2]
-	line	35
+	line	36
 	
 l2588:	
-# 35 "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-nop ;# 
-	line	36
 # 36 "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+nop ;# 
+	line	37
+# 37 "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 clrwdt ;# 
 psect	text15
-	line	37
-	
-l2590:	
-;main.c: 37: INTCON = 0;
-	clrf	(11)	;volatile
 	line	38
 	
+l2590:	
+;main.c: 38: INTCON = 0;
+	clrf	(11)	;volatile
+	line	39
+	
 l2592:	
-;main.c: 38: OSCCON = 0X72;
+;main.c: 39: OSCCON = 0X72;
 	movlw	low(072h)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	movwf	(20)	;volatile
-	line	39
+	line	40
 	
 l2594:	
-;main.c: 39: OPTION_REG = 0;
+;main.c: 40: OPTION_REG = 0;
 	clrf	(1)	;volatile
-	line	44
-	
-l2596:	
-;main.c: 44: TRISB = 0x00;
-	clrf	(5)	;volatile
 	line	45
 	
+l2596:	
+;main.c: 45: TRISB = 0x00;
+	clrf	(5)	;volatile
+	line	46
+	
 l2598:	
-;main.c: 45: PORTB = 0;
+;main.c: 46: PORTB = 0;
 	clrf	(6)	;volatile
-	line	47
-;main.c: 47: PIE1 = 2;
+	line	48
+;main.c: 48: PIE1 = 2;
 	movlw	low(02h)
 	movwf	(14)	;volatile
-	line	48
-;main.c: 48: PR2 = 250;
+	line	49
+;main.c: 49: PR2 = 250;
 	movlw	low(0FAh)
 	movwf	(17)	;volatile
-	line	49
-;main.c: 49: T2CON = 4;
+	line	50
+;main.c: 50: T2CON = 4;
 	movlw	low(04h)
 	movwf	(19)	;volatile
-	line	51
-;main.c: 51: INTCON = 0XC0;
+	line	52
+;main.c: 52: INTCON = 0XC0;
 	movlw	low(0C0h)
 	movwf	(11)	;volatile
-	line	52
+	line	53
 	
 l443:	
 	return
@@ -5278,7 +5278,7 @@ GLOBAL	__end_of_JudgeKeyOldData
 
 ;; *************** function _Isr_Timer *****************
 ;; Defined at:
-;;		line 236 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
+;;		line 237 in file "C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -5306,12 +5306,12 @@ GLOBAL	__end_of_JudgeKeyOldData
 ;;
 psect	text30,local,class=CODE,delta=2,merge=1,group=0
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	236
+	line	237
 global __ptext30
 __ptext30:	;psect for function _Isr_Timer
 psect	text30
 	file	"C:\mcuproject\scm\zdt\SU005_8122_SOP8_\SU005_SC8P8122_sop8_\main.c"
-	line	236
+	line	237
 	global	__size_of_Isr_Timer
 	__size_of_Isr_Timer	equ	__end_of_Isr_Timer-_Isr_Timer
 	
@@ -5333,10 +5333,10 @@ interrupt_function:
 	movwf	(??_Isr_Timer+1)
 	ljmp	_Isr_Timer
 psect	text30
-	line	238
+	line	239
 	
 i1l2764:	
-;main.c: 238: if(TMR2IF)
+;main.c: 239: if(TMR2IF)
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
 	btfss	(105/8),(105)&7	;volatile
@@ -5345,16 +5345,16 @@ i1l2764:
 u177_21:
 	goto	i1l2774
 u177_20:
-	line	240
-	
-i1l2766:	
-;main.c: 239: {
-;main.c: 240: TMR2IF = 0;
-	bcf	(105/8),(105)&7	;volatile
 	line	241
 	
+i1l2766:	
+;main.c: 240: {
+;main.c: 241: TMR2IF = 0;
+	bcf	(105/8),(105)&7	;volatile
+	line	242
+	
 i1l2768:	
-;main.c: 241: if(++MainTime >= 32)
+;main.c: 242: if(++MainTime >= 32)
 	movlw	low(020h)
 	incf	(_MainTime),f	;volatile
 	subwf	((_MainTime)),w	;volatile
@@ -5364,26 +5364,26 @@ i1l2768:
 u178_21:
 	goto	i1l496
 u178_20:
-	line	243
-	
-i1l2770:	
-;main.c: 242: {
-;main.c: 243: MainTime = 0;
-	clrf	(_MainTime)	;volatile
 	line	244
 	
+i1l2770:	
+;main.c: 243: {
+;main.c: 244: MainTime = 0;
+	clrf	(_MainTime)	;volatile
+	line	245
+	
 i1l2772:	
-;main.c: 244: B_MainLoop = 1;
+;main.c: 245: B_MainLoop = 1;
 	bsf	(_B_MainLoop/8),(_B_MainLoop)&7	;volatile
 	goto	i1l496
-	line	249
+	line	250
 	
 i1l2774:	
-;main.c: 247: else
-;main.c: 248: {
-;main.c: 249: PIR1 = 0;
+;main.c: 248: else
+;main.c: 249: {
+;main.c: 250: PIR1 = 0;
 	clrf	(13)	;volatile
-	line	252
+	line	253
 	
 i1l496:	
 	movf	(??_Isr_Timer+1),w

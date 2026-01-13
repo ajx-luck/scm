@@ -1,0 +1,1498 @@
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE MOTOR
+OBJECT MODULE PLACED IN .\PRO\motor.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE DRV\motor.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\DRV) DEBUG OBJECTEXTEND PRINT
+                    -(.\LST\motor.lst) TABS(2) OBJECT(.\PRO\motor.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          
+   3          //Ò»¶¨Ê±¼äÄÚ ·´µç¶¯ÊÆ±íÏÖ³öµÄ¸ßµçÆ½Ê±¼ä ½áºÏµ¼Í¨ÏàÓÉ´ËÅÐ¶Ï´ËÊ±µç»ú´¦ÓÚ¹ýÁãÇ°»ò¹ýÁãºó
+   4          code u8 Motor_BemfHighLevelCnt[256] = 
+   5          {
+   6            0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,
+   7            4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,
+   8            4,5,1,2,2,3,2,3,3,4,2,3,3,4,3,
+   9            4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,
+  10            4,5,5,6,1,2,2,3,2,3,3,4,2,3,3,
+  11            4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,
+  12            4,5,4,5,5,6,2,3,3,4,3,4,4,5,3,
+  13            4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,
+  14            4,5,5,6,5,6,6,7,1,2,2,3,2,3,3,
+  15            4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,
+  16            4,5,3,4,4,5,4,5,5,6,2,3,3,4,3,
+  17            4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,
+  18            4,5,5,6,4,5,5,6,5,6,6,7,2,3,3,
+  19            4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,
+  20            4,5,4,5,5,6,4,5,5,6,5,6,6,7,3,
+  21            4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+  22            4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,
+  23            8
+  24          };
+  25          motor_mode  Motor_Mode = Motor_Mode_Stop;
+  26          u8      code    HallStep_CCW[]={7,4,0,5,2,3,1,7};
+  27          u8      code    HallStep_CW[]  ={7,1,3,2,5,0,4,7};  // sanyang
+  28          u8   xdata     hallStepLast=0;
+  29          u8   xdata     hallStepNew=0;
+  30          
+  31          bit Motor_FRFlags = 0;                      //µç»úÕý·´×ª±êÖ¾
+  32          bit Motor_FRFlagsTemp = 0;                  //ÁÙÊ±Öµ
+  33          bit Motor_ComputeFlags = 0;                 //ÏÂ´ÎÖÐ¶Ï½øÐÐÊý¾Ý¼ÆËã ½«ÈÎÎñ·Ö¶à´Î½øÐÐ
+  34          u8 xdata  Motor_StepCnt = 0;                      //µç»úÔËÐÐ²½Êý
+  35          u8 xdata  Motor_MotorErrorCnt = 0;                //¼ì²âµç»úÊÇ·ñÁ¬½ÓÕý³£´ÎÊý
+  36          s8  xdata Motor_Locate = 0;                       //µç»úµ±Ç°Î»ÖÃ
+  37          //·´µç¶¯ÊÆ¼ì²â
+  38          bit Motor_BemfEdgeStateNext = 0;            //ÏÂÒ»´Î¹ýÁã¼ì²âÐèÒªµÄ±ßÑØ×´Ì¬  0ÐèÒªÏÂ½µÑØ   1ÐèÒªÉÏÉýÑØ
+  39          s8 xdata  Motor_BemfEdgeStateNow = 0;             //·´µç¶¯ÊÆµ±Ç°µÄ×´Ì¬ -1ÉÐÎ´¼ì²â 0¼ì²âµ½ÏÂ½µÑØ 1¼ì²âµ½ÉÏÉýÑØ 2
+             -¼ì²âÍê³É²¢ÕýÈ·
+  40          u16 xdata Motor_BemfTime15 = 0;                   //·´µç¶¯ÊÆ15¡ãµç½Ç¶ÈÊ±¼ä
+  41          u16 xdata Motor_BemfTime30 = 0;                   //·´µç¶¯ÊÆ30¡ãµç½Ç¶ÈÊ±¼ä  
+  42          u16 xdata Motor_BemfTime60 = 0;                   //·´µç¶¯ÊÆ60¡ãµç½Ç¶ÈÊ±¼ä
+  43          u16 xdata Motor_BemfTime60Temp = 0;               //·´µç¶¯ÊÆ60¡ãµç½Ç¶ÈÊ±¼ä¶ÔÓ¦µÄ¼Ä´æÆ÷ÊýÖµ ²ÎÓëÊ±¼äÔËËã
+  44          u16 xdata Motor_BemfTime60Cnt[3] = 0;             //ÂË²¨
+  45          u16 xdata Motor_BemfTime60Sum = 0;                //60¡ãµç½Ç¶ÈÀÛ¼ÓºÍ
+  46          u16 xdata Motor_BemfTimeError = 0;                //Õý³£µÄ·´µç¶¯ÊÆµ¹¼ÆÊ±¼ì²âÊ±¼ä ÔÚ×Ô¼õÎªÁãÖ®Ç°Èç¹ûÃ»ÓÐ¸üÐÂ´ËÖµÔò³
+             -ö´í
+  47          //Òì³£±êÖ¾
+  48          bit Motor_StartFlags = 0;                   //µç»úÆô¶¯±êÖ¾
+  49          bit Motor_StopTempFlags = 0;                //µç»úÔÝÍ£±êÖ¾
+  50          bit Motor_RunErrorFlags = 0;                //µç»úÔËÐÐÒì³£±êÖ¾
+  51          bit Motor_BemfErrorFlags = 0;               //µç»ú·´µç¶¯ÊÆ¼ì²âÒì³£
+  52          bit Motor_MotorErrorFlags = 0;              //µç»úÁ¬½ÓÏß¼ì²âÒì³£
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 2   
+
+  53          bit Motor_CurrentErrorFlags = 0;            //µç»ú¶ÌÂ·Òì³£
+  54          //ÔÝÍ£
+  55          bit Motor_RestartFlags = 0;                 //µç»úÐèÒªÖØÆô±êÖ¾ 
+  56          bit Motor_RestartStopFlags = 0;             //µç»úÍ£Ö¹ÖØÆô±êÖ¾ 
+  57          xdata u8  Motor_RestartCnt = 0;             //µç»úÖØÆô´ÎÊý
+  58          xdata u16 Motor_RestartTime = 0;            //µç»úÖØÆôÊ±¼ä
+  59          xdata u8  Motor_RestartTime1ms = 0;         //µç»úÖØÆôÊ±¼ä1ms»ùÊý
+  60          //Ðø×ª
+  61          bit Motor_KeepOnFlags = 0;                  //Ðø×ªÆô¶¯±êÖ¾
+  62          u16 Motor_KeepOnCheckTime = 0;              //µç»úÐø×ª×î´ó¼ì²âÊ±¼ä
+  63          u8  Motor_KeepOnState = 0;                  //µç»úÐø×ªµ±Ç°Î»ÖÃ
+  64          u8  Motor_KeepOnStateLast = 0;              //µç»úÐø×ªÉÏÒ»´ÎÎ»ÖÃ
+  65          u8  Motor_KeepOnStateTemp[6] = 0;           //Á¬Ðø¼ÇÂ¼6´ÎÎ»ÖÃ 
+  66          //Æô¶¯
+  67          bit Motor_StartBemfStateFlags = 0;          //±¾´Î¼ì²âÕ¼Ö÷µ¼µÄ·´µç¶¯ÊÆ×´Ì¬ 0ÎªµÍµçÆ½Õ¼Ö÷µ¼ 1Îª¸ßµçÆ½Õ¼Ö÷µ¼
+  68          bit Motor_StartBemfStateFlagsLast = 0;
+  69          xdata u8  Motor_StartForceCnt = 0;          //Æô¶¯½×¶ÎÇ¿ÖÆ»»Ïà´ÎÊý
+  70          u16 Motor_StartForceTime = 0;               //Æô¶¯½×¶ÎÇ¿ÖÆ»»ÏàÊ±¼ä¼ä¸ô
+  71          u16 Motor_StartForceTimeNext = 0;           //Æô¶¯½×¶ÎÇ¿ÖÆ»»ÏàÊ±¼ä¼ä¸ô
+  72          u8  Motor_StartDelayTime = 0;               //Æô¶¯½×¶ÎÁ½´Î¼ì²âÖÜÆÚµÄ¼ä¸ôÊ±¼ä
+  73          u8  Motor_StartStepOkCnt = 0;               //Æô¶¯½×¶Î»»ÏàÕýÈ·´ÎÊý
+  74          u8  Motor_StartBemfStateCnt = 0;            //Ò»¸ö¼ì²âÖÜÆÚÄÚ¼ì²â·´µç¶¯ÊÆ×´Ì¬µÄ´ÎÊý
+  75          u8  Motor_StartBemfStateHigh = 0;           //Ò»¸ö¼ì²âÖÜÆÚÄÚ¼ì²â·´µç¶¯ÊÆ×´Ì¬Îª¸ßµçÆ½µÄ´ÎÊý
+  76          u16 Motor_StartBemfState = 0;               //Æô¶¯½×¶ÎÖÜÆÚÐÔµÄ¼ì²âÒ»¶ÎÊ±¼äÄÚ·´µç¶¯ÊÆ×´Ì¬ Ö»È¡×îÐÂ16´Î 0=µÍµçÆ½ 1=
+             -¸ßµçÆ½
+  77          //ÔËÐÐ
+  78          bit Motor_SpeedValueOverFlags = 0;          //ËÙ¶È²ÉÑù¹ýµÍ ¼Ä´æÆ÷Òç³ö
+  79          u16 Motor_SpeedValueBase = 0;               //µç»ú×ª¹ý60¶Èµç½Ç¶ÈµÄÊ±¼ä ÒÔ´ËÎª»ù×¼¼ÆËã×ªËÙ ´ËÎª¼Ä´æÆ÷Öµ
+  80          u32 Motor_SpeedValueNowTemp = 0;            //µç»úµ±Ç°×ªËÙÖµ¶ÔÓ¦µÄ¼Ä´æÆ÷ÊýÖµÂË²¨ºóµÄÖµ ²ÎÓë×ªËÙÔËËã
+  81          u32 Motor_SpeedValueTemp[8] = 0;            //Á¬Ðø8´ÎÖµ
+  82          u8  Motor_GetSpeedCnt = 0;                  //»ñÈ¡Á¬Ðø8´ÎµÄ×ªËÙÖµ¼ÆÊý
+  83          xdata u16 Motor_SpeedValueNow = 0;          //µç»úµ±Ç°×ªËÙÖµ
+  84          xdata u16 Motor_SpeedValueNowTime = 0;      //¼ÆËã×ªËÙÖµµÄÖÜÆÚ
+  85          xdata u16 Motor_SpeedValueTarget = 0;       //µç»úÄ¿±ê×ªËÙÖµ
+  86          xdata u16 Motor_SpeedValueTargetTemp = 0;   //µç»úÄ¿±ê×ªËÙÖµ Ó¦ÓÃÓÚ»º¼Ó»º¼õ
+  87          xdata u8  Motor_SpeedValueTargetTime = 0;   //µç»úÄ¿±ê×ªËÙ¸Ä±äÖÜÆÚ
+  88          //¼ÆËãPWM
+  89          u16 Motor_SetPwmTime = 0;                   //PWMµ÷ÕûÖÜÆÚ
+  90          xdata u8  Motor_PidTime = 0;                //PID¼ÆËãÖÜÆÚ
+  91          xdata s16 Motor_SpeedValueError = 0;        //µç»úµ±Ç°×ªËÙÓëÄ¿±ê×ªËÙÖ®¼äµÄ²îÖµ ²ÎÓëPIDÔËËã
+  92          xdata s16 Motor_SpeedValueErrorCnt[3] = 0;  //Îó²îÖµÂË²¨
+  93          xdata f16 Motor_SpeedValueErrorOut = 0;     //PIDÊä³öÖµ
+  94          xdata u16 Motor_Op1oValueError = 0;         //µç»ú³¬¹ý¹æ¶¨µçÁ÷Ôò½µµÍPWM
+  95          xdata u16 Motor_ForceImprove = 0;           //×ªËÙ¹ýµÍÊ±¿ìËÙÔö¼ÓPWMÌáËÙ
+  96          s16 Motor_RealPwm = 0;                      //µ±Ç°PWMÊµ¼ÊÊä³öÖµ
+  97          xdata s16 Motor_TargetPwm = 0;              //¼ÆËãºóÄ¿±êPWMÖµ
+  98          //É²³µ
+  99          u16 Motor_BrakePwm = 0;                     //µç»úÉ²³µÊ±µÄPWM
+ 100          u16 Motor_BrakeTime = 0;                    //µç»úÉ²³µÊ±PWMµÄ±ä»¯¼ä¸ô
+ 101          u16 Motor_BrakeTimeTarget = 0;              //µç»úÉ²³µÊ±²»Í¬µ²Î»Ä¿±êÊ±¼ä
+ 102          void UPWM_VL(void)
+ 103          {
+ 104   1          PWMMASKE = 0x34;
+ 105   1          PWMD0H = Motor_RealPwm>>8;  PWMD0L = Motor_RealPwm; 
+ 106   1          PWMD2H = 0; PWMD2L = 0; 
+ 107   1        PWMLOADEN = 0x05; //Êý¾Ý¼ÓÔØ
+ 108   1      }
+ 109          void UPWM_WL(void)
+ 110          {
+ 111   1          PWMMASKE = 0x1C;
+ 112   1          PWMD0H = Motor_RealPwm>>8;  PWMD0L = Motor_RealPwm; 
+ 113   1          PWMD4H = 0; PWMD4L =0;  
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 3   
+
+ 114   1        PWMLOADEN = 0x11; //Êý¾Ý¼ÓÔØ
+ 115   1      }
+ 116          void VPWM_WL(void)
+ 117          {
+ 118   1          PWMMASKE = 0x13;
+ 119   1          PWMD2H = Motor_RealPwm>>8;  PWMD2L = Motor_RealPwm; 
+ 120   1          PWMD4H = 0; PWMD4L = 0; 
+ 121   1        PWMLOADEN = 0x14; //Êý¾Ý¼ÓÔØ
+ 122   1      }
+ 123          void VPWM_UL(void)
+ 124          {
+ 125   1          PWMMASKE = 0x31;
+ 126   1          PWMD2H = Motor_RealPwm>>8;  PWMD2L = Motor_RealPwm; 
+ 127   1          PWMD0H = 0; PWMD0L = 0; 
+ 128   1        PWMLOADEN = 0x05; //Êý¾Ý¼ÓÔØ
+ 129   1      }
+ 130          void WPWM_UL(void)
+ 131          {
+ 132   1          PWMMASKE = 0x0D;
+ 133   1          PWMD4H = Motor_RealPwm>>8;  PWMD4L = Motor_RealPwm; 
+ 134   1          PWMD0H = 0; PWMD0L = 0; 
+ 135   1        PWMLOADEN = 0x11; //Êý¾Ý¼ÓÔØ
+ 136   1      }
+ 137          void WPWM_VL(void)
+ 138          {
+ 139   1          PWMMASKE = 0x07;
+ 140   1          PWMD4H = Motor_RealPwm>>8;  PWMD4L = Motor_RealPwm; 
+ 141   1          PWMD2H = 0; PWMD2L = 0; 
+ 142   1        PWMLOADEN = 0x14; //Êý¾Ý¼ÓÔØ
+ 143   1      }
+ 144          void motor_pid(u8 time, float kp, float ki, float kd, s16 out)
+ 145          {
+ 146   1        if((Motor_PidTime >= time) && (Motor_StepCnt > 6))
+ 147   1        {
+ 148   2          Motor_PidTime = 0;
+ 149   2            
+ 150   2          Motor_SpeedValueError = Motor_SpeedValueTarget - Motor_SpeedValueNow;
+ 151   2          Motor_SpeedValueErrorCnt[2] = Motor_SpeedValueErrorCnt[1];
+ 152   2          Motor_SpeedValueErrorCnt[1] = Motor_SpeedValueErrorCnt[0];
+ 153   2          Motor_SpeedValueErrorCnt[0] = Motor_SpeedValueError;
+ 154   2          Motor_SpeedValueErrorOut = (f16)(kp * (Motor_SpeedValueErrorCnt[0] - Motor_SpeedValueErrorCnt[1]) 
+ 155   2                                         + ki * (Motor_SpeedValueErrorCnt[0])
+ 156   2                                         + kd * (Motor_SpeedValueErrorCnt[0] + Motor_SpeedValueErrorCnt[2] - 2*Motor_SpeedValueEr
+             -rorCnt[1]));
+ 157   2          if(Motor_SpeedValueErrorOut > out)
+ 158   2            Motor_SpeedValueErrorOut = out;
+ 159   2          if(Motor_SpeedValueErrorOut < -out)
+ 160   2            Motor_SpeedValueErrorOut = -out;
+ 161   2          
+ 162   2      //    if(AD_Op1oValue > AD_Op1oValueMax) //Æ½¾ùµçÁ÷
+ 163   2      //      Motor_Op1oValueError++;
+ 164   2          else
+ 165   2          {
+ 166   3            Motor_Op1oValueError = 0;
+ 167   3            if(Motor_Op1oValueError)
+ 168   3              Motor_Op1oValueError--;
+ 169   3          }
+ 170   2          
+ 171   2          Motor_TargetPwm += Motor_SpeedValueErrorOut - Motor_Op1oValueError;
+ 172   2        }
+ 173   1        
+ 174   1        if(Motor_TargetPwm < 30)
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 4   
+
+ 175   1          Motor_TargetPwm = 30;
+ 176   1        if(Motor_TargetPwm > PWMT)
+ 177   1          Motor_TargetPwm = PWMT;
+ 178   1          Motor_TargetPwm = 50;
+ 179   1      }
+ 180          
+ 181          void motor_getspeed()
+ 182          {   
+ 183   1        if(Motor_SpeedValueOverFlags)
+ 184   1        {
+ 185   2          Motor_SpeedValueOverFlags = 0;
+ 186   2          Motor_SpeedValueNow = 0;
+ 187   2          TH3 = 0x00;           
+ 188   2          TL3 = 0x00; 
+ 189   2        }
+ 190   1        else
+ 191   1        {
+ 192   2          Motor_SpeedValueBase = (TH3<<8) + TL3; //us
+ 193   2          TH3 = 0x00;           
+ 194   2          TL3 = 0x00; 
+ 195   2        }
+ 196   1      }
+ 197          
+ 198          void motor_setpwm(u16 pwm)
+ 199          {
+ 200   1        Motor_RealPwm = pwm;
+ 201   1        
+ 202   1        if(Motor_RealPwm <= 30)
+ 203   1          Motor_RealPwm = 30;
+ 204   1        if(Motor_RealPwm >= PWMT)
+ 205   1          Motor_RealPwm = PWMT;
+ 206   1      }
+ 207          #if 0
+              void motor_checkkeepon()
+              {//132645
+              //AB A AC C BC B 315462
+              //AB AC BC BA CA CB
+                Motor_KeepOnState = 0;
+                C1CON2 = 0x08;
+                
+                C1CON0 = 0x80;            //C     
+                _nop_x;
+                if(C1CON1 & 0x80)
+                  Motor_KeepOnState |= 1<<2;
+                
+                C1CON0 = 0x81;            //B     
+                _nop_x;
+                if(C1CON1 & 0x80)
+                  Motor_KeepOnState |= 1<<1;
+                
+                C1CON0 = 0x82;            //A     
+                _nop_x;
+                if(C1CON1 & 0x80)
+                  Motor_KeepOnState |= 1<<0;
+                
+                C1CON2 = 0x18;
+              } 
+              
+              void motor_checkbemf()
+              {
+              //AB AC BC BA CA CB
+                if(Motor_BemfEdgeStateNow < 0)      
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 5   
+
+                {
+                  if(Motor_BemfEdgeStateNext)
+                  {
+                    if(C1CON1 & 0x80)
+                      Motor_BemfEdgeStateNow = 1;
+                    else
+                    {
+                      if(Motor_BemfTimeError)
+                        Motor_BemfTimeError--;
+                    }
+                  }
+                  else
+                  {
+                    if(C1CON1 & 0x80)
+                    {
+                      if(Motor_BemfTimeError)
+                        Motor_BemfTimeError--;
+                    }
+                    else
+                      Motor_BemfEdgeStateNow = 0;
+                  }
+                }
+              }
+              
+              void motor_getbemftime()
+              { 
+                Motor_BemfTime60Sum    = Motor_BemfTime60Cnt[2] 
+                                       + Motor_BemfTime60Cnt[1] 
+                                       + Motor_BemfTime60Cnt[0] 
+                                       + Motor_BemfTime60Temp;
+                
+                Motor_BemfTime60Cnt[2] = Motor_BemfTime60Cnt[1];
+                Motor_BemfTime60Cnt[1] = Motor_BemfTime60Cnt[0];
+                Motor_BemfTime60Cnt[0] = Motor_BemfTime60Temp;
+                Motor_BemfTime60Temp = 0;
+                
+                Motor_BemfTime60 = Motor_BemfTime60Sum >> 2;
+                Motor_BemfTimeError = Motor_BemfTime60 << 2;
+                Motor_BemfTime30 = Motor_BemfTime60 >> 2;
+                Motor_BemfTime15 = Motor_BemfTime30;
+              }
+              #else
+ 279          u8  ReadHallPin(void)
+ 280          {
+ 281   1        u8   hallState=0;
+ 282   1        if(PIN_HS_1)  
+ 283   1        {
+ 284   2          hallState+=4; 
+ 285   2        }
+ 286   1          
+ 287   1        if(PIN_HS_2)  
+ 288   1        {
+ 289   2          hallState+=1; 
+ 290   2        }
+ 291   1        
+ 292   1        if(PIN_HS_3)  
+ 293   1        {
+ 294   2          hallState+=2; 
+ 295   2        }
+ 296   1        return  hallState;     
+ 297   1      }
+ 298          #endif
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 6   
+
+ 299          
+ 300          #if 0
+              void motor_steps()
+              {
+                motor_getspeed();
+                switch(Motor_Locate)
+                {
+                  case 1 :  {//AB
+                              UPWM_VL();
+                              C1CON0 = 0x80;    
+                              if(Motor_FRFlags)
+                                Motor_BemfEdgeStateNext = 0;
+                              else
+                                Motor_BemfEdgeStateNext = 1;
+                              Motor_BemfEdgeStateNow = -1;
+                            }break;
+                  case 2 :  {//AC
+                              UPWM_WL();
+                              C1CON0 = 0x81;  
+                              if(Motor_FRFlags)
+                                Motor_BemfEdgeStateNext = 1;
+                              else
+                                Motor_BemfEdgeStateNext = 0;
+                              Motor_BemfEdgeStateNow = -1;  
+                            }break;
+                  case 3 :  {//BC
+                              VPWM_WL();
+                              C1CON0 = 0x82;    
+                              if(Motor_FRFlags)
+                                Motor_BemfEdgeStateNext = 0;
+                              else
+                                Motor_BemfEdgeStateNext = 1;
+                              Motor_BemfEdgeStateNow = -1;  
+                            }break;
+                  case 4 :  {//BA   
+                              VPWM_UL();
+                              C1CON0 = 0x80;  
+                              if(Motor_FRFlags)
+                                Motor_BemfEdgeStateNext = 1;
+                              else
+                                Motor_BemfEdgeStateNext = 0;
+                              Motor_BemfEdgeStateNow = -1;    
+                            }break;
+                  case 5 :  {//CA   
+                              WPWM_UL();
+                              C1CON0 = 0x81;  
+                              if(Motor_FRFlags)
+                                Motor_BemfEdgeStateNext = 0;
+                              else
+                                Motor_BemfEdgeStateNext = 1;
+                              Motor_BemfEdgeStateNow = -1;  
+                            }break;
+                  case 6 :  {//CB 
+                              WPWM_VL();
+                              C1CON0 = 0x82;  
+                              if(Motor_FRFlags)
+                                Motor_BemfEdgeStateNext = 1;
+                              else
+                                Motor_BemfEdgeStateNext = 0;
+                              Motor_BemfEdgeStateNow = -1;  
+                            }break;
+                  default:  {
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 7   
+
+                              ABCOFF;
+                              Motor_BemfEdgeStateNow = -1;
+                            }break;
+                }
+              }
+              #else 
+ 367          void motor_steps()
+ 368          {
+ 369   1      //  motor_getspeed();
+ 370   1      //  Motor_Locate++;
+ 371   1      //  if(Motor_Locate>=7)
+ 372   1      //  {
+ 373   1      //    Motor_Locate=1;
+ 374   1      //  }
+ 375   1        switch(Motor_Locate)
+ 376   1        {
+ 377   2          case 0 :  {//AB
+ 378   3                      UPWM_VL();
+ 379   3      //                C1CON0 = 0x80;    
+ 380   3      //                if(Motor_FRFlags)
+ 381   3      //                  Motor_BemfEdgeStateNext = 0;
+ 382   3      //                else
+ 383   3      //                  Motor_BemfEdgeStateNext = 1;
+ 384   3      //                Motor_BemfEdgeStateNow = -1;
+ 385   3                    }break;
+ 386   2          case 1 :  {//AC
+ 387   3                      UPWM_WL();
+ 388   3      //                C1CON0 = 0x81;  
+ 389   3      //                if(Motor_FRFlags)
+ 390   3      //                  Motor_BemfEdgeStateNext = 1;
+ 391   3      //                else
+ 392   3      //                  Motor_BemfEdgeStateNext = 0;
+ 393   3      //                Motor_BemfEdgeStateNow = -1;  
+ 394   3                    }break;
+ 395   2          case 2 :  {//BC
+ 396   3                      VPWM_WL();
+ 397   3      //                C1CON0 = 0x82;    
+ 398   3      //                if(Motor_FRFlags)
+ 399   3      //                  Motor_BemfEdgeStateNext = 0;
+ 400   3      //                else
+ 401   3      //                  Motor_BemfEdgeStateNext = 1;
+ 402   3      //                Motor_BemfEdgeStateNow = -1;  
+ 403   3                    }break;
+ 404   2          case 3 :  {//BA   
+ 405   3                      VPWM_UL();
+ 406   3      //                C1CON0 = 0x80;  
+ 407   3      //                if(Motor_FRFlags)
+ 408   3      //                  Motor_BemfEdgeStateNext = 1;
+ 409   3      //                else
+ 410   3      //                  Motor_BemfEdgeStateNext = 0;
+ 411   3      //                Motor_BemfEdgeStateNow = -1;    
+ 412   3                    }break;
+ 413   2          case 4 :  {//CA   
+ 414   3                      WPWM_UL();
+ 415   3      //                C1CON0 = 0x81;  
+ 416   3      //                if(Motor_FRFlags)
+ 417   3      //                  Motor_BemfEdgeStateNext = 0;
+ 418   3      //                else
+ 419   3      //                  Motor_BemfEdgeStateNext = 1;
+ 420   3      //                Motor_BemfEdgeStateNow = -1;  
+ 421   3                    }break;
+ 422   2          case 5: {//CB 
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 8   
+
+ 423   3                      WPWM_VL();
+ 424   3      //                C1CON0 = 0x82;  
+ 425   3      //                if(Motor_FRFlags)
+ 426   3      //                  Motor_BemfEdgeStateNext = 1;
+ 427   3      //                else
+ 428   3      //                  Motor_BemfEdgeStateNext = 0;
+ 429   3      //                Motor_BemfEdgeStateNow = -1;  
+ 430   3                    }break;
+ 431   2          default:  {
+ 432   3                      ABCOFF;
+ 433   3      //                Motor_BemfEdgeStateNow = -1;
+ 434   3                    }break;
+ 435   2        }
+ 436   1      }
+ 437          #endif
+ 438          #if 0 
+              void motor_run()
+              {
+                
+                //³öÏÖÈÎºÎ¹ÊÕÏÔò×Ü¹ÊÕÏ±êÖ¾ÖÃ1 »ù×¼µçÁ÷´íÎó ·´µç¶¯ÊÆ¼ì²â´íÎó µç»úÃ»²å
+              //  if(Motor_CurrentErrorFlags | Motor_RestartStopFlags | AD_Op1oValueInitErrorFlags | Motor_BemfErrorFlags
+             - | Motor_MotorErrorFlags) 
+              //  {
+              //    Motor_RunErrorFlags = 1;
+              //  }
+              //  else
+              //  {
+              //    Motor_RunErrorFlags = 0;
+              //  }
+                if(Motor_RunErrorFlags || (Motor_StartFlags == 0))  //
+                {
+                  Motor_Mode = Motor_Mode_Stop;
+                }
+                if(Motor_Mode)
+                {
+                  if(Motor_FRFlags != Motor_FRFlagsTemp)
+                  {
+                    Motor_Mode = Motor_Mode_Brake;
+                    Motor_FRFlags = Motor_FRFlagsTemp;
+                  }
+                }
+                else
+                {
+                  if(Motor_FRFlags != Motor_FRFlagsTemp)  
+                    Motor_FRFlags = Motor_FRFlagsTemp;
+                }
+                
+                switch(Motor_Mode)
+                {
+                  case Motor_Mode_Stop :
+                  {
+                    ABCOFF;
+                    PWMD0H = 0; PWMD0L = 0;
+                    PWMD2H = 0; PWMD2L = 0;
+                    PWMD4H = 0; PWMD4L = 0; 
+                    PWMLOADEN = 0x15; //Êý¾Ý¼ÓÔØ
+                    T34MOD &= ~(1<<3);  //¹Ø±ÕT3
+                    EIF2 &= ~(1<<0);  //ÇåÖÐ¶Ï±êÖ¾
+                    TH3 = 0x00;           
+                    TL3 = 0x00; 
+                    
+                    if(Motor_StartFlags)  //ÔÊÐíÆô¶¯
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 9   
+
+                    {
+                      if(Motor_RunErrorFlags) //³öÏÖ¹ÊÕÏÔò³¢ÊÔÖØÆô
+                      {
+                        if(Motor_BemfErrorFlags)  //ÔÊÐíÖØÆôµÄ¹ÊÕÏ
+                        {
+                          if(Motor_RestartTime1ms)
+                          {
+                            Motor_RestartTime1ms = 0;
+                            Motor_RestartFlags = 1;   //ÖØÆô±êÖ¾ÖÃ1
+                            
+                            if(Motor_RestartCnt < 4)    //¹æ¶¨×î´óÖØÆô´ÎÊý
+                            {
+                              if(Motor_RestartTime < 2000)  //¹æ¶¨Ã¿´Î³¢ÊÔÖØÆôÊ±¼ä
+                              {
+                                Motor_RunErrorFlags = 0;
+                                Motor_BemfErrorFlags = 0;
+                                Motor_Mode = Motor_Mode_StartInit;  //ÖØÆô
+                              }
+                              else if(Motor_RestartTime < 2200) //±¾´ÎÖØÆô³¬³öÔÊÐíÊ±¼äÔòÊ§°Ü µÈ´ý1S
+                              {
+                                Motor_Mode = Motor_Mode_Stop;
+                              }
+                              else
+                              {
+                                Motor_RestartCnt++;   //ÖØÆô´ÎÊý×Ô¼Ó
+                                Motor_RestartTime = 0;
+                              }
+                            }
+                            else  //³¬³öÖØÆô´ÎÊý Í£Ö¹ÖØÆô±êÖ¾ÖÃ1
+                            {
+                              Motor_RestartCnt = 0;
+                              Motor_RestartTime = 0;
+                              Motor_RestartStopFlags = 1;
+                        
+                            }
+                          }
+                        }
+                      }
+                      else  //ÔÊÐíÆô¶¯ÇÒÎÞ¹ÊÕÏ±êÖ¾
+                      {
+                        Motor_RestartTime = 0;
+                        Motor_RestartFlags = 0;
+                        Motor_Mode = Motor_Mode_StartInit;
+                      }
+                    }
+                  }break;
+                  
+                  case Motor_Mode_StartInit :
+                  {
+                    //OneStepTime = 2500;
+                    Motor_BemfTime60Cnt[2] = 0;
+                    Motor_BemfTime60Cnt[1] = 0;
+                    Motor_BemfTime60Cnt[0] = 0;
+                    Motor_BemfTime60Temp = 0;
+                    Motor_BemfTime60Sum = 0;
+                    Motor_BemfTimeError = 0;
+                    Motor_BemfTime60 = 0;
+                    Motor_BemfTime30 = 0;
+                    Motor_BemfTime15 = 0;
+                    
+                    Motor_SpeedValueTarget = 0;
+                    Motor_SpeedValueTargetTemp = 0;
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 10  
+
+                    Motor_SpeedValueNowTemp = 0;
+                    Motor_SpeedValueTemp[7] = 0;
+                    Motor_SpeedValueTemp[6] = 0;
+                    Motor_SpeedValueTemp[5] = 0;
+                    Motor_SpeedValueTemp[4] = 0;
+                    Motor_SpeedValueTemp[3] = 0;
+                    Motor_SpeedValueTemp[2] = 0;
+                    Motor_SpeedValueTemp[1] = 0;
+                    Motor_SpeedValueTemp[0] = 0;
+                    Motor_SpeedValueNow = 0;
+                    Motor_SpeedValueBase = 0;
+                    Motor_StartForceTime = 0;
+                    Motor_StartForceCnt = 3;//Ç¿ÖÆ»»Ïò3
+                    Motor_BrakeTime = 0;
+                    Motor_BrakePwm = 0;
+                    Motor_StepCnt = 0;
+                    Motor_Locate = 3;
+                    
+                    Motor_StartForceTimeNext = 100;//Ç¿ÖÆ»»ÏòÊ±¼ä120
+                    Motor_RealPwm = 40;//³õÊ¼ËÙ¶Èd
+                    Motor_TargetPwm = 0;
+                    Motor_SpeedValueError = 0;
+                    Motor_SpeedValueErrorCnt[2] = 0;
+                    Motor_SpeedValueErrorCnt[1] = 0;
+                    Motor_SpeedValueErrorCnt[0] = 0;
+                    Motor_SpeedValueErrorOut = 0;
+                    Motor_Op1oValueError = 0;
+                    
+                    Motor_CurrentErrorFlags = 0;
+                    Motor_MotorErrorFlags = 0;
+                    Motor_MotorErrorCnt = 0;
+                    Motor_BemfErrorFlags = 0;
+                    Motor_RunErrorFlags = 0;
+                    
+                    Motor_FRFlags = Motor_FRFlagsTemp;
+                    
+                    Motor_KeepOnStateTemp[5] = 0;
+                    Motor_KeepOnStateTemp[4] = 0;
+                    Motor_KeepOnStateTemp[3] = 0;
+                    Motor_KeepOnStateTemp[2] = 0;
+                    Motor_KeepOnStateTemp[1] = 0;
+                    Motor_KeepOnStateTemp[0] = 0;
+                    Motor_KeepOnCheckTime = 0;
+                    if(Motor_KeepOnFlags) 
+                      Motor_Mode = Motor_Mode_KeepON; 
+                    else  
+                      Motor_Mode = Motor_Mode_Start;  //Ö±½Ó½øÈëÆô¶¯½×¶Î
+                  }break;
+                  
+                  case Motor_Mode_KeepON :  //¼ì²âµç»úÊÇ·ñ»¹ÔÚ¿¿¹ßÐÔÐý×ª
+                  {
+                  }break;
+                  
+                  case Motor_Mode_Start : //Æô¶¯½×¶Î
+                  {
+                    if((Motor_StartForceCnt && (Motor_StartForceTime >= Motor_StartForceTimeNext)) || (Motor_StartForceTime
+             - >= 100))
+                    {
+                      if(Motor_FRFlags)
+                      {
+                        Motor_Locate++;
+                        if(Motor_Locate > 6)
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 11  
+
+                          Motor_Locate = 1;
+                      }
+                      else
+                      {
+                        Motor_Locate--;
+                        if(Motor_Locate < 1)
+                          Motor_Locate = 6;
+                      }
+                      motor_steps();
+                      
+                      if(Motor_MotorErrorCnt < 200)
+                        Motor_MotorErrorCnt++;
+                      if(Motor_MotorErrorCnt > 10)
+                        Motor_MotorErrorFlags = 1;
+                      
+                      if(Motor_StepCnt < 250)
+                        Motor_StepCnt++;
+                      if(Motor_StepCnt > 2)
+                        Motor_BemfErrorFlags = 1;
+                      
+                      if(Motor_StartForceCnt)
+                      {
+                        Motor_StartForceCnt--;
+                        Motor_StartForceTimeNext = Motor_StartForceTimeNext >> 1;
+                        Motor_RealPwm += 5;
+                      }
+                      
+                      Motor_StartDelayTime = DELAYTIME;
+                      Motor_StartForceTime = 0;
+                      Motor_BemfTime60Cnt[2] = 0;
+                      Motor_BemfTime60Cnt[1] = 0;
+                      Motor_BemfTime60Cnt[0] = 0;
+                      Motor_BemfTime60Temp = 0;
+                      Motor_BemfTime60Sum = 0;
+                      Motor_BemfTimeError = 0;
+                      Motor_BemfTime60 = 0;
+                      Motor_BemfTime30 = 0;
+                      Motor_BemfTime15 = 0;
+                      Motor_StartStepOkCnt = 0;
+                    }
+                    
+                    if(Motor_StartForceCnt)
+                      Motor_TargetPwm = Motor_RealPwm;
+                    else
+                    {
+                      if(Motor_RestartFlags)
+                      {
+                        Motor_TargetPwm = 200; 
+                      }
+                        
+                      else
+                      {
+                        Motor_TargetPwm = 125;
+                      } 
+                    }
+                    motor_setpwm(Motor_TargetPwm);
+                  }break;
+                  
+                  case Motor_Mode_Run : //Õý³£ÔËÐÐ½×¶Î
+                  {
+                          if(Motor_StepCnt > 240)
+                          {
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 12  
+
+              //                Motor_RestartCnt = 0;
+                              Motor_RestartTime = 0;
+                              Motor_RestartFlags = 0;
+                          }
+                          
+                    if(!(T34MOD & 0x08))
+                    {
+                      T34MOD |= 1<<3;     //Æô¶¯T3
+                      EIF2 &= ~(1<<0);    //ÇåÖÐ¶Ï±êÖ¾
+                      TH3 = 0x00;           
+                      TL3 = 0x00;           
+                    }
+                    if(Motor_SpeedValueTargetTime >= 1)
+                    {
+                      Motor_SpeedValueTargetTime = 0;
+                      if(Motor_SpeedValueTargetTemp != Motor_SpeedValueTarget)
+                      {
+                        if(Motor_SpeedValueTargetTemp > Motor_SpeedValueTarget)
+                        {
+                          if(Motor_SpeedValueTargetTemp > (Motor_SpeedValueTarget + 50))
+                            Motor_SpeedValueTarget += 50;
+                          else
+                            Motor_SpeedValueTarget++;
+                        }
+                        else if(Motor_SpeedValueTargetTemp < Motor_SpeedValueTarget)
+                        {
+                          if((Motor_SpeedValueTargetTemp + 50) < Motor_SpeedValueTarget)
+                            Motor_SpeedValueTarget -= 50;
+                          else
+                            Motor_SpeedValueTarget--;
+                        }
+                      }
+                    }
+                    
+                    if(Motor_SpeedValueOverFlags)
+                    {
+              //        Motor_SpeedValueNow = 0;
+                      EIF2 &= ~(1<<0);  //ÇåÖÐ¶Ï±êÖ¾
+                      TH3 = 0x00;           
+                      TL3 = 0x00; 
+                    }
+                    else
+                    {
+                      if(Motor_SpeedValueNowTime )
+                      {
+                        Motor_SpeedValueNowTime = 0;
+                        //60 000 000/(6*Motor_SpeedValueBase/12)
+                        Motor_SpeedValueNowTemp =    (Motor_SpeedValueTemp[7] + Motor_SpeedValueTemp[6] + Motor_SpeedValueTem
+             -p[5] + Motor_SpeedValueTemp[4] 
+                                                
+                                                 + Motor_SpeedValueTemp[3] + Motor_SpeedValueTemp[2] +
+                                                   Motor_SpeedValueTemp[1] + Motor_SpeedValueTemp[0]) >> 3;
+                        Motor_SpeedValueNow = 40000000/(Motor_SpeedValueNowTemp*PAIRS);
+                        //Motor_SpeedValueNow = Motor_SpeedValueNow - Motor_SpeedValueNow%100;
+                      }
+                    }
+                    motor_pid(4, 0.13, 0.005, 0, 220); //µÍµµÎ»Ê±¼ä¶Ì  ¸ßµµÎ»Ê±¼ä³¤Ò»Ð©
+                    motor_setpwm(300);
+                  }break;
+                }
+              }
+              #else 
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 13  
+
+ 730          void motor_run()
+ 731          {
+ 732   1        
+ 733   1        //³öÏÖÈÎºÎ¹ÊÕÏÔò×Ü¹ÊÕÏ±êÖ¾ÖÃ1 »ù×¼µçÁ÷´íÎó ·´µç¶¯ÊÆ¼ì²â´íÎó µç»úÃ»²å
+ 734   1      //  if(Motor_CurrentErrorFlags | Motor_RestartStopFlags | AD_Op1oValueInitErrorFlags | Motor_BemfErrorFlags
+             - | Motor_MotorErrorFlags) 
+ 735   1      //  {
+ 736   1      //    Motor_RunErrorFlags = 1;
+ 737   1      //  }
+ 738   1      //  else
+ 739   1      //  {
+ 740   1      //    Motor_RunErrorFlags = 0;
+ 741   1      //  }
+ 742   1        if(Motor_RunErrorFlags || (Motor_StartFlags == 0))  //
+ 743   1        {
+ 744   2          Motor_Mode = Motor_Mode_Stop;
+ 745   2        }
+ 746   1        if(Motor_Mode)
+ 747   1        {
+ 748   2          if(Motor_FRFlags != Motor_FRFlagsTemp)
+ 749   2          {
+ 750   3            Motor_Mode = Motor_Mode_Brake;
+ 751   3            Motor_FRFlags = Motor_FRFlagsTemp;
+ 752   3          }
+ 753   2        }
+ 754   1        else
+ 755   1        {
+ 756   2          if(Motor_FRFlags != Motor_FRFlagsTemp)  
+ 757   2            Motor_FRFlags = Motor_FRFlagsTemp;
+ 758   2        }
+ 759   1        
+ 760   1        switch(Motor_Mode)
+ 761   1        {
+ 762   2          case Motor_Mode_Stop :
+ 763   2          {
+ 764   3            ABCOFF;
+ 765   3            PWMD0H = 0; PWMD0L = 0;
+ 766   3            PWMD2H = 0; PWMD2L = 0;
+ 767   3            PWMD4H = 0; PWMD4L = 0; 
+ 768   3            PWMLOADEN = 0x15; //Êý¾Ý¼ÓÔØ
+ 769   3            T34MOD &= ~(1<<3);  //¹Ø±ÕT3
+ 770   3            EIF2 &= ~(1<<0);  //ÇåÖÐ¶Ï±êÖ¾
+ 771   3            TH3 = 0x00;           
+ 772   3            TL3 = 0x00; 
+ 773   3            
+ 774   3            if(Motor_StartFlags)  //ÔÊÐíÆô¶¯
+ 775   3            {
+ 776   4              if(Motor_RunErrorFlags) //³öÏÖ¹ÊÕÏÔò³¢ÊÔÖØÆô
+ 777   4              {
+ 778   5                if(Motor_BemfErrorFlags)  //ÔÊÐíÖØÆôµÄ¹ÊÕÏ
+ 779   5                {
+ 780   6                  if(Motor_RestartTime1ms)
+ 781   6                  {
+ 782   7                    Motor_RestartTime1ms = 0;
+ 783   7                    Motor_RestartFlags = 1;   //ÖØÆô±êÖ¾ÖÃ1
+ 784   7                    
+ 785   7                    if(Motor_RestartCnt < 4)    //¹æ¶¨×î´óÖØÆô´ÎÊý
+ 786   7                    {
+ 787   8                      if(Motor_RestartTime < 2000)  //¹æ¶¨Ã¿´Î³¢ÊÔÖØÆôÊ±¼ä
+ 788   8                      {
+ 789   9                        Motor_RunErrorFlags = 0;
+ 790   9                        Motor_BemfErrorFlags = 0;
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 14  
+
+ 791   9                        Motor_Mode = Motor_Mode_StartInit;  //ÖØÆô
+ 792   9                      }
+ 793   8                      else if(Motor_RestartTime < 2200) //±¾´ÎÖØÆô³¬³öÔÊÐíÊ±¼äÔòÊ§°Ü µÈ´ý1S
+ 794   8                      {
+ 795   9                        Motor_Mode = Motor_Mode_Stop;
+ 796   9                      }
+ 797   8                      else
+ 798   8                      {
+ 799   9                        Motor_RestartCnt++;   //ÖØÆô´ÎÊý×Ô¼Ó
+ 800   9                        Motor_RestartTime = 0;
+ 801   9                      }
+ 802   8                    }
+ 803   7                    else  //³¬³öÖØÆô´ÎÊý Í£Ö¹ÖØÆô±êÖ¾ÖÃ1
+ 804   7                    {
+ 805   8                      Motor_RestartCnt = 0;
+ 806   8                      Motor_RestartTime = 0;
+ 807   8                      Motor_RestartStopFlags = 1;
+ 808   8                
+ 809   8                    }
+ 810   7                  }
+ 811   6                }
+ 812   5              }
+ 813   4              else  //ÔÊÐíÆô¶¯ÇÒÎÞ¹ÊÕÏ±êÖ¾
+ 814   4              {
+ 815   5                Motor_RestartTime = 0;
+ 816   5                Motor_RestartFlags = 0;
+ 817   5                Motor_Mode = Motor_Mode_StartInit;
+ 818   5              }
+ 819   4            }
+ 820   3          }break;
+ 821   2          
+ 822   2          case Motor_Mode_StartInit :
+ 823   2          {
+ 824   3            //OneStepTime = 2500;
+ 825   3            Motor_BemfTime60Cnt[2] = 0;
+ 826   3            Motor_BemfTime60Cnt[1] = 0;
+ 827   3            Motor_BemfTime60Cnt[0] = 0;
+ 828   3            Motor_BemfTime60Temp = 0;
+ 829   3            Motor_BemfTime60Sum = 0;
+ 830   3            Motor_BemfTimeError = 0;
+ 831   3            Motor_BemfTime60 = 0;
+ 832   3            Motor_BemfTime30 = 0;
+ 833   3            Motor_BemfTime15 = 0;
+ 834   3            
+ 835   3            Motor_SpeedValueTarget = 0;
+ 836   3            Motor_SpeedValueTargetTemp = 0;
+ 837   3            Motor_SpeedValueNowTemp = 0;
+ 838   3            Motor_SpeedValueTemp[7] = 0;
+ 839   3            Motor_SpeedValueTemp[6] = 0;
+ 840   3            Motor_SpeedValueTemp[5] = 0;
+ 841   3            Motor_SpeedValueTemp[4] = 0;
+ 842   3            Motor_SpeedValueTemp[3] = 0;
+ 843   3            Motor_SpeedValueTemp[2] = 0;
+ 844   3            Motor_SpeedValueTemp[1] = 0;
+ 845   3            Motor_SpeedValueTemp[0] = 0;
+ 846   3            Motor_SpeedValueNow = 0;
+ 847   3            Motor_SpeedValueBase = 0;
+ 848   3            Motor_StartForceTime = 0;
+ 849   3            Motor_StartForceCnt = 3;//Ç¿ÖÆ»»Ïò3
+ 850   3            Motor_BrakeTime = 0;
+ 851   3            Motor_BrakePwm = 0;
+ 852   3            Motor_StepCnt = 0;
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 15  
+
+ 853   3            Motor_Locate = 3;
+ 854   3            
+ 855   3            Motor_StartForceTimeNext = 100;//Ç¿ÖÆ»»ÏòÊ±¼ä120
+ 856   3            Motor_RealPwm = 40;//³õÊ¼ËÙ¶Èd
+ 857   3            Motor_TargetPwm = 0;
+ 858   3            Motor_SpeedValueError = 0;
+ 859   3            Motor_SpeedValueErrorCnt[2] = 0;
+ 860   3            Motor_SpeedValueErrorCnt[1] = 0;
+ 861   3            Motor_SpeedValueErrorCnt[0] = 0;
+ 862   3            Motor_SpeedValueErrorOut = 0;
+ 863   3            Motor_Op1oValueError = 0;
+ 864   3            
+ 865   3            Motor_CurrentErrorFlags = 0;
+ 866   3            Motor_MotorErrorFlags = 0;
+ 867   3            Motor_MotorErrorCnt = 0;
+ 868   3            Motor_BemfErrorFlags = 0;
+ 869   3            Motor_RunErrorFlags = 0;
+ 870   3            
+ 871   3            Motor_FRFlags = Motor_FRFlagsTemp;
+ 872   3            
+ 873   3            Motor_KeepOnStateTemp[5] = 0;
+ 874   3            Motor_KeepOnStateTemp[4] = 0;
+ 875   3            Motor_KeepOnStateTemp[3] = 0;
+ 876   3            Motor_KeepOnStateTemp[2] = 0;
+ 877   3            Motor_KeepOnStateTemp[1] = 0;
+ 878   3            Motor_KeepOnStateTemp[0] = 0;
+ 879   3            Motor_KeepOnCheckTime = 0;
+ 880   3            UPWM_VL();
+ 881   3            if(Motor_KeepOnFlags) 
+ 882   3              Motor_Mode = Motor_Mode_KeepON; 
+ 883   3            else  
+ 884   3              Motor_Mode = Motor_Mode_Start;  //Ö±½Ó½øÈëÆô¶¯½×¶Î
+ 885   3          }break;
+ 886   2          
+ 887   2          case Motor_Mode_KeepON :  //¼ì²âµç»úÊÇ·ñ»¹ÔÚ¿¿¹ßÐÔÐý×ª
+ 888   2          {
+ 889   3            Motor_Mode = Motor_Mode_Run;  //Ö±½Ó½øÈëÆô¶¯½×¶Î
+ 890   3          }break;
+ 891   2          
+ 892   2          case Motor_Mode_Start : //Æô¶¯½×¶Î
+ 893   2          {
+ 894   3            motor_setpwm(Motor_TargetPwm);
+ 895   3            hallStepNew=ReadHallPin( );
+ 896   3            hallStepLast=hallStepNew; 
+ 897   3            if(Motor_FRFlags)
+ 898   3            {
+ 899   4              Motor_Locate=HallStep_CW[hallStepNew];
+ 900   4            }
+ 901   3            else
+ 902   3            {
+ 903   4              Motor_Locate=HallStep_CCW[hallStepNew];
+ 904   4            }
+ 905   3            motor_steps();      
+ 906   3            Motor_StartDelayTime = DELAYTIME;
+ 907   3            Motor_StartForceTime = 0;
+ 908   3            Motor_BemfTime60Cnt[2] = 0;
+ 909   3            Motor_BemfTime60Cnt[1] = 0;
+ 910   3            Motor_BemfTime60Cnt[0] = 0;
+ 911   3            Motor_BemfTime60Temp = 0;
+ 912   3            Motor_BemfTime60Sum = 0;
+ 913   3            Motor_BemfTimeError = 0;
+ 914   3            Motor_BemfTime60 = 0;
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 16  
+
+ 915   3            Motor_BemfTime30 = 0;
+ 916   3            Motor_BemfTime15 = 0;
+ 917   3            Motor_StartStepOkCnt = 0;
+ 918   3            Motor_SpeedValueTarget= 0;
+ 919   3            Motor_Mode = Motor_Mode_Run;  //Ö±½Ó½øÈëÆô¶¯½×¶Î
+ 920   3          }break;
+ 921   2          
+ 922   2          case Motor_Mode_Run : //Õý³£ÔËÐÐ½×¶Î
+ 923   2          {
+ 924   3                  if(Motor_StepCnt > 240)
+ 925   3                  {
+ 926   4      //                Motor_RestartCnt = 0;
+ 927   4                      Motor_RestartTime = 0;
+ 928   4                      Motor_RestartFlags = 0;
+ 929   4                  }
+ 930   3                  
+ 931   3            if(!(T34MOD & 0x08))
+ 932   3            {
+ 933   4              T34MOD |= 1<<3;     //Æô¶¯T3
+ 934   4              EIF2 &= ~(1<<0);    //ÇåÖÐ¶Ï±êÖ¾
+ 935   4              TH3 = 0x00;           
+ 936   4              TL3 = 0x00;           
+ 937   4            }
+ 938   3            if(Motor_SpeedValueTargetTime >= 1)
+ 939   3            {
+ 940   4              Motor_SpeedValueTargetTime = 0;
+ 941   4              if(Motor_SpeedValueTargetTemp != Motor_SpeedValueTarget)
+ 942   4              {
+ 943   5                if(Motor_SpeedValueTargetTemp > Motor_SpeedValueTarget)
+ 944   5                {
+ 945   6                  if(Motor_SpeedValueTargetTemp > (Motor_SpeedValueTarget + 5))
+ 946   6                    Motor_SpeedValueTarget += 5;
+ 947   6                  else
+ 948   6                    Motor_SpeedValueTarget++;
+ 949   6                }
+ 950   5                else if(Motor_SpeedValueTargetTemp < Motor_SpeedValueTarget)
+ 951   5                {
+ 952   6                  if((Motor_SpeedValueTargetTemp + 5) < Motor_SpeedValueTarget)
+ 953   6                    Motor_SpeedValueTarget -= 5;
+ 954   6                  else
+ 955   6                    Motor_SpeedValueTarget--;
+ 956   6                }
+ 957   5              }
+ 958   4            }
+ 959   3            
+ 960   3            if(Motor_SpeedValueOverFlags)
+ 961   3            {
+ 962   4      //        Motor_SpeedValueNow = 0;
+ 963   4              EIF2 &= ~(1<<0);  //ÇåÖÐ¶Ï±êÖ¾
+ 964   4              TH3 = 0x00;           
+ 965   4              TL3 = 0x00; 
+ 966   4            }
+ 967   3            else
+ 968   3            {
+ 969   4              if(Motor_SpeedValueNowTime )
+ 970   4              {
+ 971   5                Motor_SpeedValueNowTime = 0;
+ 972   5                //60 000 000/(6*Motor_SpeedValueBase/12)
+ 973   5                Motor_SpeedValueNowTemp =    (Motor_SpeedValueTemp[7] + Motor_SpeedValueTemp[6] + Motor_SpeedValueTem
+             -p[5] + Motor_SpeedValueTemp[4] 
+ 974   5                                        
+ 975   5                                         + Motor_SpeedValueTemp[3] + Motor_SpeedValueTemp[2] +
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 17  
+
+ 976   5                                           Motor_SpeedValueTemp[1] + Motor_SpeedValueTemp[0]) >> 3;
+ 977   5                Motor_SpeedValueNow = 40000000/(Motor_SpeedValueNowTemp*PAIRS);
+ 978   5                //Motor_SpeedValueNow = Motor_SpeedValueNow - Motor_SpeedValueNow%100;
+ 979   5              }
+ 980   4            }
+ 981   3            motor_pid(4, 0.13, 0.005, 0, 220); //µÍµµÎ»Ê±¼ä¶Ì  ¸ßµµÎ»Ê±¼ä³¤Ò»Ð©
+ 982   3            motor_setpwm(Motor_SpeedValueTarget);
+ 983   3          }break;
+ 984   2        }
+ 985   1      }
+ 986          
+ 987          #endif
+ 988          #if 0
+              void isr_time0()  interrupt 1
+              {
+                TF0 = 0;  //20us
+                
+                //SMG = 1;
+                if(Motor_SetPwmTime < 10000)
+                  Motor_SetPwmTime++;
+                
+                if(Motor_BemfTime60Temp < 10000)
+                  Motor_BemfTime60Temp++;
+                
+                switch(Motor_Mode)
+                {
+                  case Motor_Mode_KeepON :
+                  {
+                    if(Motor_KeepOnCheckTime >= 100)
+                    {
+                      Motor_KeepOnCheckTime = 0;
+                      Motor_KeepOnFlags = 0;
+                      Motor_Mode = Motor_Mode_StartInit;
+                    }
+                    
+                    motor_checkkeepon();
+                    if(Motor_KeepOnStateLast != Motor_KeepOnState)
+                    {
+                      Motor_KeepOnStateLast = Motor_KeepOnState;
+                      Motor_KeepOnStateTemp[5] = Motor_KeepOnStateTemp[4];
+                      Motor_KeepOnStateTemp[4] = Motor_KeepOnStateTemp[3];
+                      Motor_KeepOnStateTemp[3] = Motor_KeepOnStateTemp[2];
+                      Motor_KeepOnStateTemp[2] = Motor_KeepOnStateTemp[1];
+                      Motor_KeepOnStateTemp[1] = Motor_KeepOnStateTemp[0];
+                      Motor_KeepOnStateTemp[0] = Motor_KeepOnState;
+                      
+                      motor_getbemftime();
+                      
+                      if((Motor_KeepOnStateTemp[0] == 3)&&(Motor_KeepOnStateTemp[1] == 1)&&(Motor_KeepOnStateTemp[2] == 5)&&
+                         (Motor_KeepOnStateTemp[3] == 4)&&(Motor_KeepOnStateTemp[4] == 6)&&(Motor_KeepOnStateTemp[5] == 2))
+                      {
+                        if(Motor_BemfTime60 < 1000)
+                        {
+                          if(Motor_FRFlags == 1)
+                          {
+                            Motor_Locate = Motor_KeepOnState;
+                            Motor_BemfEdgeStateNow = 2;
+                            Motor_KeepOnFlags = 0;
+                            Motor_Mode = Motor_Mode_Run;
+                          }
+                        }
+                        else
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 18  
+
+                        {
+                          Motor_KeepOnFlags = 0;
+                          Motor_Mode = Motor_Mode_StartInit;
+                        }
+                      }
+                      else 
+                      if((Motor_KeepOnStateTemp[0] == 2)&&(Motor_KeepOnStateTemp[1] == 6)&&(Motor_KeepOnStateTemp[2] == 4)&&
+                         (Motor_KeepOnStateTemp[3] == 5)&&(Motor_KeepOnStateTemp[4] == 1)&&(Motor_KeepOnStateTemp[5] == 3))
+                      {
+                        if(Motor_BemfTime60 < 1000)
+                        {
+                          if(Motor_FRFlags == 0)
+                          {
+                            Motor_Locate = Motor_KeepOnState;
+                            Motor_BemfEdgeStateNow = 2;
+                            Motor_KeepOnFlags = 0;
+                            Motor_Mode = Motor_Mode_Run;
+                          }
+                        }
+                        else
+                        {
+                          Motor_KeepOnFlags = 0;
+                          Motor_Mode = Motor_Mode_StartInit;
+                        }
+                      }
+                    }
+                  }break;
+                  
+                  case Motor_Mode_Start : //Æô¶¯½×¶Î
+                  {
+                    Motor_StartBemfState <<= 1; 
+                    if(C1CON1 & 0x80)
+                      Motor_StartBemfState++;
+                    
+                    if(Motor_StartDelayTime)
+                    {
+                      Motor_StartDelayTime--;
+                      Motor_StartBemfState = 0;
+                      Motor_StartBemfStateCnt = 0;
+                    
+                      if(Motor_ComputeFlags)
+                      {
+                        Motor_ComputeFlags = 0;
+                      }
+                    }
+                    else
+                    {
+                      if(Motor_StartForceCnt == 0)
+                      {
+                        Motor_StartBemfStateCnt++;
+                        if(Motor_StartBemfStateCnt >= STARTBEMFSTATECNT)
+                        {
+                          Motor_StartBemfState &= 0xFFFF;
+                          Motor_StartBemfStateHigh = (Motor_BemfHighLevelCnt[(u8)(Motor_StartBemfState)] 
+                                                    + Motor_BemfHighLevelCnt[(u8)(Motor_StartBemfState>>8)]); 
+                          
+                          Motor_StartBemfState = 0;
+                          Motor_StartBemfStateCnt = 0;
+                          if(Motor_StartBemfStateHigh > STARTBEMFSTATEHCNT)
+                            Motor_StartBemfStateFlags = 1;
+                          else if(Motor_StartBemfStateHigh < STARTBEMFSTATELCNT)
+                            Motor_StartBemfStateFlags = 0;
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 19  
+
+                          
+                          if(Motor_StartBemfStateFlagsLast != Motor_StartBemfStateFlags)
+                          {
+                            Motor_StartBemfStateFlagsLast = Motor_StartBemfStateFlags;
+                            
+                            if(Motor_BemfEdgeStateNext)
+                            {
+                              if(Motor_StartBemfStateFlags)
+                              {
+                                if(Motor_StartStepOkCnt >= 18)
+                                {
+                                  Motor_StepCnt = 0;
+                                  Motor_StartStepOkCnt = 0;
+                                  Motor_BemfEdgeStateNow = 2;
+                                  Motor_Mode = Motor_Mode_Run;
+                                }
+                                else
+                                {
+                                  if(Motor_FRFlags)
+                                  {
+                                    Motor_Locate++;
+                                    if(Motor_Locate > 6)
+                                      Motor_Locate = 1;
+                                  }
+                                  else
+                                  {
+                                    Motor_Locate--;
+                                    if(Motor_Locate < 1)
+                                      Motor_Locate = 6;
+                                  }
+                                  motor_steps();
+                                  motor_getbemftime();
+                                  Motor_StartStepOkCnt++;
+                                  if(Motor_StartStepOkCnt > 6)
+                                    Motor_ComputeFlags = 1;
+                                  Motor_StartBemfStateCnt = 0;
+                                  Motor_StartForceTime = 0;
+                                  Motor_StartDelayTime = DELAYTIME;
+                                  
+                //                  if(Motor_StepCnt)
+                //                    Motor_StepCnt--;
+                                  
+                                  Motor_MotorErrorCnt = 0;
+                                }
+                              }
+                            }
+                            else if(Motor_BemfEdgeStateNext == 0)
+                            {
+                              if(Motor_StartBemfStateFlags == 0)
+                              {
+                                if(Motor_StartStepOkCnt >= 18)
+                                {
+                                  Motor_StepCnt = 0;
+                                  Motor_StartStepOkCnt = 0;
+                                  Motor_BemfEdgeStateNow = 2;
+                                  Motor_Mode = Motor_Mode_Run;
+                                }
+                                else
+                                {
+                                  if(Motor_FRFlags)
+                                  {
+                                    Motor_Locate++;
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 20  
+
+                                    if(Motor_Locate > 6)
+                                      Motor_Locate = 1;
+                                  }
+                                  else
+                                  {
+                                    Motor_Locate--;
+                                    if(Motor_Locate < 1)
+                                      Motor_Locate = 6;
+                                  }
+                                  motor_steps();
+                                  motor_getbemftime();
+                                  Motor_StartStepOkCnt++;
+                                  if(Motor_StartStepOkCnt > 6)
+                                    Motor_ComputeFlags = 1;
+                                  Motor_StartBemfStateCnt = 0;
+                                  Motor_StartForceTime = 0;
+                                  Motor_StartDelayTime = DELAYTIME;
+                                  
+                //                  if(Motor_StepCnt)
+                //                    Motor_StepCnt--;
+                                  
+                                  Motor_MotorErrorCnt = 0;
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }break;
+                  
+                  case Motor_Mode_Run : //Õý³£ÔËÐÐ½×¶Î
+                  {
+                    if(Motor_BemfEdgeStateNow == 2)
+                    {
+                      if(Motor_ComputeFlags)
+                      {
+                        Motor_ComputeFlags = 0;
+                        
+                        Motor_GetSpeedCnt++;
+                        if(Motor_GetSpeedCnt > 7)
+                          Motor_GetSpeedCnt = 0;
+                        Motor_SpeedValueTemp[Motor_GetSpeedCnt] = Motor_SpeedValueBase; 
+                      }
+                      
+                      if(Motor_BemfTime30)
+                        Motor_BemfTime30--;
+                      else
+                      {
+                        if(Motor_FRFlags)
+                        {
+                          Motor_Locate++;
+                          if(Motor_Locate > 6)
+                            Motor_Locate = 1;
+                        }
+                        else
+                        {
+                          Motor_Locate--;
+                          if(Motor_Locate < 1)
+                            Motor_Locate = 6;
+                        }
+                        motor_steps();
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 21  
+
+                        Motor_ComputeFlags = 1;
+                        
+                        if(Motor_StepCnt < 250)
+                          Motor_StepCnt++;
+                      }
+                    }
+                    else
+                    {
+                      if(Motor_BemfTime15)
+                      {
+                        Motor_BemfTime15--;
+                        Motor_BemfEdgeStateNow = -1;  
+                      }
+                      else
+                      {
+                        if((Motor_BemfTimeError == 0))
+                          Motor_BemfErrorFlags = 1;
+                        
+                        motor_checkbemf();
+                        if(Motor_BemfEdgeStateNow == Motor_BemfEdgeStateNext)
+                        {
+                          Motor_BemfEdgeStateNow = 2;
+                          motor_getbemftime();
+                          
+                          if(Motor_StepCnt > 240)
+                          {
+                            if((Motor_BemfTime60 > 1000) || (Motor_BemfTime60 < 5))
+                              Motor_BemfErrorFlags = 1;
+                            
+                            if((Motor_BemfTime60Cnt[0] > (Motor_BemfTime60 << 1)) ||
+                              ((Motor_BemfTime60Cnt[0] << 1) < Motor_BemfTime60))
+                              Motor_BemfErrorFlags = 1;
+                            
+                            if(Motor_BemfTime30 < 2)
+                              Motor_BemfErrorFlags = 1;
+                          }
+                        }
+                      }
+                    }
+                  }break;
+                  
+                  case Motor_Mode_Brake : //É²³µ½×¶Î
+                  {
+                    //ÉÏ¹ÜÉ²³µ ÏÂ¹ÜÈ«¹Ø Õ¼¿Õ±È´Ó0-100 ÂýÂýÔö´ó ¿ìËÙÉ²³µ
+                    //ÆÚ¼ä¼ì²âÒ»ÏÂµç»úµçÁ÷ ¹ýÐ¡ÔòÅÐ¶Ïµç»úÍ£Ö¹ »òÕß ¹Ì¶¨Ê±¼ä1SÄÚÉ²Í£
+                    if(Motor_BrakeTime <= 100)
+                    {
+                      ABCOFF;
+                      PWMD0H = 0; PWMD0L = 0;
+                      PWMD2H = 0; PWMD2L = 0;
+                      PWMD4H = 0; PWMD4L = 0; 
+                      PWMLOADEN = 0x15; //Êý¾Ý¼ÓÔØ
+                      Motor_BrakePwm = 0;
+                    }
+                    else 
+                    {
+                      if(Vsp_LevelValueTarget < 10)
+                      {
+                        Motor_BrakeTimeTarget = 500;
+                      }
+                      else if(Vsp_LevelValueTarget < 20)
+                      {
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 22  
+
+                        Motor_BrakeTimeTarget = 1000;
+                      }
+                      else
+                      {
+                        Motor_BrakeTimeTarget = 1000;
+                      }
+                      if(Motor_BrakeTime < Motor_BrakeTimeTarget)
+                      {
+                        Motor_BrakePwm = (Motor_BrakeTime - 100) << 1;
+                        if(Motor_BrakePwm > PWMT)
+                        {
+                          Motor_BrakePwm = PWMT;
+                        }
+                        ABCBREAK;
+                        PWMD0H = Motor_BrakePwm>>8; PWMD0L = Motor_BrakePwm;
+                        PWMD2H = Motor_BrakePwm>>8; PWMD2L = Motor_BrakePwm;
+                        PWMD4H = Motor_BrakePwm>>8; PWMD4L = Motor_BrakePwm;  
+                        PWMLOADEN = 0x15; //Êý¾Ý¼ÓÔØ
+                      }
+                      else
+                      {
+                        Motor_BrakeTime = 0;
+                        Motor_BrakePwm = 15;
+                        Motor_Mode = Motor_Mode_Stop; //Í£Ö¹
+                      }
+                    }
+                  }break;
+                }
+                
+                //SMG = 0;
+              }
+              #else
+1318          void isr_time0()  interrupt 1
+1319          {
+1320   1        TF0 = 0;  //20us
+1321   1        
+1322   1        //SMG = 1;
+1323   1        if(Motor_SetPwmTime < 10000)
+1324   1          Motor_SetPwmTime++;
+1325   1        
+1326   1        if(Motor_BemfTime60Temp < 10000)
+1327   1          Motor_BemfTime60Temp++;
+1328   1        
+1329   1        switch(Motor_Mode)
+1330   1        {   
+1331   2          case Motor_Mode_Run : //Õý³£ÔËÐÐ½×¶Î
+1332   2          {
+1333   3            hallStepNew=ReadHallPin();
+1334   3            if(hallStepLast!=hallStepNew)
+1335   3            {
+1336   4              hallStepLast=hallStepNew;
+1337   4              if(Motor_FRFlags)
+1338   4              {
+1339   5                Motor_Locate=HallStep_CW[hallStepNew];
+1340   5              }
+1341   4              else
+1342   4              {
+1343   5                Motor_Locate=HallStep_CCW[hallStepNew];
+1344   5              }
+1345   4              motor_steps();
+1346   4              Motor_GetSpeedCnt++;
+1347   4              if(Motor_GetSpeedCnt > 7)
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 23  
+
+1348   4              {
+1349   5                Motor_GetSpeedCnt = 0;
+1350   5              }
+1351   4              Motor_SpeedValueTemp[Motor_GetSpeedCnt] = Motor_SpeedValueBase;         
+1352   4            }
+1353   3          }break;
+1354   2          
+1355   2          case Motor_Mode_Brake : //É²³µ½×¶Î
+1356   2          {
+1357   3            //ÉÏ¹ÜÉ²³µ ÏÂ¹ÜÈ«¹Ø Õ¼¿Õ±È´Ó0-100 ÂýÂýÔö´ó ¿ìËÙÉ²³µ
+1358   3            //ÆÚ¼ä¼ì²âÒ»ÏÂµç»úµçÁ÷ ¹ýÐ¡ÔòÅÐ¶Ïµç»úÍ£Ö¹ »òÕß ¹Ì¶¨Ê±¼ä1SÄÚÉ²Í£
+1359   3            if(Motor_BrakeTime <= 500)
+1360   3            {
+1361   4              ABCOFF;
+1362   4              PWMD0H = 0; PWMD0L = 0;
+1363   4              PWMD2H = 0; PWMD2L = 0;
+1364   4              PWMD4H = 0; PWMD4L = 0; 
+1365   4              PWMLOADEN = 0x15; //Êý¾Ý¼ÓÔØ
+1366   4              Motor_BrakePwm = 0;
+1367   4            }
+1368   3            else 
+1369   3            {
+1370   4                Motor_BrakeTimeTarget = 1000;
+1371   4              if(Motor_BrakeTime < Motor_BrakeTimeTarget)
+1372   4              {
+1373   5                Motor_BrakePwm = (Motor_BrakeTime - 100) << 1;
+1374   5                if(Motor_BrakePwm > PWMT)
+1375   5                {
+1376   6                  Motor_BrakePwm = PWMT;
+1377   6                }
+1378   5                ABCBREAK;
+1379   5                PWMD0H = Motor_BrakePwm>>8; PWMD0L = Motor_BrakePwm;
+1380   5                PWMD2H = Motor_BrakePwm>>8; PWMD2L = Motor_BrakePwm;
+1381   5                PWMD4H = Motor_BrakePwm>>8; PWMD4L = Motor_BrakePwm;  
+1382   5                PWMLOADEN = 0x15; //Êý¾Ý¼ÓÔØ
+1383   5              }
+1384   4              else
+1385   4              {
+1386   5                Motor_BrakeTime = 0;
+1387   5                Motor_BrakePwm = 15;
+1388   5                Motor_Mode = Motor_Mode_Stop; //Í£Ö¹
+1389   5              }
+1390   4            }
+1391   3          }break;
+1392   2        }
+1393   1        
+1394   1        //SMG = 0;
+1395   1      }
+1396          #endif
+1397          void isr_acmp0()  interrupt 14
+1398          {
+1399   1        CNIF = 0x00;
+1400   1        
+1401   1        ABCOFF;
+1402   1        PWMD0H = 0; PWMD0L = 0;
+1403   1        PWMD2H = 0; PWMD2L = 0;
+1404   1        PWMD4H = 0; PWMD4L = 0; 
+1405   1        PWMLOADEN = 0x15; //Êý¾Ý¼ÓÔØ
+1406   1        PWMFBKC = 0x00;
+1407   1        PWMCNTE = 0x15;
+1408   1        Motor_CurrentErrorFlags = 1;
+1409   1        Motor_Mode = Motor_Mode_Stop;
+C51 COMPILER V9.01   MOTOR                                                                 12/17/2025 13:41:36 PAGE 24  
+
+1410   1      }
+1411          
+1412          void isr_time3() interrupt 15
+1413          {
+1414   1        EIF2 &= ~(1<<0);    //ÇåÖÐ¶Ï±êÖ¾
+1415   1        TH3 = 0x00;           
+1416   1        TL3 = 0x00;           
+1417   1        
+1418   1        Motor_SpeedValueOverFlags = 1;
+1419   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2352    ----
+   CONSTANT SIZE    =    272    ----
+   XDATA SIZE       =     57    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     70      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =     16    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

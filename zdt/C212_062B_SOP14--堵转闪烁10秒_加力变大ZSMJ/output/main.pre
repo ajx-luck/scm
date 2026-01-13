@@ -1,5 +1,5 @@
 
-# 1 "C:\mcuproject\scm\zdt\C212_062B_SOP14--堵转闪烁10秒_加力变大\main.c"
+# 1 "C:\mcuproject\scm\zdt\C212_062B_SOP14--堵转闪烁10秒_加力变大ZSMJ\main.c"
 
 
 # 4
@@ -357,7 +357,7 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 16 "C:\mcuproject\scm\zdt\C212_062B_SOP14--堵转闪烁10秒_加力变大\main.c"
+# 16 "C:\mcuproject\scm\zdt\C212_062B_SOP14--堵转闪烁10秒_加力变大ZSMJ\main.c"
 volatile unsigned int adresult;
 volatile unsigned int result;
 volatile unsigned char test_adc;
@@ -408,6 +408,7 @@ unsigned int count900s;
 unsigned char lowBatFlag = 0;
 unsigned char sleepTime;
 unsigned char startChrgTime = 0;
+unsigned char badBatFlag = 0;
 
 
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo);
@@ -429,7 +430,7 @@ void workCtr();
 void ledCtr();
 char keyRead(char keyStatus);
 
-# 100
+# 101
 void interrupt Isr_Timer()
 {
 if(TMR2IF)
@@ -450,7 +451,7 @@ intCount10++;
 
 }
 
-# 124
+# 125
 void main()
 {
 Init_System();
@@ -678,15 +679,26 @@ reChrgCount = 0;
 }
 return;
 }
-if(batADValue < 1118)
+if(batADValue < 1200)
+{
+chrgMode = 0;
+chrgMaxAD = 10;
+}
+else if(batADValue < 1300)
 {
 chrgMode = 0;
 chrgMaxAD = 15;
 }
+else if(batADValue < 1400)
+{
+chrgMode = 1;
+chrgMaxAD = 23;
+lockCount = 0;
+}
 else if(batADValue < 1530)
 {
 chrgMode = 1;
-chrgMaxAD = 40;
+chrgMaxAD = 24;
 lockCount = 0;
 }
 else if(count1s == 0)
@@ -697,9 +709,9 @@ lockCount = 0;
 chrgMode = 2;
 }
 
-chrgMaxAD = 40;
+chrgMaxAD = 22;
 }
-if(chrgMode == 2 && outADValue < 5)
+if(chrgMode == 2 && outADValue < 8)
 {
 if(++fullCount >= 200)
 {
@@ -919,7 +931,7 @@ test_adc = ADC_Sample(0, 5);
 }
 if (0xA5 == test_adc)
 {
-if(chrgFlag && adresult > 210)
+if(chrgFlag && adresult > 150)
 {
 if(++overChrgTime > 10)
 {
@@ -932,6 +944,7 @@ else
 {
 overChrgTime = 0;
 }
+
 outADValue = adresult;
 
 if(workStep && (outADValue > 220))
@@ -1041,6 +1054,11 @@ test_adc = ADC_Sample(2, 5);
 if (0xA5 == test_adc)
 {
 batADValue = adresult;
+if(batADValue < 558)
+{
+protectFlag = 2;
+}
+
 if(batADValue < 1117)
 {
 pwStep = 0;
@@ -1090,7 +1108,12 @@ if (0xA5 == test_adc)
 if(chrgFlag && adresult > 100)
 {
 
-if(adresult > 810 || (batADValue - adresult) > 810)
+if(batADValue < 279)
+{
+protectFlag = 2;
+}
+
+if(adresult > 800 || (batADValue - adresult) > 800)
 {
 
 if(++countHalfFull > 250)
@@ -1113,7 +1136,7 @@ _delay((unsigned long)((100)*(16000000/4000000.0)));
 }
 }
 
-# 795
+# 818
 void Init_System()
 {
 asm("nop");
@@ -1142,14 +1165,14 @@ T2CON = 0B00000100;
 INTCON = 0XC0;
 }
 
-# 832
+# 855
 void AD_Init()
 {
 
-# 865
+# 888
 ADCON0 = 0X41;
 
-# 882
+# 905
 ADCON1 = 0;
 ANSEL0 = 0X1D;
 }
@@ -1199,7 +1222,7 @@ PWMCON0 &= 0XFD;
 RB1 = 0;
 }
 
-# 939
+# 962
 void Sleep_Mode()
 {
 INTCON = 0;
@@ -1256,7 +1279,7 @@ Init_System();
 AD_Init();
 }
 
-# 1015
+# 1038
 unsigned char ADC_Sample(unsigned char adch, unsigned char adldo)
 {
 volatile unsigned long adsum = 0;

@@ -1,0 +1,321 @@
+C51 COMPILER V9.60.7.0   INIT                                                              10/22/2025 01:51:09 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE INIT
+OBJECT MODULE PLACED IN .\PRO\init.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE DRV\init.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\DRV) DEBUG OBJECTEXTEND PRI
+                    -NT(.\LST\init.lst) OBJECT(.\PRO\init.obj)
+
+line level    source
+
+   1          #include "config.h"
+   2          
+   3          void clk_init()
+   4          {
+   5   1              EA = 0;
+   6   1              TA = 0xAA;
+   7   1              TA = 0x55;
+   8   1              CLKDIV = 0x00;                  //振荡器48MHz CONFIG配置中振荡1分频 系统时钟1分频 最终主频48Mhz
+   9   1              CKCON = 0xE7;                           //1110 0111 WDT 1.4s溢出  T0 12分频4Mhz  T1 12分频 4Mhz 
+  10   1              EA = 1;
+  11   1      }
+  12          
+  13          void power_init()
+  14          {
+  15   1              EA = 0;
+  16   1              PCON = 0x04;                            //0000 0100 STOP状态功能唤醒 系统进入正常状态
+  17   1              LVDCON = 0x00;                  //关闭低电压检测
+  18   1              EA = 1;
+  19   1      }
+  20          
+  21          void wdt_init()
+  22          {
+  23   1              EA = 0;
+  24   1              TA = 0xAA;
+  25   1              TA = 0x55;
+  26   1              WDCON = 0x03;   
+  27   1              EA = 1;
+  28   1      }
+  29          
+  30          void clwdt()
+  31          {
+  32   1              EA = 0;
+  33   1              TA = 0xAA;
+  34   1              TA = 0x55;
+  35   1              WDCON |= 1<<0;          //清WDT
+  36   1              EA = 1;
+  37   1      }
+  38          //void foot_vsp_onoff_mode(unsigned char chiose)
+  39          //{
+  40          //              if(chiose)
+  41          //              {
+  42          //                              
+  43          
+  44          //              }
+  45          
+  46          //}
+  47          void io_init()
+  48          {                                                                               
+  49   1              //0推挽正常 1开漏开漏                   0输入 1输出     0低电平 1高电平
+  50   1              //PXTRIS 输入输出寄存器 PX 状态寄存器
+  51   1              P0TRIS = 0xC1;          //1100 0001     
+  52   1              P1TRIS = 0xFF;          //1110 1111 //P14  改为调速脚踏和开关脚踏选择引脚
+  53   1              P2TRIS = 0x71;          //0111 0001 //  p22  JP1 输入 切换 HAND 与 FOOT 
+  54   1              P3TRIS = 0xB8;          //1011 1000     //p30 AC_CHK  检测交流是否插电 (输入)
+C51 COMPILER V9.60.7.0   INIT                                                              10/22/2025 01:51:09 PAGE 2   
+
+  55   1              
+  56   1              P0 = 0x00;
+  57   1              P1 = 0x00;
+  58   1              P2 = 0x00;
+  59   1              P3 = 0x00;
+  60   1              
+  61   1              P02CFG = 0x01;          //P02 模拟功能 比较器输入U
+  62   1              P03CFG = 0x01;          //P03 模拟功能 比较器输入V
+  63   1              P04CFG = 0x01;          //P04 模拟功能 比较器输入W
+  64   1              P05CFG = 0x01;          //P05 模拟功能 比较器输入COM
+  65   1      //      P14CFG = 0x00;          //P14 模拟功能 FOOT_VSP
+  66   1      
+  67   1      
+  68   1              P23CFG = 0x01;          //P24 模拟功能 FOOT
+  69   1              P36CFG = 0x01;          //P25 模拟功能 V_AD
+  70   1              P22CFG = 0x01;          //P26 模拟功能 VSP  电位器检测
+  71   1              P36CFG = 0x01;          //P31 模拟功能 电机电流检测
+  72   1              P30CFG = 0x01;          //P30 模拟功能 电机电流检测
+  73   1      //      P22CFG = 0x01;          //P22 JP1
+  74   1      //      P36CFG = 0x01;          //P36 F_R
+  75   1      }
+  76          
+  77          void isr_init()
+  78          {
+  79   1              IE = 0x00;
+  80   1              IP = 0x00;
+  81   1              EIE2 = 0x00;
+  82   1              T2IE = 0x00;
+  83   1              P0EXTIE = 0x00;         
+  84   1              P1EXTIE = 0x00;
+  85   1              P2EXTIE = 0x00;
+  86   1              P3EXTIE = 0x00;
+  87   1              TCON = 0x00;
+  88   1              T2IF = 0x00;
+  89   1              EIF2 = 0x00;
+  90   1              P0EXTIF = 0x00;
+  91   1              P1EXTIF = 0x00;
+  92   1              P2EXTIF = 0x00;
+  93   1              P3EXTIF = 0x00;
+  94   1              EA = 0;
+  95   1      }
+  96          
+  97          void Timer0_init()
+  98          {                               
+  99   1              TMOD = 0x12;                            //0001 0010     T1 16位定时模式  T0自动重载8位
+ 100   1              TH0 = 0xB0;                                     //256 - 20*4 20us
+ 101   1              TL0 = 0xB0;
+ 102   1      
+ 103   1              TF0 = 0;
+ 104   1              PT0 = 1;                                                //T0高优先级
+ 105   1              ET0 = 1;                                                //允许T0中断
+ 106   1              TR0 = 1;                                                //启动T0
+ 107   1      }
+ 108          
+ 109          void Timer1_init()
+ 110          {                               
+ 111   1              TH1     =       0xF0;                                   //1000*4   *1/4
+ 112   1              TL1 = 0x60;                                     //1ms定时
+ 113   1      
+ 114   1              TF1 = 0;
+ 115   1      //PT1 = 1;                                              //T1高优先级
+ 116   1              ET1 = 1;                                                //允许T1中断
+C51 COMPILER V9.60.7.0   INIT                                                              10/22/2025 01:51:09 PAGE 3   
+
+ 117   1              TR1 = 1;                                                //启动T1
+ 118   1      }
+ 119          
+ 120          void Timer3_init()
+ 121          {
+ 122   1              T34MOD |= 0x01;                 //0000 0001 12分频 1/4us 16位定时器
+ 123   1              TH3     =       0x00;                                           
+ 124   1              TL3 = 0x00;                                             
+ 125   1              
+ 126   1      //      EIF2 &= ~(1<<0);                //清中断标志
+ 127   1      //      EIE2 |= 1<<0;
+ 128   1              //T34MOD |= 1<<3;                       //启动T3
+ 129   1      }
+ 130          
+ 131          void Timer4_init()
+ 132          {                               
+ 133   1      //      T34MOD |= 0x60;                 //0110 0000 T4M=1 12Mhz 8位自动重装 
+ 134   1      //      EIF2 &= ~(1<<1);                //清零中断标志
+ 135   1      //      TH4     =       0xD9;                                   //THx = 256- 48000000/(32*4*波特率)
+ 136   1      //      TL4 = 0xD9;                                     //初始值(256-39)        波特率9600
+ 137   1      //      
+ 138   1      //      T34MOD |= 1<<7;                 //启动T4
+ 139   1      }
+ 140          
+ 141          void uart0_init()
+ 142          {
+ 143   1              BRTCON = 0x83;                  //1000 0011 6MHz
+ 144   1              BRTDH = 0xFF;                           
+ 145   1              BRTDL = 0xEC;                           //104.1666666666667us
+ 146   1              
+ 147   1              FUNCCR = 0x05;                  //0000 1111
+ 148   1              SCON0 = 0x40;                           //0100 0000 8位异步 
+ 149   1              ES0 = 1;
+ 150   1      }
+ 151          
+ 152          void pwm_init()
+ 153          {
+ 154   1              PWMCON = 0x10;                  //3路PWM互补 边沿对齐 向下计数
+ 155   1              PWM01PSC = 0x01;                //第一级分频为(1+1)分频
+ 156   1              PWM23PSC = 0x01;                //第一级分频为(1+1)分频 
+ 157   1              PWM45PSC = 0x01;                //第一级分频为(1+1)分频 
+ 158   1              PWM0DIV = 0x04;                 //第二级分频为
+ 159   1      //      PWM1DIV = 0x04;                 //第二级分频为
+ 160   1              PWM2DIV = 0x04;                 //第二级分频为   最终得到的PWM时钟为24Mhz 1/24us
+ 161   1      
+ 162   1      //      PWM3DIV = 0x04;                 //第二级分频为
+ 163   1              PWM4DIV = 0x04;                 //第二级分频为
+ 164   1      //      PWM5DIV = 0x04;                 //第二级分频为   最终得到的PWM时钟为24Mhz 1/24us
+ 165   1      //      PWMCNTM = 0x07;                 //计数器自动重新加载
+ 166   1      //      PWMPINV = 0x00;                 //输出极性选择 正常输出
+ 167   1      
+ 168   1              //PWM0周期 1200 * (1/24) = 50us 20Khz
+ 169   1              PWMP0H = PWMT>>8;
+ 170   1              PWMP0L = PWMT;                          
+ 171   1              PWMP2H = PWMT>>8;
+ 172   1              PWMP2L = PWMT;                          
+ 173   1              PWMP4H = PWMT>>8;
+ 174   1              PWMP4L = PWMT;                                  
+ 175   1              
+ 176   1      
+ 177   1      //      PWMP3H = PWMT>>8;
+ 178   1      //      PWMP3L = PWMT;                          
+C51 COMPILER V9.60.7.0   INIT                                                              10/22/2025 01:51:09 PAGE 4   
+
+ 179   1      //      PWMP4H = PWMT>>8;
+ 180   1      //      PWMP4L = PWMT;                          
+ 181   1      //      PWMP5H = PWMT>>8;
+ 182   1      //      PWMP5L = PWMT;  
+ 183   1      
+ 184   1              PWMD0H = 300>>8;
+ 185   1              PWMD0L = 300;                           
+ 186   1              PWMD2H = 300>>8;
+ 187   1              PWMD2L = 300;                           
+ 188   1              PWMD4H = 300>>8;
+ 189   1              PWMD4L = 300;           
+ 190   1      //      PWMD3H = 0;
+ 191   1      //      PWMD3L = 0;                             
+ 192   1      //      PWMD4H = 0;
+ 193   1      //      PWMD4L = 0;                             
+ 194   1      //      PWMD5H = 0;
+ 195   1      //      PWMD5L = 0;     
+ 196   1          PWMCNTM = 0x15;         //数据加载
+ 197   1          PWMPINV = 0x00;                     //输出极性选择 正常输出
+ 198   1          PWMOE   =0x3F;
+ 199   1          
+ 200   1          PWMDTE=0x07;
+ 201   1          PWM01DT = 0x13; //PWM0/1 死区时间：（PWM01DT+1）*TPWM0  50us  1ms = 1000us 
+ 202   1          PWM23DT = 0x13;
+ 203   1          PWM45DT = 0x13;
+ 204   1      
+ 205   1      //      PWMMASKE = 0x3F;
+ 206   1      //      PWMMASKE = 0x30;
+ 207   1      //      PWMMASKD = 0x00;
+ 208   1              P17CFG = 0x12;          //P17 模拟功能 PG0 通道 AH
+ 209   1              P14CFG = 0x13;          //P16 模拟功能 PG1 通道 BH
+ 210   1              P16CFG = 0x14;          //P15 模拟功能 PG2 通道 CH
+ 211   1              P13CFG = 0x15;          //P13 模拟功能 PG3 通道 AL
+ 212   1              P15CFG = 0x16;          //P00 模拟功能 PG4 通道 BL
+ 213   1              P00CFG = 0x17;          //P01 模拟功能 PG5 通道 CL
+ 214   1          
+ 215   1      //      PWMFBKC = 0x00;         
+ 216   1      //      PWMFBKD = 0x00;  
+ 217   1      //      PWMOE = 0x15;                   //PWM启动输出
+ 218   1          PWMLOADEN = 0x3F;   //数据加载
+ 219   1              PWMCNTE = 0x15;         //PWM计数器启动计数
+ 220   1      
+ 221   1      }
+ 222          
+ 223          void acm0_init()
+ 224          {
+ 225   1              C0CON0 = 0x0E;          //0000 1110 内部电压负端输入    PGA-ANA正端输入
+ 226   1              C0CON2 = 0x00;          //0000 0000 正常输出 
+ 227   1              C0HYS = 0x00;                   //0000 0000
+ 228   1              CNVRCON = 0x1A;         //0001 1010 分压开启 24V3A= 3.25V = 5*13/20
+ 229   1              CNFBCON = 0x04;         //0000 0100     使能比较器0控制PWM刹车 上升沿触发
+ 230   1              EIP1 |= 0x80;
+ 231   1              
+ 232   1              C0CON0 |= 1<<7;         //使能比较器0
+ 233   1              CNIE = 0x01;                    //0000 0001 使能比较器0中断
+ 234   1              CNIF = 0x00;                    //0000 0000 清中断标志
+ 235   1      }
+ 236          
+ 237          void acm1_init()
+ 238          {
+ 239   1              C1CON0 = 0x00;          //0000 0000 比较器1禁止 禁止调节模式 C1N负端输入 C1P0正端输入
+ 240   1              C1CON2 = 0x18;          //0000 0000 正常输出
+C51 COMPILER V9.60.7.0   INIT                                                              10/22/2025 01:51:09 PAGE 5   
+
+ 241   1              C1HYS = 0x00;                   //0000 0000
+ 242   1              
+ 243   1              C1CON0 |= 1<<7;         //使能比较器1   
+ 244   1      }
+ 245          
+ 246          void op_init()
+ 247          {
+ 248   1      //      OP1CON0 = 0x30;         //0011 0000禁止运放1 禁止调节模式 运放模式 OP1O输出 OP1N负端输入 OP1P正端输入
+ 249   1      //      
+ 250   1      //      OP1CON0 |= 1<<7;        //使能运放1
+ 251   1      }
+ 252          
+ 253          void pga_init()
+ 254          {
+ 255   1              PGACON0 = 0x33;         //0011 0011  放大8倍 PGAP单端输入 
+ 256   1              PGACON1 = 0x10;         //0001 0000      正常放大
+ 257   1              PGACON2 = 0x00;         //0000 0000  PGATO关闭
+ 258   1              
+ 259   1              PGACON0 |= 0x80;
+ 260   1      }
+ 261          
+ 262          void buzzer_init()
+ 263          {
+ 264   1              BUZCON = 0x03;  //0000 0011 蜂鸣器分频48MHz/64
+ 265   1              BUZDIV = 0xBC;  //188 Fbuz=48MHz/(2*BUZDIV)/64= 2KH
+ 266   1      //      BUZDIV = 0x5E;  //94  Fbuz=48MHz/(2*BUZDIV)/64= 4KH
+ 267   1      //      BUZDIV = 0x3F;  //63  Fbuz=48MHz/(2*BUZDIV)/64= 6KH
+ 268   1      }
+ 269          
+ 270          void Sysinit()
+ 271          {
+ 272   1              clk_init();
+ 273   1              power_init();
+ 274   1              wdt_init();
+ 275   1              clwdt();
+ 276   1              io_init();
+ 277   1              isr_init();
+ 278   1              Timer0_init();
+ 279   1              Timer1_init();
+ 280   1              Timer3_init();
+ 281   1              Timer4_init();
+ 282   1              uart0_init();
+ 283   1              pwm_init();
+ 284   1      //      acm0_init();
+ 285   1              acm1_init();
+ 286   1              op_init();
+ 287   1              pga_init();
+ 288   1              buzzer_init();
+ 289   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    533    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
