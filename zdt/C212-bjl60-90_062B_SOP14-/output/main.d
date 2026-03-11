@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/mcuproject/scm/zdt/C212-bjl60-90_062B_SOP14-/main.c

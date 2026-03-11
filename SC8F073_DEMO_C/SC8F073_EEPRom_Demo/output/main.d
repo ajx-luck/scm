@@ -1,0 +1,1 @@
+ main.d  main.p1:  C:/Work/11_2024_5_17/SC8F073/SC8F073_EEPRom_Demo/main.c
